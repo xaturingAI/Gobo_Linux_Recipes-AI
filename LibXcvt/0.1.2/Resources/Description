@@ -1,0 +1,4 @@
+[Name] LibXcvt
+[Summary] Modeline generation library used by Xwayland/Xorg (libxcvt, cvt)
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/xorg/lib/libxcvt
