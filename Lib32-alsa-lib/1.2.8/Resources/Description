@@ -1,0 +1,4 @@
+[Name] Lib32-alsa-lib
+[Summary] 32-bit ALSA audio library for Wine/Proton
+[License] LGPL-2.1+
+[Homepage] https://www.alsa-project.org/

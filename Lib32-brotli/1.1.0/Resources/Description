@@ -1,0 +1,4 @@
+[Name] Lib32-brotli
+[Summary] 32-bit Brotli compression for Steam
+[License] MIT
+[Homepage] https://github.com/google/brotli

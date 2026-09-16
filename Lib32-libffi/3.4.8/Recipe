@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit libffi foreign-function interface for Wine/Proton
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libf/libffi/libffi8_3.4.8-2_i386.deb"
+file_size=21556
+file_md5=775f2895074133b83117db7775c977de
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libffi.so.8* "$target"/lib32/ || Die "Failed copying 32-bit libffi.so.8."
+}
+

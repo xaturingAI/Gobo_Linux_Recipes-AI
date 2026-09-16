@@ -1,0 +1,4 @@
+[Name] Lib32-libglvnd
+[Summary] 32-bit GLVND dispatch libraries for Wine/Proton Vulkan
+[License] MIT
+[Homepage] https://github.com/NVIDIA/libglvnd

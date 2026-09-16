@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit libblkid for Steam runtime
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/u/util-linux/libblkid1_2.41-5_i386.deb"
+file_size=187128
+file_md5=8945550ad6eec6947dc0f8b5cedea5fe
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libblkid.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libblkid.so.1."
+}
+

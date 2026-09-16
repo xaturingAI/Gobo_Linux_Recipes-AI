@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# 32-bit libidn2 extracted from Debian i386 packages for Steam/Proton.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libi/libidn2/libidn2-0_2.3.3-1+b1_i386.deb"
+url2="https://deb.debian.org/debian/pool/main/libu/libunistring/libunistring2_1.0-2_i386.deb"
+file_size=125528
+file_md5=a8d1e9f0b3b89cfde10e2c68f9f853bf
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    for u in "$url" "$url2"; do
+        local deb="$compileArchivesDir/$(basename $u)"
+        [ -f "$deb" ] || wget -q "$u" -O "$deb"
+        Log_Normal "Unpacking ${deb}"
+        ar p "$deb" data.tar.xz | tar xJf -
+    done
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libidn2.so.0* "$target"/lib32/ || Die "Failed copying libidn2."
+    cp -a usr/lib/i386-linux-gnu/libunistring.so.2* "$target"/lib32/ || Die "Failed copying libunistring."
+}

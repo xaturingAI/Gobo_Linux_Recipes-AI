@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit capability library for libsystemd
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libc/libcap2/libcap2_2.75-10+deb13u1+b1_i386.deb"
+file_size=30104
+file_md5=0a875a7b896c836e743ac7c571dcced6
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libcap.so.2* "$target"/lib32/ || Die "Failed copying 32-bit libcap.so.2."
+}
+

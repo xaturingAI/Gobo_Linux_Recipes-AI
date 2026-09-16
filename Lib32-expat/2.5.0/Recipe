@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/e/expat/libexpat1_2.5.0-1+deb12u2_i386.deb"
+file_size=104388
+file_md5=aae6ca9eff6c85898e23e5562f25af4b
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a lib/i386-linux-gnu/libexpat.so.1* "$target"/lib32/ || Die "Failed copying 32-bit Expat."
+}

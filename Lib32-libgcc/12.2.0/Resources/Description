@@ -1,0 +1,4 @@
+[Name] Lib32-libgcc
+[Summary] 32-bit GCC runtime support library
+[License] GPL-3.0+ with GCC Runtime Library Exception
+[Homepage] https://gcc.gnu.org/

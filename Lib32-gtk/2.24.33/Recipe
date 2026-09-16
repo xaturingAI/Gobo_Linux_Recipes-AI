@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit GTK+ 2.0 extracted from Debian i386 packages for Steam UI.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/gtk+2.0/libgtk2.0-0_2.24.33-2+deb12u1_i386.deb"
+file_size=1934932
+file_md5=8906ec4e8edc8bbbab52bd566eb805ae
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libgtk-x11-2.0.so.0* "$target"/lib32/ || Die "Failed copying libgtk-x11-2.0."
+    cp -a usr/lib/i386-linux-gnu/libgdk-x11-2.0.so.0* "$target"/lib32/ || Die "Failed copying libgdk-x11-2.0."
+}

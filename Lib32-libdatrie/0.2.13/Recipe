@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit double-array trie library for libthai
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libd/libdatrie/libdatrie1_0.2.13-3+b1_i386.deb"
+file_size=39872
+file_md5=d7b38658446929d09d9dbae6e419cf4e
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libdatrie.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libdatrie.so.1."
+}
+

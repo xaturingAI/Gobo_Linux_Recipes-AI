@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit libcurl extracted from Debian i386 packages for Steam HTTP.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/c/curl/libcurl4_7.88.1-10+deb12u15_i386.deb"
+file_size=426548
+file_md5=6cd3fdf490afe083e27396bf752092c7
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libcurl.so.4* "$target"/lib32/ || Die "Failed copying libcurl."
+}

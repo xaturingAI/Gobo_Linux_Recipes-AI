@@ -1,0 +1,4 @@
+[Name] Lib32-libffi
+[Summary] 32-bit libffi foreign-function interface for Wine/Proton
+[License] MIT
+[Homepage] https://github.com/libffi/libffi

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit Brotli compression for Steam
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/b/brotli/libbrotli1_1.1.0-2+b7_i386.deb"
+file_size=298764
+file_md5=f68215bbacafcdf36bb7983b1f839b36
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libbrotlidec.so.1* usr/lib/i386-linux-gnu/libbrotlicommon.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libbrotlicommon.so.1."
+}
+
