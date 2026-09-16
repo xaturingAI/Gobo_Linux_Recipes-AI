@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xi extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxi/libxi6_1.8.2-1_i386.deb"
+file_size=81176
+file_md5=ba3b319f7d37ded7d7aa26b8c72cd191
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXi.so.6* "$target"/lib32/ || Die "Failed copying 32-bit libXi."
+}

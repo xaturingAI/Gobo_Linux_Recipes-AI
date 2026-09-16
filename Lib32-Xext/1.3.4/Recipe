@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xext extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxext/libxext6_1.3.4-1+b1_i386.deb"
+file_size=55260
+file_md5=dc14ccfce55aea152f2293e8da463ca3
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXext.so.6* "$target"/lib32/ || Die "Failed copying 32-bit libXext."
+}

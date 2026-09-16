@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xdamage extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxdamage/libxdamage1_1.1.6-1+b2_i386.deb"
+file_size=15644
+file_md5=a0a95b4d16558bb5e34955c75d851de3
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXdamage.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libXdamage."
+}

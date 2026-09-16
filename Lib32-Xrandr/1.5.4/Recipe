@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xrandr extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxrandr/libxrandr2_1.5.4-1+b3_i386.deb"
+file_size=37888
+file_md5=b24f3eb6f37e5c5c9c7681f7b09e45af
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXrandr.so.2* "$target"/lib32/ || Die "Failed copying 32-bit libXrandr."
+}

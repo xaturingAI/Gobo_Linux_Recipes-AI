@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xss extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxss/libxss1_1.2.3-1+b3_i386.deb"
+file_size=17308
+file_md5=e2a6c08dd2c111e13bb0ab87e8c76955
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXss.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libXss."
+}

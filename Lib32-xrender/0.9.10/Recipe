@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxrender/libxrender1_0.9.10-1.1_i386.deb"
+file_size=34116
+file_md5=98566054da050404e01624938749d182
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXrender.so.1* "$target"/lib32/ || Die "Failed copying 32-bit xrender."
+}

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# 32-bit Vulkan loader extracted from Debian bookworm i386 package.
+# Dispatches Vulkan API calls to the installed ICD (Nvidia or Mesa RADV).
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/v/vulkan-loader/libvulkan1_1.3.239.0-1_i386.deb"
+file_size=124720
+file_md5=4531caf7d2645276c03b61bbb17bc08d
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+
+    cp -a usr/lib/i386-linux-gnu/libvulkan.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libvulkan."
+
+    # Vulkan ICD JSON manifests (if present)
+    if [ -d usr/share/vulkan/icd.d ]; then
+        mkdir -p "$target"/Resources/Unmanaged/usr/share/vulkan/icd.d/
+        cp -a usr/share/vulkan/icd.d/*.json \
+              "$target"/Resources/Unmanaged/usr/share/vulkan/icd.d/ || true
+    fi
+}

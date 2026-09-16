@@ -1,0 +1,30 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxkbcommon/libxkbcommon0_1.5.0-1_i386.deb"
+file_size=111976
+file_md5=41399e0834913d552ae1889ce35a385f
+recipe_type=manifest
+uncompress=no
+
+x11_url="https://deb.debian.org/debian/pool/main/libx/libxkbcommon/libxkbcommon-x11-0_1.5.0-1_i386.deb"
+x11_md5=457450e565366c53f6a30118b11d781d
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+
+    Log_Normal "Fetching libxkbcommon-x11 i386"
+    curl -sL -o xkbx11.deb "$x11_url" || Die "Failed downloading libxkbcommon-x11-0 i386."
+    echo "$x11_md5  xkbx11.deb" | md5sum -c - || Die "libxkbcommon-x11-0 i386 checksum mismatch."
+    mkdir -p libxkbcommon-x11
+    ar p xkbx11.deb data.tar.xz | tar xJf - -C libxkbcommon-x11
+    rm -f xkbx11.deb
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libxkbcommon.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libxkbcommon."
+    cp -a libxkbcommon-x11/usr/lib/i386-linux-gnu/libxkbcommon-x11.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libxkbcommon-x11."
+}

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit libssh extracted from Debian i386 packages for Steam/Proton.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libs/libssh/libssh-4_0.10.6-0+deb12u2_i386.deb"
+file_size=206868
+file_md5=6b1219a8339c1d2b0ac90496c9a91731
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libssh.so.4* "$target"/lib32/ || Die "Failed copying libssh."
+}

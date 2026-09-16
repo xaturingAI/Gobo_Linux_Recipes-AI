@@ -1,0 +1,21 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libt/libtheora/libtheora0_1.1.1+dfsg.1-16.1+deb12u1_i386.deb"
+file_size=150524
+file_md5=8767c68223524501afbe1734bdf48e8c
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libtheora.so.0* "$target"/lib32/ || Die "Failed copying 32-bit theora."
+    cp -a usr/lib/i386-linux-gnu/libtheoraenc.so.1* "$target"/lib32/ || Die "Failed copying 32-bit theoraenc."
+    cp -a usr/lib/i386-linux-gnu/libtheoradec.so.1* "$target"/lib32/ || Die "Failed copying 32-bit theoradec."
+}

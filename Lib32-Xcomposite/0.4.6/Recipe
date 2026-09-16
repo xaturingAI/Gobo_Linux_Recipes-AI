@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xcomposite extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxcomposite/libxcomposite1_0.4.6-1_i386.deb"
+file_size=16572
+file_md5=a34d8605af100865f00acaf033f36847
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXcomposite.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libXcomposite."
+}
