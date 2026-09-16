@@ -1,0 +1,5 @@
+[Name] LibDrm
+[Summary] Userspace interface to kernel DRM services
+[Description] Library for accessing the kernel's Direct Rendering Manager interface (used by Mesa, the X server, Wayland compositors such as wlroots, and XWayland). Bumped to 2.4.121 for the Wayland/XWayland build (ISO ships 2.4.100).
+[License] MIT
+[Homepage] https://dri.freedesktop.org/wiki/
