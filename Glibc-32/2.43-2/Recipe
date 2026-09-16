@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Minimal 32-bit base for the 32-bit Steam client and 32-bit games, extracted
+# from Debian i386 packages: glibc (ld-linux.so.2 + libc/libm/libdl/libpthread/
+# librt + nss + gconv), libgcc_s and libstdc++ 6.0.33.
+#
+# The Steam client (ELF32, PT_INTERP /lib/ld-linux.so.2) requires the 32-bit
+# dynamic linker at /lib/ld-linux.so.2; a symlink from lib/ to lib32/ provides
+# it. lib32/ is registered with the dynamic linker via ld.so.conf.d.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.43-2_i386.deb"
+file_size=1737680
+file_md5=d483506829ae65e8e1617babb87d9391
+recipe_type=manifest
+uncompress=no
+
+# libgcc_s + libstdc++ are pulled during pre_install (see BuildInformation).
+libgcc_url="https://deb.debian.org/debian/pool/main/g/gcc-14/libgcc-s1_14.2.0-19_i386.deb"
+libgcc_size=88164
+libgcc_md5=4096d4517c495aa06c86c2c7a1472fd6
+libstdcpp_url="https://deb.debian.org/debian/pool/main/g/gcc-14/libstdc++6_14.2.0-19_i386.deb"
+libstdcpp_size=765444
+libstdcpp_md5=077fa76cbfa70b9a61304e00596602e5
+
+do_install() {
+    # glibc core: dynamic linker + base libraries + nss + gconv
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/*.so* "$target"/lib32/ || Die "Failed copying 32-bit glibc."
+    cp -a usr/lib/i386-linux-gnu/ld-linux.so.2 "$target"/lib32/ || Die "Failed copying 32-bit loader."
+    cp -a usr/lib/i386-linux-gnu/gconv "$target"/lib32/ || Die "Failed copying gconv modules."
+
+    # 32-bit dynamic linker at its hard-coded path /lib/ld-linux.so.2
+    mkdir -p "$target"/lib
+    ln -sf ../lib32/ld-linux.so.2 "$target"/lib/ld-linux.so.2
+
+    # libgcc_s + libstdc++ from the extracted gcc-14 packages
+    cp -a libgccs/usr/lib/i386-linux-gnu/libgcc_s.so.1 "$target"/lib32/ || Die "Failed copying libgcc_s."
+    cp -a libstdcpp/usr/lib/i386-linux-gnu/libstdc++.so.6* "$target"/lib32/ || Die "Failed copying libstdc++."
+
+    # Register lib32 for the dynamic linker (both 64-bit and 32-bit loaders).
+    mkdir -p "$target"/Resources/Defaults/Settings/ld.so.conf.d
+    echo "$goboPrograms/Glibc-32/Current/lib32" > "$target"/Resources/Defaults/Settings/ld.so.conf.d/glibc-32.conf
+}
+
+pre_install() {
+    # Extract the primary package (libc6) fetched by the Compile machinery.
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+
+    # Fetch and unpack the gcc-14 32-bit runtime packages.
+    Log_Normal "Fetching libgcc_s/libstdc++ 32-bit packages"
+    curl -sL -o libgccs.deb "$libgcc_url" || Die "Failed downloading libgcc-s1 i386."
+    echo "$libgcc_md5  libgccs.deb" | md5sum -c - || Die "libgcc-s1 i386 checksum mismatch."
+    curl -sL -o libstdcpp.deb "$libstdcpp_url" || Die "Failed downloading libstdc++6 i386."
+    echo "$libstdcpp_md5  libstdcpp.deb" | md5sum -c - || Die "libstdc++6 i386 checksum mismatch."
+    mkdir -p libgccs libstdcpp
+    ar p libgccs.deb data.tar.xz | tar xJf - -C libgccs
+    ar p libstdcpp.deb data.tar.xz | tar xJf - -C libstdcpp
+    rm -f libgccs.deb libstdcpp.deb
+}
