@@ -1,0 +1,5 @@
+[Name] Bubblewrap
+[Summary] Unprivileged sandboxing tool
+[License] LGPL-2.0-or-later
+[Description] Runs applications in a user-namespace sandbox using unshare + user namespaces. Base for Flatpak and standalone use for unprivileged sandboxing.
+[Homepage] https://github.com/containers/bubblewrap

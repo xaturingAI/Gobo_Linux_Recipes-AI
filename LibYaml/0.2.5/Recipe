@@ -1,0 +1,21 @@
+# Custom recipe for LibYaml 0.2.5 (autotools)
+#
+# Part of the Pantheon stack port. yaml-0.1.pc is a hard dependency of
+# AppStream (meson.build does `dependency('yaml-0.1')` unconditionally; no
+# disable option) which libadwaita 1.8.0 hard-requires. libyaml is a tiny,
+# dependency-free C library; there is no libyaml on the 017.01 ISO.
+#
+# Build AFTER GLib 2.84 and BEFORE LibXmlb/AppStream/LibAdwaita.
+#
+# file_md5 + file_size verified against the GitHub 0.2.5 release tarball.
+
+compile_version=017-GIT
+url="https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"
+file_size=609454
+file_md5=bb15429d8fb787e7d3f1c83ae129a999
+dir='yaml-0.2.5'
+recipe_type=configure
+
+configure_options=(
+    --disable-dependency-tracking
+)

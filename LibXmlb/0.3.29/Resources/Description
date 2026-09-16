@@ -1,0 +1,5 @@
+[Name] LibXmlb
+[Summary] Xapian-style XML indexer for AppStream
+[Description] libxmlb is a small library to help create and query binary XML blobs, used by AppStream to index component metadata. Provides xmlb.pc (>= 0.3.14), a hard dependency of AppStream which libadwaita 1.8.0 requires. Not shipped on the 017.01 ISO. Build AFTER GLib 2.84 and BEFORE AppStream/LibAdwaita. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] LGPL-2.1-or-later
+[Homepage] https://github.com/hughsie/libxmlb

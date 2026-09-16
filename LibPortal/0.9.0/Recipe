@@ -1,0 +1,32 @@
+# Custom recipe for libportal 0.9.0 (meson)
+#
+# Part of the Pantheon stack port. xdg-desktop-portal client library. Provides
+# libportal.pc + libportal-gtk3.pc + libportal-gtk4.pc. Needed by
+# PantheonScreenshot 8.0.4 (libportal + libportal-gtk4, gtk4 app) and
+# PantheonFiles 7.3.2 (libportal + libportal-gtk3, gtk3 app).
+#
+# Builds on glib/gio (index). GTK3 + GTK4 backends enabled; Qt backends off.
+# introspection + vapi ON (valac apps bind via gir/vapi).
+#
+# file_md5 + file_size verified against the flatpak/libportal 0.9.0 tarball.
+
+compile_version=017-GIT
+url="https://github.com/flatpak/libportal/releases/download/0.9.0/libportal-0.9.0.tar.xz"
+file_size=107488
+file_md5=dc54838e4529086bfb2dc6169410750b
+dir='libportal-0.9.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dbackend-gtk3=enabled"
+    "-Dbackend-gtk4=enabled"
+    "-Dbackend-qt5=disabled"
+    "-Dbackend-qt6=disabled"
+    "-Dintrospection=true"
+    "-Dvapi=true"
+    "-Ddocs=false"
+    "-Dtests=false"
+    "-Dportal-tests=false"
+    "-Ddefault_library=shared"
+)

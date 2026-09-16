@@ -1,0 +1,73 @@
+# Custom recipe for Polkit 126 (meson)
+#
+# Part of the Pantheon stack port. Provides polkit-gobject-1.pc (required by
+# gnome-settings-daemon 48.1 and SwitchboardPlugSecurityPrivacy) AND the
+# full polkitd authorization daemon so the Pantheon PolkitAgent can actually
+# answer authorization prompts on the live CD.
+#
+# Previously this recipe built with -Dlibs-only=true because polkitd's rules
+# engine embeds the duktape JS interpreter, which the ISO did not ship. Duktape
+# 2.7.0 is now provided by the Recipes/Duktape recipe, so -Dlibs-only is dropped
+# and the daemon is built.  polkitd additionally needs: expat (present),
+# libcrypt for authfw=shadow (present), and the polkitd system user (present).
+#
+# Session tracking uses elogind (libelogind.pc present via Elogind 257.16),
+# giving real per-session active/inactive tracking over the org.freedesktop.
+# login1 D-Bus interface instead of the less accurate ConsoleKit stub.  No
+# systemd, no PAM (authfw=shadow), no gettext/man/docs.
+#
+# do_patch() is REQUIRED for the elogind build: it wires logind_dep (elogind)
+# into the polkitd target so polkitd.c can see <systemd/sd-daemon.h> (only
+# provided under elogind's -I<incdir>/elogind).  See the patch body for details.
+#
+# Build AFTER: Duktape, GLib, DBus, Elogind (dev pc), Expat.
+# Build BEFORE: GnomeSettingsDaemon (needs polkit-gobject-1.pc).
+#
+# NB: meson_post_install.py chowns pkexec + polkit-agent-helper-1 to setuid
+# root (04755) and creates the rules.d dir; meson install runs as root in the
+# chroot, so that is satisfied.  If it ever runs as non-root the setuid step is
+# skipped with a warning (degrade, not failure).
+#
+# file_md5 verified against the github.com/polkit-org/polkit release tag.
+
+compile_version=017-GIT
+url="https://github.com/polkit-org/polkit/archive/refs/tags/126.tar.gz"
+file_size=456138
+file_md5=db4ce0a42d5bf8002061f8e34ee9bdd0
+dir='polkit-126'
+recipe_type=meson
+
+do_patch() {
+    # Note: run in a subshell -- the meson recipe type invokes `meson setup`
+    # from the build dir, so do_patch must not leave cwd inside the source dir.
+    ( cd "$sourcedir"
+      # polkitd.c gets `#ifdef HAVE_LIBSYSTEMD` -> `#include <systemd/sd-daemon.h>`
+      # as soon as session tracking is ANYTHING but ConsoleKit (polkit sets
+      # HAVE_LIBSYSTEMD == enable_logind).  With elogind that header only exists
+      # at <elogind/systemd/sd-daemon.h> and is reachable only via
+      # `-I<includedir>/elogind` from libelogind.pc's Cflags.  The polkitd
+      # executable target links libpolkit_gobject_dep but NOT logind_dep, so it
+      # never sees those flags and the build dies on "systemd/sd-daemon.h: No
+      # such file or directory".  The session-monitor backend compiles because
+      # the backend library DOES get logind_dep - the polkitd target does not.
+      # Fix: hand logind_dep to the polkitd target too (guarded on enable_logind
+      # so a future ConsoleKit build is unaffected).
+      sed -i \
+        's/^  dependencies: libpolkit_gobject_dep,$/  dependencies: [libpolkit_gobject_dep] + (enable_logind ? [logind_dep] : []),/' \
+        src/polkitbackend/meson.build
+    )
+}
+
+meson_variables=(
+    --buildtype=release
+    -Dlibs-only=false
+    -Dsession_tracking=elogind
+    -Dsystemdsystemunitdir=no
+    -Dgettext=false
+    -Dman=false
+    -Dintrospection=false
+    -Dauthfw=shadow
+    -Dexamples=false
+    -Dtests=false
+    -Dgtk_doc=false
+)

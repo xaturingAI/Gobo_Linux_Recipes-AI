@@ -1,0 +1,39 @@
+# Custom recipe for libgpg-error 1.52 (autotools)
+#
+# Part of the Pantheon stack port (flatpak tier). Foundation error-reporting
+# library for GnuPG components. Hard prereq of Gpgme 1.24.0 (needs
+# libgpg-error >= 1.47); no gpg stack exists on the ISO. ISO has libassuan.pc
+# but libgpg-error.pc is missing.
+#
+# Plain C library; builds with the ISO gcc/make/gettext. Tests/docs off.
+#
+# do_patch: libgpg-error 1.52 guards the `estream_t` typedef behind
+# GPGRT_ENABLE_ES_MACROS, yet its own gpg-error.h uses estream_t
+# unconditionally (gpgrt_nvc_parse/gpgrt_nvc_write at :1727). ISO-era
+# libassuan 2.5.3 includes gpg-error.h without defining that macro, so any
+# consumer (gpgme-tool, libostree, flatpak) fails with "unknown type name
+# 'estream_t'". Making the typedef unconditional matches upstream 1.37
+# behavior and the header's own usage; the es_* macros stay opt-in.
+# Idempotent: a rebuilt source tree is left untouched on re-run.
+#
+# file_md5 + file_size verified against gnupg.org tarball.
+
+compile_version=017-GIT
+url="https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.52.tar.bz2"
+file_size=1106910
+file_md5=695d642e2a5b0ea0f10402c4e156267e
+dir='libgpg-error-1.52'
+recipe_type=configure
+
+do_patch() {
+    local header
+    for header in src/gpg-error.h.in src/gpg-error.h src/gpgrt.h; do
+        [ -f "$header" ] || continue
+        sed -i -z 's|typedef struct _gpgrt__stream \*gpgrt_stream_t;\n#ifdef GPGRT_ENABLE_ES_MACROS\ntypedef struct _gpgrt__stream \*estream_t;\n#endif|typedef struct _gpgrt__stream *gpgrt_stream_t;\ntypedef struct _gpgrt__stream *estream_t;|' "$header"
+    done
+}
+
+configure_options=(
+    --disable-doc
+    --disable-tests
+)

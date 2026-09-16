@@ -1,0 +1,51 @@
+# Custom recipe for XDG-Desktop-Portal 1.22.1 (meson)
+#
+# Portal D-Bus daemon: required at runtime by libportal apps
+# (PantheonScreenshot, PantheonFiles portal calls) and by every Flatpak app.
+# Backend (xdg-desktop-portal-gtk) is a separate recipe built right after.
+#
+# sysvinit ISO adaptations:
+#   -Dsystemd=disabled: no libsystemd, no user units (elogind ISO).
+#   -Dgudev=disabled: gudev was skipped with the client-only UDisks2 build.
+#   -Dgeoclue=disabled: geoclue agent wiring not needed for portals.
+#   tests/sandboxed-* default to ENABLED upstream and pull umockdev/gstreamer
+#   test deps - all off. man-pages/documentation need rst2man/sphinx - off.
+#   -Dbwrap: resolved via PATH (Bubblewrap 0.11.0 pre-built).
+#
+# Offline subprojects: meson pulls gvdb + libglnx via wrap-git; pre_build
+# copies pinned checkouts from /Data/Compile/SubprojectSeeds over the wrap
+# stubs so nothing touches the network (host clones them at exactly the
+# revisions from subprojects/*.wrap).
+
+compile_version=017-GIT
+url="https://github.com/flatpak/xdg-desktop-portal/archive/refs/tags/1.22.1.tar.gz"
+file="xdg-desktop-portal-1.22.1.tar.gz"
+file_size=1376338
+file_md5=0262d10facd1ead283d04469b1144d2f
+dir='xdg-desktop-portal-1.22.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dsystemd=disabled"
+    "-Dsystemd-user-unit-dir=no"
+    "-Dgudev=disabled"
+    "-Dgeoclue=disabled"
+    "-Ddocumentation=disabled"
+    "-Dman-pages=disabled"
+    "-Dtests=disabled"
+    "-Dinstalled-tests=false"
+    "-Dsandboxed-image-validation=disabled"
+    "-Dsandboxed-sound-validation=disabled"
+)
+
+pre_build() {
+    rm -rf "$sourcedir/subprojects/gvdb" "$sourcedir/subprojects/libglnx"
+    cp -a /Data/Compile/SubprojectSeeds/gvdb "$sourcedir/subprojects/gvdb"
+    cp -a /Data/Compile/SubprojectSeeds/libglnx "$sourcedir/subprojects/libglnx"
+    # Kernel headers predate 5.3 (no __NR_pidfd_open / SYS_pidfd_open alias)
+    # and glibc predates 2.36's sys/pidfd.h, so meson sets HAVE_PIDFD_OPEN=0
+    # and upstream's fallback still references the missing macro. Hardcode
+    # the x86_64 syscall number instead.
+    sed -i 's/SYS_pidfd_open/434/' "$sourcedir/src/xdp-utils.c"
+}

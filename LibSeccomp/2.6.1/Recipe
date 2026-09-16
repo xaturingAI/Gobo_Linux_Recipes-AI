@@ -1,0 +1,21 @@
+# Custom recipe for LibSeccomp 2.6.1 (autotools)
+#
+# Part of the Pantheon stack port. Seccomp syscall-filter library. gnome-desktop
+# 44.5's meson.build does dependency('libseccomp') unconditionally on Linux (no
+# disable option; used by its sandbox helper), so libseccomp.pc must be on the
+# index before Gnome-Desktop.
+#
+# Build BEFORE Gnome-Desktop. Autotools with prebuilt configure.
+#
+# file_md5 verified against the v2.6.1 release tarball.
+
+compile_version=017-GIT
+url="https://github.com/seccomp/libseccomp/releases/download/v2.6.1/libseccomp-2.6.1.tar.gz"
+file_size=656231
+file_md5=33a3a5d4c526a739515ff4dc53cdc192
+dir='libseccomp-2.6.1'
+recipe_type=configure
+
+configure_options=(
+    --prefix=/usr
+)

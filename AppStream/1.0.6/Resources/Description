@@ -1,0 +1,5 @@
+[Name] AppStream
+[Summary] Software metadata and appcenter infrastructure
+[Description] AppStream provides libappstream and the appstream.pc hard-required by libadwaita 1.8.0 (meson fallback default_options mirrored in the recipe: systemd/apidocs/docs/stemming/svg/gir/vapi off, zstd on). Not shipped on the 017.01 ISO. Build AFTER GLib 2.84 + LibYaml 0.2.5 + LibXmlb 0.3.29 and BEFORE LibAdwaita. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] LGPL-2.1-or-later
+[Homepage] https://www.freedesktop.org/wiki/Distributions/AppStream/
