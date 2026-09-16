@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# OpenZFS 2.4.4 -- ZFS filesystem + volume manager for the Live CD's own
+# Linux 7.1.5 kernel (OpenZFS 2.4.4 officially supports Linux 4.18 - 7.2).
+#
+# A single configure pass builds BOTH the kernel modules and the userspace
+# (zpool, zfs, zfsd, zdb, zhack, libzfs). The modules are compiled against the
+# exact kernel installed by the Linux package
+# (/Programs/Linux/Current/lib/modules/<release>/build) -- so this must build
+# AFTER Linux, exactly like the Nvidia recipe. `make install` drops the modules
+# into $target/lib/modules via INSTALL_MOD_PATH; post_install then copies them
+# into the *Linux program's* module tree (the only tree /lib/modules points at)
+# and regenerates modules.dep.
+#
+# The GitHub release tarball does not ship a generated configure, so autogen.sh
+# (autoreconf) is required -- autoconf/automake/libtool must be available on the
+# build system. pyzfs is disabled (needs python-cffi, not on the base ISO).
+
+compile_version=017-GIT
+url="https://github.com/openzfs/zfs/archive/refs/tags/zfs-2.4.4.tar.gz"
+file_size=33804353
+file_md5=2f65acb45b2facd55c7ec958218c4768
+dir="zfs-zfs-2.4.4"
+recipe_type=configure
+override_default_options=yes
+needs_safe_linking=yes
+
+# Kernel release the modules are built against: the one installed by the Linux
+# package (see the Nvidia recipe for the rationale).
+kernelrelease="$(ls /Programs/Linux/Current/lib/modules 2>/dev/null | grep -vE '^(Current|Settings|Variable)$' | head -1)"
+[ -n "$kernelrelease" ] || Die "Could not determine kernel release from /Programs/Linux/Current/lib/modules (is Linux installed?)."
+
+configure_options=(
+    "--prefix=$target"
+    "--with-linux=/Programs/Linux/Current/lib/modules/$kernelrelease/build"
+    --disable-pyzfs
+    --disable-static
+)
+
+install_variables=(
+    "INSTALL_MOD_PATH=$target"
+)
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+do_configuration() {
+    local syssrc="/Programs/Linux/Current/lib/modules/$kernelrelease/build"
+
+    # Restore the few files the sanitized kernel source copy omits (same dance
+    # as the Nvidia recipe) before regenerating the build-tree metadata.
+    if [ ! -e "$syssrc/tools/arch/x86/tools/gen-insn-attr-x86.awk" ] || \
+       [ ! -e "$syssrc/tools/include" ] || \
+       [ ! -e "$syssrc/kernel/sched/rq-offsets.c" ]
+    then
+       Log_Normal "Restoring missing kernel sources from the kernel archive"
+       tar -C "$syssrc/tools" --strip-components=2 -xJf "$compileArchivesDir/linux-7.1.5.tar.xz" \
+           linux-7.1.5/tools/arch linux-7.1.5/tools/include \
+           || Die "Failed to restore kernel tools/ from the kernel archive."
+       mkdir -p "$syssrc/kernel/sched"
+       tar -C "$syssrc/kernel/sched" --strip-components=3 -xJf "$compileArchivesDir/linux-7.1.5.tar.xz" \
+           linux-7.1.5/kernel/sched/rq-offsets.c \
+           || Die "Failed to extract kernel/sched/rq-offsets.c from the kernel archive."
+    fi
+    Log_Normal "Preparing kernel build tree at ${syssrc}"
+    $sudo_exec make -C "$syssrc" LD=ld.bfd prepare || Die "'make prepare' in the kernel build tree failed."
+
+    Log_Normal "Generating the OpenZFS configure script (autogen.sh)"
+    ./autogen.sh || Die "autogen.sh failed -- are autoconf/automake/libtool installed on the build system?"
+
+    Log_Normal "Configuring OpenZFS (userspace + kernel modules vs $kernelrelease)"
+    ./configure "$@" || Die "OpenZFS configure failed."
+}
+
+post_install() {
+    # Move the freshly built kernel modules into the Linux program's module tree
+    # (the only tree /System/Index/lib/modules is a symlink to) so modprobe and
+    # depmod see them on the Live CD.
+    local modtree="$target/lib/modules/$kernelrelease"
+    local desttree="/Programs/Linux/Current/lib/modules/$kernelrelease"
+    if [ -d "$modtree" ]
+    then
+        Log_Normal "Installing ZFS kernel modules into $desttree"
+        cp -a "$modtree"/. "$desttree"/ || Die "Failed copying ZFS kernel modules into the Linux module tree."
+        depmod -b / "$kernelrelease" 2>/dev/null || true
+    else
+        Log_Warn "No kernel modules under $modtree were built; skipping module install."
+    fi
+}
+
+post_install_message="
+OpenZFS 2.4.4 installed (zpool, zfs, zfsd, zdb, zhack, libzfs) for kernel
+release $kernelrelease.
+- Load the driver with:   modprobe zfs
+- Create a pool with:     zpool create <pool> /dev/<disk>
+- Import pools with:      zpool import
+Built against the Live CD's own Linux 7.1.5 kernel (supported 4.18 - 7.2).
+"

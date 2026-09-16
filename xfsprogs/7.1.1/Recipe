@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# xfsprogs 7.1.1 -- userspace tools for the XFS filesystem (mkfs.xfs, xfs_repair,
+# xfs_db, xfs_copy, xfs_metadump, ...) plus libhandle and xfsprogs headers.
+#
+# The Live CD kernel already carries the XFS driver itself (CONFIG_XFS_FS=m in
+# Recipes/Linux/7.1.5/x86_64/dot-config), so no kernel module build is needed
+# -- only the tooling. xfs_scrub is disabled: it needs liburcu, which is not on
+# the base ISO; everything else builds against the base gettext/libs (libuuid
+# from util-linux, libintl).
+
+compile_version=017-GIT
+url="https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-7.1.1.tar.xz"
+file_size=1595568
+file_md5=befa97b62b635a1817db666806d40411
+dir="xfsprogs-7.1.1"
+recipe_type=configure
+override_default_options=yes
+
+configure_options=(
+    "--prefix=$target"
+    --disable-scrub
+    --disable-editline
+    --enable-shared=yes
+)
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+post_install_message="
+xfsprogs 7.1.1 installed (mkfs.xfs, xfs_repair, xfs_db, xfs_check, xfs_copy,
+xfs_metadump, xfs_scrub is NOT built -- it would require liburcu).
+The XFS kernel driver module is built into the Live CD kernel
+(CONFIG_XFS_FS=m). Load it with:  modprobe xfs
+"
