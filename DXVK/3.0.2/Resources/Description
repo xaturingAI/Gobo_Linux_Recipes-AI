@@ -1,0 +1,4 @@
+[Name] DXVK
+[Summary] Vulkan-based D3D9/D3D10/D3D11 translation layer for Wine (d3d8, d3d9, d3d10core, d3d11, dxgi)
+[License] Zlib
+[Homepage] https://github.com/doitsujin/dxvk

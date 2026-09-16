@@ -1,0 +1,10 @@
+GCC
+GMP
+MPFR
+MPC
+Texinfo
+ZLib
+Binutils
+Bison
+Flex
+Make

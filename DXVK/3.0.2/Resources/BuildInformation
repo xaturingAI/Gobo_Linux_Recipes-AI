@@ -1,0 +1,5 @@
+Prebuilt official release tarball (dxvk-3.0.2.tar.gz), manifest recipe.
+x32/ and x64/ DLL directories map to lib/dxvk/x32 and lib/dxvk/x64.
+These are Windows PE DLLs used by Wine (DXVK), not Linux libraries; the
+Vulkan-Loader dependency is a defensive build-order hint for recipe
+resolution (Wine/Heroic/Lutris set it up per-prefix via the DXVK path).

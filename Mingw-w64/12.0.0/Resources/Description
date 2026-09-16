@@ -1,0 +1,1 @@
+MinGW-w64 cross compiler toolchain (x86_64-w64-mingw32): binutils, GCC 14.2.0, headers and CRT, built from source into a single program tree. Required to build the Windows PE DLLs of Wine, DXVK and vkd3d(-proton).

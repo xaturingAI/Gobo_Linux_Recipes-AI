@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Vkd3d-Proton 3.0.1 for GoboLinux, packaged from the official release
+# tarball. Vulkan-based D3D12 translation layer for Wine (d3d12, d3d12core),
+# the vkd3d-proton variant tuned for Proton games. Prebuilt 32-bit (x86) and
+# 64-bit (x64) DLLs are installed under lib/vkd3d/, so a prefix's VKD3D path
+# can be pointed at /Programs/Vkd3d-Proton/3.0.1/lib/vkd3d (Lutris ships it
+# into each prefix from there). The setup_vkd3d_proton.sh helper is kept at
+# lib/vkd3d/ but the DLLs are the only thing needed.
+#
+# The release is distributed as a zstd-compressed tarball; Compile downloads
+# and md5-checks the file, then pre_install decompresses it through zstd
+# (present on the ISO) into a plain tar stream.
+compile_version=017-GIT
+url="https://github.com/HansKristian-Work/vkd3d-proton/releases/download/v3.0.1/vkd3d-proton-3.0.1.tar.zst"
+file_size=5163266
+file_md5=e5e9ca431850c298a89f7b327fe747f0
+recipe_type=manifest
+uncompress=no
+
+manifest=(
+    "vkd3d-proton-3.0.1/setup_vkd3d_proton.sh:lib/vkd3d/setup_vkd3d_proton.sh"
+    "vkd3d-proton-3.0.1/x86:lib/vkd3d/x86"
+    "vkd3d-proton-3.0.1/x64:lib/vkd3d/x64"
+)
+
+pre_install() {
+    local archive="$compileArchivesDir/vkd3d-proton-3.0.1.tar.zst"
+    Log_Normal "Unpacking ${archive}"
+    zstd -dc "$archive" | tar x
+}

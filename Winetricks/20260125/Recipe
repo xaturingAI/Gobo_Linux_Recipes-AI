@@ -1,0 +1,15 @@
+# Custom recipe for Winetricks 20260125 (plain Makefile installer)
+# Self-contained shell script + man page + .desktop. Nothing to compile;
+# the Makefile only installs files under $target. Requires Wine or Proton
+# at runtime (winetricks --self-update stays disabled on a read-only ISO).
+compile_version=017-GIT
+url="https://github.com/Winetricks/winetricks/archive/refs/tags/20260125.tar.gz"
+file_size=706134
+file_md5=bec36705f1cd1cdb295c73722e3a7da5
+file="winetricks-20260125.tar.gz"
+dir='winetricks-20260125'
+recipe_type=makefile
+makefile='Makefile'
+make_variables=(
+    "PREFIX=$target"
+)

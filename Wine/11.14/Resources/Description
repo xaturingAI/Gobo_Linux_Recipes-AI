@@ -1,0 +1,5 @@
+[Name] Wine
+[Summary] Windows API compatibility layer for Linux
+[License] LGPL-2.1
+[Description] Default working Wine on this CD, packaged from the Kron4ek prebuilt vanilla (new-WoW64) 11.14 release. No source build or multilib toolchain involved; the binaries only need glibc 2.14/2.17 so they run on the CD's glibc 2.30. wine-mono 11.2.0 and wine-gecko 2.47.4 MSIs are baked into share/wine/{mono,gecko} for offline first-run. The Wine-Source recipe is the source-build alternative.
+[Homepage] https://www.winehq.org

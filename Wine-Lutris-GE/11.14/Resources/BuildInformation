@@ -1,0 +1,5 @@
+Kron4ek prebuilt staging Wine 11.14 (tarball top dir wine-11.14-staging-amd64).
+Same monolithic bin/lib/share layout and glibc 2.14/2.17 requirements as the
+vanilla Wine/11.14 recipe. Baked mono/gecko MSIs identical to Wine/11.14.
+This is the lutris-GE answer for this CD: upstream lutris-GE needs glibc 2.38
+and cannot run on the CD's glibc 2.30, while Kron4ek's staging build does.
