@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# 32-bit Mesa DRI drivers and GLX/EGL backends extracted from Debian bookworm
+# i386 packages.  Provides software-rendered OpenGL via the Mesa DRI stack as a
+# fallback when no 32-bit proprietary driver is present (e.g. Intel or AMD).
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/m/mesa/libgl1-mesa-dri_22.3.6-1+deb12u2_i386.deb"
+file_size=7416536
+file_md5=7634078a36c2a72e241dca445e453e52
+recipe_type=manifest
+uncompress=no
+
+deb_glx_url="https://deb.debian.org/debian/pool/main/m/mesa/libglx-mesa0_22.3.6-1+deb12u2_i386.deb"
+deb_egl_url="https://deb.debian.org/debian/pool/main/m/mesa/libegl-mesa0_22.3.6-1+deb12u2_i386.deb"
+
+pre_install() {
+    local base="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking libgl1-mesa-dri"
+    ar p "$base" data.tar.xz | tar xJf -
+
+    local dl_dir="$compileArchivesDir"
+    for pair in \
+        "libglx-mesa0:${deb_glx_url}:libglx-mesa0_i386.deb" \
+        "libegl-mesa0:${deb_egl_url}:libegl-mesa0_i386.deb"; do
+        local name="${pair%%:*}"
+        local rest="${pair#*:}"
+        local file_url="${rest%%:*}"
+        local local_name="${rest##*:}"
+        local deb="$dl_dir/$local_name"
+        # Use pre-downloaded file if present; otherwise fetch.
+        if [ ! -s "$deb" ]; then
+            Log_Normal "Fetching ${name} i386"
+            curl -sL -o "$deb" "$file_url" || Die "Failed downloading ${name} i386."
+        else
+            Log_Normal "Using pre-downloaded ${name} i386"
+        fi
+        ar p "$deb" data.tar.xz | tar xJf -
+    done
+}
+
+do_install() {
+    mkdir -p "$target"/lib32/dri
+
+    # DRI drivers from libgl1-mesa-dri
+    cp -a usr/lib/i386-linux-gnu/dri/*.so "$target"/lib32/dri/ || Die "Failed copying Mesa DRI drivers."
+
+    # libglx-mesa0: Mesa GLX and indirect rendering
+    cp -a usr/lib/i386-linux-gnu/libGLX_mesa.so.0* "$target"/lib32/ || Die "Failed copying libGLX_mesa."
+    cp -a usr/lib/i386-linux-gnu/libGLX_indirect.so.0* "$target"/lib32/ || Die "Failed copying libGLX_indirect."
+
+    # libegl-mesa0: Mesa EGL backend
+    cp -a usr/lib/i386-linux-gnu/libEGL_mesa.so.0* "$target"/lib32/ || Die "Failed copying libEGL_mesa."
+}

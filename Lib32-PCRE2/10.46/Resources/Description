@@ -1,0 +1,4 @@
+[Name] Lib32-PCRE2
+[Summary] 32-bit PCRE2 regex library for Wine/Proton
+[License] BSD-3-Clause
+[Homepage] https://github.com/PCRE2Project/pcre2

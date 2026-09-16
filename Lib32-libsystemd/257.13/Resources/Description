@@ -1,0 +1,4 @@
+[Name] Lib32-libsystemd
+[Summary] 32-bit libsystemd ABI (library only; no systemd daemons)
+[License] LGPL-2.1-or-later
+[Homepage] https://github.com/systemd/systemd

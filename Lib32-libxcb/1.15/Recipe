@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# 32-bit libxcb and extension libraries. Multiple Debian packages are fetched
+# in pre_install because the Compile machinery only downloads one URL.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb1_1.15-1_i386.deb"
+file_size=148040
+file_md5=c3775ebb4c646253013e1d548102bf22
+recipe_type=manifest
+uncompress=no
+
+xcb_render_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-render0_1.15-1_i386.deb"
+
+xcb_shm_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-shm0_1.15-1_i386.deb"
+
+xcb_shape_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-shape0_1.15-1_i386.deb"
+
+xcb_xfixes_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-xfixes0_1.15-1_i386.deb"
+
+xcb_xinerama_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-xinerama0_1.15-1_i386.deb"
+
+xcb_xkb_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-xkb1_1.15-1_i386.deb"
+
+_fetch_and_unpack() {
+    local url="$1" name="$2" dest="$3"
+    curl -sL -o "$name.deb" "$url" || Die "Failed downloading $name i386."
+    mkdir -p "$dest"
+    ar p "$name.deb" data.tar.xz | tar xJf - -C "$dest"
+    rm -f "$name.deb"
+}
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+
+    Log_Normal "Fetching libxcb extension packages"
+    _fetch_and_unpack "$xcb_render_url"  libxcb-render  xcb_render
+    _fetch_and_unpack "$xcb_shm_url"    libxcb-shm    xcb_shm
+    _fetch_and_unpack "$xcb_shape_url"  libxcb-shape  xcb_shape
+    _fetch_and_unpack "$xcb_xfixes_url" libxcb-xfixes xcb_xfixes
+    _fetch_and_unpack "$xcb_xinerama_url" libxcb-xinerama xcb_xinerama
+    _fetch_and_unpack "$xcb_xkb_url"    libxcb-xkb    xcb_xkb
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+
+    # libxcb1
+    cp -a usr/lib/i386-linux-gnu/libxcb.so.1* "$target"/lib32/ || Die "Failed copying libxcb."
+    cp -a xcb_render/usr/lib/i386-linux-gnu/libxcb-render.so.0* "$target"/lib32/ || Die "Failed copying libxcb-render."
+    cp -a xcb_shm/usr/lib/i386-linux-gnu/libxcb-shm.so.0* "$target"/lib32/ || Die "Failed copying libxcb-shm."
+
+    # libxcb extension packages
+    cp -a xcb_shape/usr/lib/i386-linux-gnu/libxcb-shape.so.0* "$target"/lib32/ || Die "Failed copying libxcb-shape."
+    cp -a xcb_xfixes/usr/lib/i386-linux-gnu/libxcb-xfixes.so.0* "$target"/lib32/ || Die "Failed copying libxcb-xfixes."
+    cp -a xcb_xinerama/usr/lib/i386-linux-gnu/libxcb-xinerama.so.0* "$target"/lib32/ || Die "Failed copying libxcb-xinerama."
+    cp -a xcb_xkb/usr/lib/i386-linux-gnu/libxcb-xkb.so.1* "$target"/lib32/ || Die "Failed copying libxcb-xkb."
+}

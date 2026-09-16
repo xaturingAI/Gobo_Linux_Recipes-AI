@@ -1,0 +1,4 @@
+[Name] Lib32-SDL2
+[Summary] 32-bit SDL2 runtime for games and Steam
+[License] Zlib
+[Homepage] https://www.libsdl.org/

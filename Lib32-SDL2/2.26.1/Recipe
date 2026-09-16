@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# 32-bit SDL2 runtime extracted from Debian bookworm i386 package.
+# Required by the Steam client and many 32-bit games for input, audio,
+# and window management in Wine/Proton.
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/libs/libsdl2/libsdl2-2.0-0_2.26.5+dfsg-1_i386.deb"
+file_size=645596
+file_md5=f77684f04b5a93e89ce3703ea71d8082
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+
+    cp -a usr/lib/i386-linux-gnu/libSDL2-2.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit SDL2."
+}

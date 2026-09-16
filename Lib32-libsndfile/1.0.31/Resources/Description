@@ -1,0 +1,4 @@
+[Name] Lib32-libsndfile
+[Summary] 32-bit sound file I/O library for audio in games
+[License] LGPL-2.1+
+[Homepage] https://libsndfile.github.io/libsndfile/

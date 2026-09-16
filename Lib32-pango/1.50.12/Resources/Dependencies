@@ -1,0 +1,6 @@
+Glibc-32
+Lib32-freetype
+Lib32-fontconfig
+Lib32-harfbuzz
+Lib32-fribidi
+Lib32-libxft

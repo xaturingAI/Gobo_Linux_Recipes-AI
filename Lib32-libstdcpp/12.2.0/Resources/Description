@@ -1,0 +1,4 @@
+[Name] Lib32-libstdcpp
+[Summary] 32-bit GCC standard C++ library
+[License] GPL-3.0+ with GCC Runtime Library Exception
+[Homepage] https://gcc.gnu.org/

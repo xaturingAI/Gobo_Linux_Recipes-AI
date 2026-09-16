@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# 32-bit libsndfile extracted from Debian bookworm i386 package.
+# Provides WAV/FLAC/OGG I/O for 32-bit game audio in Wine/Proton.
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/libs/libsndfile/libsndfile1_1.2.0-1+deb12u1_i386.deb"
+file_size=219504
+file_md5=d6bbe6c54f64d6a0e0d66dc356c3ad84
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+
+    cp -a usr/lib/i386-linux-gnu/libsndfile.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libsndfile."
+}

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libv/libva/libva2_2.17.0-1_i386.deb"
+file_size=72776
+file_md5=b8168eebf0a8f4c1911aaeb4d3d21d2b
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libva.so.2* "$target"/lib32/ || Die "Failed copying 32-bit libva."
+}

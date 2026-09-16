@@ -1,0 +1,4 @@
+[Name] Lib32-libmount
+[Summary] 32-bit libmount for Steam runtime
+[License] LGPL-2.1-or-later
+[Homepage] https://github.com/util-linux/util-linux

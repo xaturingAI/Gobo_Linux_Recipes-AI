@@ -1,0 +1,4 @@
+[Name] Lib32-libxcb
+[Summary] 32-bit XCB protocol library and extensions for Steam
+[License] MIT
+[Homepage] https://xcb.freedesktop.org/

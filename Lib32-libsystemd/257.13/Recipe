@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit libsystemd ABI (library only; no systemd daemons)
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/s/systemd/libsystemd0_257.13-1~deb13u1_i386.deb"
+file_size=486216
+file_md5=a05b4c2a7aa2de8d4a988f1b72e56d7a
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libsystemd.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libsystemd.so.0."
+}
+

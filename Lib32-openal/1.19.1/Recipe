@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/o/openal-soft/libopenal1_1.19.1-2_i386.deb"
+file_size=512060
+file_md5=cf4d7c87aafba26f4629139b1a423993
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libopenal.so.1* "$target"/lib32/ || Die "Failed copying 32-bit openal."
+}

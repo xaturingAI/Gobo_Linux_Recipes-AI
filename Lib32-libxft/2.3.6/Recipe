@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/x/xft/libxft2_2.3.6-1_i386.deb"
+file_size=62768
+file_md5=2234dd011ba28d9fb7176d041fc58ca7
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXft.so.2* "$target"/lib32/ || Die "Failed copying 32-bit libxft."
+}
