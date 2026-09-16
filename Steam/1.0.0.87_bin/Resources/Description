@@ -1,0 +1,5 @@
+[Name] Steam
+[Summary] Valve's Steam gaming platform.
+[License] Proprietary
+[Description] Steam for Linux, the client for Valve's digital distribution platform. Ships the official launcher plus the 32-bit client bootstrap (bootstraplinux_ubuntu12_32.tar.xz). The client is 32-bit, so a 32-bit base (Glibc-32) and 32-bit GPU driver libraries are required. On first run Steam downloads its scout runtime into ~/.local/share/Steam; for an offline Live CD bake the runtime into the squashfs image first.
+[Homepage] https://store.steampowered.com

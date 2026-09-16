@@ -1,0 +1,5 @@
+[Name] Heroic Games Launcher
+[Summary] Launcher for GOG, Epic Games and Amazon Games
+[License] GPL-3.0
+[Homepage] https://heroicgameslauncher.com
+[Description] Heroic Games Launcher is a native desktop launcher for GOG, Epic Games Store and Amazon Games, written in Electron. On this Live CD it is the primary way to run non-Steam Windows games: it manages Wine prefixes, per-game DXVK/Vkd3d-Proton setup and GOG/Epic installs, delegating actual game execution to the bundled Wine 11.14 / Wine-Lutris-GE. The bundled Electron binary runs with --no-sandbox because the chrome-sandbox helper cannot be made setuid on a read-only Live CD.

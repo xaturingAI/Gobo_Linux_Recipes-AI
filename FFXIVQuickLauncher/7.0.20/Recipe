@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# XIVLauncher (FFXIVQuickLauncher) 7.0.20 for GoboLinux, packaged from the
+# official Squirrel "full" nupkg (Windows .NET WPF build).  The nupkg is a
+# plain zip whose lib/app/ tree contains the complete self-contained .NET 9
+# application (including the bundled coreclr runtime and DirectWriteForwarder),
+# so no .NET install is needed inside the Wine prefix -- it just needs a Wine
+# that can run .NET Core/WPF apps (our own Wine 11.14 / Wine-Lutris-GE
+# staging build handles this).
+#
+# The app is Windows-only: the "native Linux" XIVLauncher is a separate
+# upstream delivery (Flathub / XIVLauncher.Core) with its own release stream,
+# so here we ship the Windows build under Wine, exactly as Lutris/Heroic
+# run Windows games on this CD.
+#
+# On first launch the app creates its own Wine prefix, downloads the FFXIV
+# game client, and sets up Dalamud; all persistent data lives under
+# WINEPREFIX (defaults to ~/.local/share/wineprefixes/xivlauncher).
+# The app bundles aria2c-xl.exe for game downloads (in Resources/) and
+# self-updates via Squirrel (no Winetricks needed).
+
+compile_version=017-GIT
+url="https://github.com/goatcorp/FFXIVQuickLauncher/releases/download/7.0.20/XIVLauncher-7.0.20-full.nupkg"
+file_size=112025386
+file_md5=f1d38b524bdacfe185455d9921ee8148
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+unmanaged_files=(
+    usr/share/applications/xivlauncher.desktop
+    usr/share/pixmaps/xivlauncher.png
+)
+
+manifest=(
+    "lib/app:lib/xivlauncher"
+    "xivlauncher:bin/xivlauncher"
+)
+
+pre_install() {
+    local nupkg="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${nupkg}"
+    unzip -qo "$nupkg" -d .
+
+    # Menu icon: the nupkg ships only setup.ico (a 256x256 PNG-in-ICO).
+    # Convert it to a plain PNG for the desktop entry.
+    mkdir -p usr/share/pixmaps
+    magick setup.ico -thumbnail 256x256 usr/share/pixmaps/xivlauncher.png
+
+    cat > xivlauncher <<'EOF'
+#!/bin/bash
+# XIVLauncher (FFXIV) under Wine.  The app is self-contained (.NET 9 runtime
+# bundled in lib/xivlauncher) and manages its own prefix: game files,
+# Dalamud plugin framework and updates all live under WINEPREFIX.
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+APP="$DIR/lib/xivlauncher/XIVLauncher.exe"
+
+WINE="${WINE:-}"
+if [ -z "$WINE" ]; then
+    for cand in "/Programs/Wine-Lutris-GE/Current/bin/wine" \
+                "/Programs/Wine/Current/bin/wine" \
+                "$(command -v wine 2>/dev/null)"; do
+        [ -n "$cand" ] && [ -x "$cand" ] && WINE="$cand" && break
+    done
+fi
+[ -n "$WINE" ] || { echo "xivlauncher: no wine found"; exit 1; }
+
+WINEPREFIX="${WINEPREFIX:-$HOME/.local/share/wineprefixes/xivlauncher}"
+export WINEPREFIX WINEDEBUG="${WINEDEBUG:--all}"
+
+if [ ! -d "$WINEPREFIX/drive_c" ]; then
+    echo "Initializing Wine prefix $WINEPREFIX"
+    mkdir -p "$WINEPREFIX"
+    "$WINE" wineboot --init 2>/dev/null
+fi
+
+exec "$WINE" "$APP" "$@"
+EOF
+    chmod +x xivlauncher
+
+    mkdir -p usr/share/applications
+    cat > usr/share/applications/xivlauncher.desktop <<'EOF'
+[Desktop Entry]
+Name=XIVLauncher
+Comment=FFXIV Quick Launcher (Windows, under Wine)
+Exec=xivlauncher
+Icon=xivlauncher
+Terminal=false
+Type=Application
+Categories=Game;
+StartupWMClass=XIVLauncher
+EOF
+}

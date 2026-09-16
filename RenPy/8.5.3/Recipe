@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Ren'Py 8.5.3 (Visual Novel Engine) SDK for GoboLinux, packaged from the
+# official prebuilt Linux SDK tarball. The SDK is fully self-contained: it
+# bundles its own CPython 3.12 (lib/py3-*/python), SDL2 stack, the compiled
+# pygame_sdl2/Cython modules, and the "renpy" launcher binary per-platform.
+#
+# Why the SDK and not a source build: a from-scratch compile would need the
+# whole module toolchain (SDL2, SDL2_image/mixer/ttf, Cython, pygame_sdl2)
+# rebuilt first — none of which we ship. The SDK is the upstream-supported
+# "extract and run" distribution; renpy.sh resolves its own location, computes
+# the platform dir under lib/, and execs lib/py3-linux-x86_64/renpy.
+#
+# Layout: the whole SDK tree is installed to lib/renpy (so renpy.sh's ROOT is
+# .../lib/renpy and it finds .../lib/renpy/lib/py3-linux-x86_64/renpy), with a
+# small wrapper renpy -> bin/ that launches it. renpy.sh runs the bundled
+# binary with no suid helpers, so it works on the ephemeral Live CD.
+#
+# Bundling a game: drop the game's project directory into lib/renpy/ next to
+# this SDK; it is then selectable from the launcher (or launch directly via
+#   renpy <sdk>/<game>).
+#
+# pre_install stages the launcher's .desktop/.png under usr/share/; installing
+# those into the program tree (share/applications + share/pixmaps) makes Gobo's
+# install rule auto-link the .desktop into /usr/share/applications and
+# /System/Index/share/applications so the menu entry appears on rebuilt ISOs.
+# (apply-live-fixes 14b covers ISOs merged from the pre-fix package.)
+
+compile_version=017-GIT
+url="https://www.renpy.org/dl/8.5.3/renpy-8.5.3-sdk.tar.bz2"
+file_size=153611590
+file_md5=e7d311c148bf62ddccd1753029ed0fa7
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "renpy-8.5.3-sdk:lib/renpy"
+    "renpy:bin/renpy"
+    "usr/share/applications/renpy.desktop:share/applications/renpy.desktop"
+    "usr/share/pixmaps/renpy.png:share/pixmaps/renpy.png"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    tar xjf "$tarball"
+
+    cat > renpy <<'EOF'
+#!/bin/sh
+# Resolve the real path of this wrapper, then the SDK root two levels up.
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+exec "$DIR/lib/renpy/renpy.sh" "$@"
+EOF
+    chmod +x renpy
+
+    mkdir -p usr/share/applications usr/share/pixmaps
+    cp -a renpy-8.5.3-sdk/launcher/game/images/logo32.png usr/share/pixmaps/renpy.png
+    cat > usr/share/applications/renpy.desktop <<'EOF'
+[Desktop Entry]
+Name=Ren'Py
+Comment=Ren'Py Visual Novel Engine SDK
+Exec=renpy
+Icon=renpy
+Terminal=false
+Type=Application
+Categories=Development;Game;
+EOF
+}

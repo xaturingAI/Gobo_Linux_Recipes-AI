@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# Lutris 0.5.22 for GoboLinux (python recipe, python_major=3.11).
+# Lutris hard-requires Python >= 3.10 (setup.py: "Python >= 3.10 is required
+# to run Lutris"), so it is built against the CD's new main interpreter
+# Python 3.11.12. PyGObject/PyCairo come from their Gobo recipes (their
+# meson installs emit PyGObject-3.44.1-py3.11.egg-info / pycairo-*egg-info,
+# so setup.py's easy_install dependency check finds them satisfied).
+#
+# The remaining install_requires are pip packages. pre_build installs them
+# into the chroot's python3.11 system site-packages FIRST so easy_install
+# resolves them without touching PyPI at install time, then re-installs them
+# with pip --target into the package's own lib/python3.11/site-packages so
+# they end up on the ISO (the chroot's /System pip installs are not merged).
+#
+# dbus-python needs dbus headers (ISO DBus/1.12.16, via pkg-config); evdev
+# needs kernel UAPI headers -- already provided by the ISO's Linux-Headers
+# package at /usr/include (linux/input.h, linux/uinput.h, linux/input-event-codes.h),
+# which evdev's setup.py picks up from its default /usr/include search. Do NOT
+# add /Programs/Linux/Current/lib/modules/*/build/include here: those are the
+# kernel-INTERNAL headers, and leaking them into CPPFLAGS breaks every package's
+# compile (glibc's bits/local_lim.h -> <linux/limits.h> resolves to the internal
+# tree, whose <linux/types.h> redefines fd_set/dev_t/loff_t/... against glibc).
+# Both have source-only sdists; pip's cached wheel makes the --target pass
+# reuse the first build.
+compile_version=017-GIT
+# The v0.5.22 GitHub RELEASE ships no source asset (only lutris_0.5.22_all.deb;
+# the releases/download/v0.5.22/lutris-0.5.22.tar.gz path 404s, and 0.5.22 is
+# not on PyPI), so fetch the tag's auto-generated archive instead. It is the
+# same 2208777 bytes / md5 d1d18c29... as the original recipe expected and
+# extracts to lutris-0.5.22/ (matches dir below).
+url="https://github.com/lutris/lutris/archive/refs/tags/v0.5.22.tar.gz"
+file_size=2208777
+file_md5=d1d18c29a400df9a19c1f0357a2f3ccb
+dir='lutris-0.5.22'
+recipe_type=python
+python_major=3.11
+
+_lutris_clean_index() {
+    # SandboxInstall merges the live tree as overlay lower, so ANY stale entry
+    # named lutris under the system site-packages makes setup.py's own mkdir on
+    # /usr/lib/python3.11/site-packages/lutris fail with 'File exists'.  Drop the
+    # whole /Programs/Lutris symlink farm (bin + every pip-dep entry, ~300 links)
+    # AND unlink the exact known collision names on both alias paths
+    # (/usr/lib -> ../System/Index/lib resolve to the same tree).
+    # (Never touches /Programs/Wine-Lutris-GE: matched by /Programs/Lutris/.)
+    find /System/Index /usr -type l -lname '/Programs/Lutris/*' -delete 2>/dev/null
+    rm -rf \
+        /usr/lib/python3.11/site-packages/lutris \
+        /System/Index/lib/python3.11/site-packages/lutris \
+        /usr/lib/python3.11/site-packages/lutris-0.5.22-py3.11.egg-info \
+        /System/Index/lib/python3.11/site-packages/lutris-0.5.22-py3.11.egg-info \
+        /usr/bin/lutris /System/Index/bin/lutris
+}
+
+pre_build() {
+    _lutris_clean_index
+    echo "[lutris pre_build] stale index lutris links swept" >&2
+    # Wipe $target, then install the pip deps into the chroot's python3.11
+    # system site-packages FIRST so easy_install resolves them without touching
+    # PyPI at install time, and re-install them with pip --target into the
+    # package's own site-packages so they end up on the ISO.
+    rm -rf "$target" &&
+    python3.11 -m pip install --no-cache-dir --disable-pip-version-check \
+        certifi dbus-python distro evdev lxml pillow pypresence PyYAML requests protobuf "moddb>=0.8.1" &&
+    mkdir -p "$target/lib/python3.11/site-packages" &&
+    python3.11 -m pip install --disable-pip-version-check \
+        --target "$target/lib/python3.11/site-packages" \
+        certifi dbus-python distro evdev lxml pillow pypresence PyYAML requests protobuf "moddb>=0.8.1"
+}
+
+# Runs as the LAST hook before SandboxInstall (create_dirs_first python flow:
+# Pre_Installation_Preparation / safe-copy re-points the index links into
+# -safelinking BEFORE pre_build, so pre_build's sweep is too early and the
+# factory snapshots the stale links).  Deleting here lands directly in the
+# overlay lower layer an instant before setup.py's mkdir, closing the window.
+pre_install() {
+    _lutris_clean_index
+    echo "[lutris pre_install] lutris collision paths clean before SandboxInstall" >&2
+}
+
+# Runs AFTER the framework installs Lutris itself into
+# $target/lib/python3.11/site-packages (pre_build only placed the pip deps
+# there -- at that point lutris/services/base.py does not exist yet, which
+# made the patch below fail with FileNotFoundError).
+post_install() {
+    # Lutris' own bin/lutris wrapper imports the package from ../lib/lutris
+    # (source/meson layout), but pip installs it into
+    # lib/python3.11/site-packages.  Bridge the two, and relink share so
+    # datapath() resolves <prefix>/share/lutris through lib/lutris/share.
+    ln -sfn python3.11/site-packages "$target/lib/lutris" &&
+    rm -rf "$target/lib/python3.11/site-packages/share" &&
+    ln -sfn ../../../share "$target/lib/python3.11/site-packages/share" &&
+    # WebKitGTK is NOT shipped on the ISO.  webconnect_dialog.py calls
+    # gi.require_version("WebKit2", ...) at module import time and is
+    # imported at the top of lutris/services/base.py, which aborts startup
+    # with `Namespace WebKit2 not available`.  Defer that import to first
+    # use inside OnlineService.login() so the app starts without WebKit;
+    # only the account-login popup needs it.
+    python3.11 - "$target" <<'PYEOF'
+import os, re, sys
+base = os.path.join(sys.argv[1], "lib/python3.11/site-packages/lutris/services/base.py")
+src = open(base).read()
+pat = re.compile(r"^from lutris\.gui\.dialogs\.webconnect_dialog import WebConnectDialog\n", re.M)
+if pat.search(src):
+    # remove only the top-level (column-0) import; the in-login lazy line
+    # (8-space indented) and already-patched trees must stay untouched.
+    src = pat.sub("", src, count=1)
+    marker = "def login(self, parent=None):\n"
+    lazy = "        from lutris.gui.dialogs.webconnect_dialog import WebConnectDialog\n"
+    if marker in src and (marker + lazy) not in src:
+        src = src.replace(marker, marker + lazy, 1)
+    # Persist regardless of the marker (a version bump may reword login):
+    # the eager import was removed above and must not silently resurface.
+    open(base, "w").write(src)
+PYEOF
+}

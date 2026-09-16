@@ -1,0 +1,15 @@
+Packaged from the official GitHub release nupkg (Squirrel app package), not a
+from-source build: XIVLauncher's main csproj targets net9.0-windows + WPF and
+there is no supported Linux publish for this tag; the "native Linux" line is a
+separate upstream project (XIVLauncher.Core / Flathub) with its own version
+stream. The Windows build runs cleanly under our Wine 11.14 (new WoW64, no
+lib32) -- DXVK/Vkd3d-Proton are installed as deps so the FFXIV game client can
+use them once launched.
+
+Layout: lib/xivlauncher holds the whole lib/app tree from the nupkg; the
+bin/xivlauncher wrapper prefers Wine-Lutris-GE for daemons/FFXIV compatibility
+then falls back to Wine, and boots a dedicated prefix if absent. Because the
+app is self-contained, no .NET framework install in the prefix is required.
+
+Icon: the nupkg's setup.ico is converted to a 256px PNG (ImageMagick) at build
+time for the desktop entry.

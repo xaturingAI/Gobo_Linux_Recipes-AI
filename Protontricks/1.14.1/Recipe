@@ -1,0 +1,42 @@
+# Custom recipe for Protontricks 1.14.1 (python) -- rebuilt for the CD's new
+# main Python 3.11.12 (python3.8 no longer exists as the default interpreter).
+# Wrapper to run Winetricks verbs against Proton prefixes. Pure Python;
+# BuildType_python installs the app + entry scripts into /System/Index.
+# pre_build installs the runtime deps (vdf, Pillow) so the legacy easy_install
+# dependency step finds them satisfied, and re-installs them into the package
+# tree (pip --target) so they ship on the ISO. Pillow is pinned <11: the last
+# line with py3.8 wheels, still a stable known-good version on 3.11.
+#
+# The SYSTEM-site-packages install deliberately does NOT request Pillow:
+# Lutris (built earlier in step_winedev) already put pillow 12.3.0 in the
+# shared /System/Index/lib/python3.11/site-packages, which satisfies
+# setup.cfg's unversioned `Pillow` easy_install check. Requesting 'Pillow<11'
+# there made pip try to DOWNGRADE 12.3.0; its uninstall/relink through the
+# Gobo index symlinks blew up (pillow.libs/libbrotlidec-*.so.1 OSError), the
+# pre_build chain aborted, and protontricks shipped WITHOUT vdf/Pillow.
+# The --target pass below still installs the pinned Pillow<11 (10.4.0) into
+# the package's own tree, which is what runs on the CD.
+compile_version=017-GIT
+url="https://pypi.org/packages/source/p/protontricks/protontricks-1.14.1.tar.gz"
+file_size=187504
+file_md5=d4d54d0914f36923213d2a87865c74f8
+dir='protontricks-1.14.1'
+recipe_type=python
+# Target the CD's new main interpreter explicitly (python3.11, from the
+# Python 3.11.12 recipe); BuildType_python's sane_check runs python3.11 -V.
+python_major=3.11
+
+pre_build() {
+    # pip 24.x from Python 3.11.12's ensurepip handles manylinux_2_28 wheels.
+    python3.11 -m pip install --no-cache-dir --disable-pip-version-check vdf &&
+    mkdir -p "$target/lib/python3.11/site-packages" &&
+    python3.11 -m pip install --disable-pip-version-check \
+        --target "$target/lib/python3.11/site-packages" vdf 'Pillow<11' &&
+    # setup.cfg's `setup_requires = setuptools-scm` makes easy_install fetch the
+    # newest setuptools-scm + vcs_versioning + typing_extensions during egg_info.
+    # The sdist already ships a correct static _version.py (1.14.1), so drop the
+    # build-time SCM requirement and pin the version statically. NOTE: CWD is
+    # $builddir, use $sourcedir.
+    sed -i -e '/^setup_requires = $/{N;s/.*\n\t.*//}' "$sourcedir/setup.cfg"
+    sed -i 's/^name = protontricks$/name = protontricks\nversion = 1.14.1/' "$sourcedir/setup.cfg"
+}

@@ -1,0 +1,8 @@
+Official portable Linux x64 tarball (Heroic-2.22.0-linux-x64.tar.xz),
+manifest recipe with uncompress=no. The extracted Electron dist tree maps to
+lib/heroic/; the real binary is renamed heroic-bin and a --no-sandbox wrapper
+is installed as bin/heroic (chrome-sandbox is not setuid on the CD). The
+desktop entry and pixmap icon are installed as unmanaged files, following the
+Discord/Steam convention. DLL/prefix management is delegated to Wine and
+DXVK/Vkd3d-Proton at runtime. All Electron shared libraries (incl.
+libXss.so.1 from the ISO's LibXScrnSaver 1.2.3) are present on the CD.
