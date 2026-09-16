@@ -1,0 +1,4 @@
+[Name] LibDecor
+[Summary] Wayland window decorations library (libdecor, xdg-decoration)
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/libdecor/libdecor
