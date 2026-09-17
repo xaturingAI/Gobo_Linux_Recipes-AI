@@ -1,0 +1,5 @@
+[Name] OpenCL-Headers
+[Summary] Khronos OpenCL C API headers
+[License] Apache-2.0 (Khronos)
+[Homepage] https://github.com/KhronosGroup/OpenCL-Headers
+[Description] Official Khronos OpenCL C headers (cl.h, cl_platform.h, cl_version.h, cl_ext.h, ...). Headers only -- used to build clinfo against the NVIDIA OpenCL ICD. Nothing links against this package at runtime.

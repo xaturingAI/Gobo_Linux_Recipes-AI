@@ -1,0 +1,8 @@
+manifest recipe (headers only). The tarball root carries CL/*.h (no
+include/ prefix); manifest "CL:include/CL" drops them into the package
+include tree, which SymlinkProgram links into /System/Index/include so
+clinfo's -I/System/Index/include resolves <CL/cl.h>.
+
+Build order: OpenCL-Headers -> Clinfo. No runtime deps. The NVIDIA ICD at
+runtime is provided by the Nvidia recipe (libOpenCL.so.1 loader +
+libnvidia-opencl.so.1 via nvidia.icd).

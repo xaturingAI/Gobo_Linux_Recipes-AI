@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Khronos OpenCL C headers (CL/*.h), needed to compile clinfo against the
+# NVIDIA OpenCL ICD. Pure header install: the tarball carries the headers at
+# its root under CL/ (no include/ prefix), mapped straight into the index
+# include tree. No runtime dependencies.
+compile_version=017-GIT
+url="https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2026.05.29.tar.gz"
+file_size=89035
+file_md5=a8e7d63bd1acc79d0695da3cc36479a8
+dir='OpenCL-Headers-2026.05.29'
+recipe_type=manifest
+manifest=(
+    "CL:include/CL"
+)
