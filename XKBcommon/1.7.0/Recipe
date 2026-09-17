@@ -1,0 +1,13 @@
+# Custom recipe for XKBcommon 1.7.0 (meson; docs disabled)
+# Build AFTER Wayland + Wayland-Protocols: -Denable-wayland (default true)
+# needs wayland-scanner and the wayland-protocols pkg-config files.
+# Based on the upstream gobo-recipes recipe, adapted to 'meson_variables'.
+compile_version=2.0
+url="https://xkbcommon.org/download/libxkbcommon-1.7.0.tar.xz"
+file_size=534312
+file_md5=b05b1a0d473189efb2dd995dd944f152
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    -Denable-docs=false
+)

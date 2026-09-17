@@ -1,0 +1,4 @@
+[Name] XKBcommon
+[Summary] Keyboard layout compiler / XKB keymap library for Wayland and X11
+[License] MIT/X11
+[Homepage] https://xkbcommon.org
