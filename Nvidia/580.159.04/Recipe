@@ -1,0 +1,317 @@
+#!/bin/bash
+
+# NVIDIA proprietary driver 580.159.04 for the Live CD's own Linux 7.1.5 kernel.
+#
+# The .run is treated as a binary archive: userspace (64+32-bit libs, Xorg
+# driver, Vulkan/GLVND ICDs, firmware, tools) is copied from the extracted
+# payload, and only the kernel modules are compiled -- against the exact kernel
+# package (Linux/7.1.5) shipped in the Live CD. The modules land in
+# /lib/modules/<kernelrelease>/kernel/drivers/video, so they must be built
+# AFTER Linux is installed on the build system.
+#
+# Runtime enablement (packaged, lands on every ISO built from this recipe):
+#  - /etc/modprobe.d/nvidia.conf: nouveau blacklist + nvidia-drm modeset=1;
+#  - /etc/udev/rules.d/60-nvidia.rules: PCI 0x10de VGA/3D rule that loads the
+#    nvidia/nvidia-modeset/nvidia-uvm/nvidia-drm stack at boot on real NVIDIA
+#    hardware. Nothing else triggers it -- the KERNEL== rules only fire after
+#    the modules are inserted. Needed for both the Wayland (kwin/nvidia-drm)
+#    session and the plasmax11 X session (nvidia-settings full panel).
+#  - /usr/share/X11/xorg.conf.d/10-nvidia.conf: OutputClass so Xorg picks the
+#    nvidia DDX (NV-CONTROL) once nvidia-drm claims the GPU.
+# These files were previously written to the program's Settings/ dir, which
+# CreatePackage does NOT ship -- do_install now writes them under
+# Resources/Unmanaged/ and the unmanaged_files list packages them.
+
+compile_version=017-GIT
+url="https://download.nvidia.com/XFree86/Linux-x86_64/580.159.04/NVIDIA-Linux-x86_64-580.159.04.run"
+file_size=397162548
+file_md5=1dfefa678351a366648d931fe075953c
+recipe_type=manifest
+uncompress=no
+needs_safe_linking=yes
+
+# Kernel release the modules are built against: the one installed by the Linux
+# package. In a LiveCD chroot there is no booted Gobo kernel, so /System/Kernel/Modules
+# (a boot-time bind mount of /lib/modules) does not exist; derive the release from
+# the installed Linux program tree instead.
+kernelrelease="$(ls /Programs/Linux/Current/lib/modules 2>/dev/null | grep -vE '^(Current|Settings|Variable)$' | head -1)"
+[ -n "$kernelrelease" ] || Die "Could not determine kernel release from /Programs/Linux/Current/lib/modules (is Linux installed?)."
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+# Kernel modules + firmware + shared data installed into the system root.
+unmanaged_files=(
+    "usr/share/vulkan/icd.d/nvidia_icd.json"
+    "usr/share/vulkan/icd.d/nvidia_icd.x86_64.json"
+    "usr/share/vulkan/icd.d/nvidia_icd.i686.json"
+    "usr/share/vulkan/icd.d/nvidia_icd_vksc.json"
+    "usr/share/vulkan/implicit_layer.d/nvidia_layers.json"
+    "usr/share/glvnd/egl_vendor.d/10_nvidia.json"
+    "usr/share/glvnd/egl_vendor.d/10_nvidia_wayland.json"
+    "usr/share/glvnd/egl_vendor.d/15_nvidia_gbm.json"
+    "usr/share/glvnd/egl_vendor.d/20_nvidia_xcb.json"
+    "usr/share/glvnd/egl_vendor.d/20_nvidia_xlib.json"
+    "usr/share/X11/xorg.conf.d/nvidia-drm-outputclass.conf"
+    "usr/share/X11/xorg.conf.d/10-nvidia.conf"
+    "usr/share/dbus-1/system.d/nvidia-dbus.conf"
+    "usr/share/nvidia/nvidia-application-profiles-580.159.04-rc"
+    "usr/share/nvidia/nvidia-application-profiles-580.159.04-key-documentation"
+    "lib/firmware/nvidia/580.159.04/gsp_ga10x.bin"
+    "lib/firmware/nvidia/580.159.04/gsp_tu10x.bin"
+    "etc/udev/rules.d/60-nvidia.rules"
+    "etc/modprobe.d/nvidia.conf"
+    "etc/OpenCL/vendors/nvidia.icd"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-modeset.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-drm.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-uvm.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-peermem.ko"
+)
+
+pre_install() {
+    # Uncompress the self-extracting .run into the build directory.
+    local archive="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Uncompressing NVIDIA installer ${archive}"
+    sh "$archive" -x || Die "Failed to uncompress the NVIDIA installer."
+    pkgdir=$(basename "$url" | sed 's,\.run$,,g')
+    mv "$pkgdir"/* .
+    rm -rf "$pkgdir"
+
+    # Build the kernel modules against the Live CD kernel source.
+    local syssrc="/Programs/Linux/Current/lib/modules/$kernelrelease/build"
+    # Regenerate the kernel build tree metadata if the shipped Linux package did
+    # not come with a fully prepared tree (include/generated/rustc_cfg etc. are
+    # required for out-of-tree module builds).
+    # The sanitized source copy shipped in the Linux package omits a few files
+    # that `make prepare` needs: kernel/sched/rq-offsets.c (to regenerate
+    # include/generated/rq-offsets.h) and tools/arch + tools/include (objtool).
+    # Restore them from the kernel archive so prepare + module build can run.
+    if [ ! -e "$syssrc/tools/arch/x86/tools/gen-insn-attr-x86.awk" ] || \
+       [ ! -e "$syssrc/tools/include" ] || \
+       [ ! -e "$syssrc/kernel/sched/rq-offsets.c" ]
+    then
+       Log_Normal "Restoring missing kernel sources from the kernel archive"
+       tar -C "$syssrc/tools" --strip-components=2 -xJf "$compileArchivesDir/linux-7.1.5.tar.xz" \
+           linux-7.1.5/tools/arch linux-7.1.5/tools/include \
+           || Die "Failed to restore kernel tools/ from the kernel archive."
+       mkdir -p "$syssrc/kernel/sched"
+       tar -C "$syssrc/kernel/sched" --strip-components=3 -xJf "$compileArchivesDir/linux-7.1.5.tar.xz" \
+           linux-7.1.5/kernel/sched/rq-offsets.c \
+           || Die "Failed to extract kernel/sched/rq-offsets.c from the kernel archive."
+    fi
+    Log_Normal "Preparing kernel build tree at ${syssrc}"
+    $sudo_exec make -C "$syssrc" LD=ld.bfd prepare || Die "'make prepare' in the kernel build tree failed."
+    Log_Normal "Building NVIDIA kernel modules against ${syssrc}"
+    ( cd kernel && $sudo_exec make LD=ld.bfd module SYSSRC="$syssrc" ) || Die "Kernel module build failed."
+}
+
+do_install() {
+    # 64-bit libraries
+    mkdir -p "$target"/lib
+    cp -a libGL.so.1.7.0 libEGL.so.1.1.0 libGLESv1_CM.so.1.2.0 libGLESv2.so.2.1.0 \
+          libGLX.so.0 libGLdispatch.so.0 libOpenGL.so.0 libOpenCL.so.1.0.0 \
+          libGLX_nvidia.so.580.159.04 libEGL_nvidia.so.580.159.04 \
+          libnvidia-*.so.* libcuda.so.* libnvcuvid.so.* libvdpau_nvidia.so.* \
+          libnvoptix.so.* "$target"/lib/ || Die "Failed copying 64-bit libraries."
+
+    # OpenCL ICD registration.
+    mkdir -p "$target"/Resources/Unmanaged/etc/OpenCL/vendors
+    cp -a nvidia.icd "$target"/Resources/Unmanaged/etc/OpenCL/vendors/nvidia.icd
+
+    # 32-bit libraries (for the 32-bit Steam client and 32-bit games)
+    mkdir -p "$target"/lib32
+    cp -a 32/*.so* "$target"/lib32/ || Die "Failed copying 32-bit libraries."
+
+    # NVNGX / DLSS Wine DLLs (for Proton/Wine DLSS and Frame Generation)
+    # These are 64-bit PE DLLs only; Wine/Proton bridges them to 32-bit games.
+    mkdir -p "$target"/lib/nvidia/wine
+    cp -a _nvngx.dll nvngx.dll "$target"/lib/nvidia/wine/ || Die "Failed copying NVNGX DLLs."
+    cp -a nvngx_dlssg.dll "$target"/lib/nvidia/wine/ || Die "Failed copying DLSS-G DLL."
+
+    # Tools
+    mkdir -p "$target"/bin "$target"/sbin
+    for tool in nvidia-settings nvidia-smi nvidia-xconfig nvidia-modprobe \
+                nvidia-debugdump nvidia-persistenced nvidia-powerd \
+                nvidia-cuda-mps-control nvidia-cuda-mps-server
+    do [ -x "$tool" ] && cp -a "$tool" "$target"/bin/
+    done
+    [ -x nvidia-bug-report.sh ] && cp -a nvidia-bug-report.sh "$target"/bin/
+
+    # Xorg driver modules
+    mkdir -p "$target"/lib/xorg/modules/drivers
+    mkdir -p "$target"/lib/xorg/modules/extensions
+    cp -a nvidia_drv.so "$target"/lib/xorg/modules/drivers/
+    cp -a libglxserver_nvidia.so.* "$target"/lib/xorg/modules/extensions/
+
+    # Man pages
+    mkdir -p "$target"/man/man1
+    cp -a *.1.gz "$target"/man/man1/
+
+    # Desktop entry for nvidia-settings
+    mkdir -p "$target"/Shared/applications "$target"/Shared/pixmaps
+    sed -e "s@__UTILS_PATH__@$target/bin@" -e "s@__PIXMAP_PATH__@$goboShared/pixmaps@" \
+        nvidia-settings.desktop > "$target"/Shared/applications/nvidia-settings.desktop
+    cp -a nvidia-settings.png "$target"/Shared/pixmaps/
+
+    # Kernel modules. The installer's `make` emits FLAT outputs (kernel/nvidia.ko,
+    # not kernel/nvidia/nvidia.ko) -- accept both layouts and FAIL LOUDLY if a
+    # module is missing instead of silently skipping ([ -e ] && cp hid this for
+    # the entire 580 build).
+    # They are copied into the *Linux program's* module tree, because
+    # /System/Index/lib/modules is a single symlink to that tree: anything only
+    # present in Nvidia's own Unmanaged dir never shows up under /lib/modules.
+    local moddir="/Programs/Linux/Current/lib/modules/$kernelrelease/kernel/drivers/video"
+    mkdir -p "$moddir"
+    local m missing=""
+    for name in nvidia nvidia-modeset nvidia-drm nvidia-uvm nvidia-peermem; do
+        if   [ -e "kernel/$name.ko" ]; then m="kernel/$name.ko"
+        elif [ -e "kernel/$name/$name.ko" ]; then m="kernel/$name/$name.ko"
+        else missing="$missing $name"; continue
+        fi
+        cp -a "$m" "$moddir"/ || Die "Failed installing kernel/$name.ko"
+    done
+    [ -z "$missing" ] || Die "NVIDIA kernel modules not found after build:$missing"
+    # Keep a copy in our own Unmanaged tree as well, so the package tarball is
+    # self-contained for auditing/repacking.
+    local umdir="$target/Resources/Unmanaged/lib/modules/$kernelrelease/kernel/drivers/video"
+    mkdir -p "$umdir" && cp -a "$moddir"/*.ko "$umdir"/
+    # Regenerate dependency maps so modprobe finds them on the Live CD.
+    depmod -b / "$kernelrelease" 2>/dev/null || true
+
+    # GSP firmware
+    local fwdir="$target/Resources/Unmanaged/lib/firmware/nvidia/580.159.04"
+    mkdir -p "$fwdir"
+    cp -a firmware/gsp_*.bin "$fwdir"/
+
+    # Shared data files (Vulkan/GLVND ICDs, xorg.conf.d, dbus, profiles)
+    local share="$target/Resources/Unmanaged/usr/share"
+    mkdir -p "$share"/vulkan/icd.d "$share"/vulkan/implicit_layer.d \
+             "$share"/glvnd/egl_vendor.d "$share"/X11/xorg.conf.d \
+             "$share"/dbus-1/system.d "$share"/nvidia
+    cp -a nvidia_icd.json nvidia_icd_vksc.json "$share"/vulkan/icd.d/
+    # Arch-split ICD JSONs with absolute paths for Proton bwrap sandbox compat.
+    # Without these, bwrap may load the wrong architecture's libGLX_nvidia.so.
+    sed 's|"library_path": "libGLX_nvidia.so.0"|"library_path": "/Programs/Nvidia/Current/lib/libGLX_nvidia.so.0"|' \
+        nvidia_icd.json > "$share"/vulkan/icd.d/nvidia_icd.x86_64.json
+    sed 's|"library_path": "libGLX_nvidia.so.0"|"library_path": "/Programs/Nvidia/Current/lib32/libGLX_nvidia.so.0"|' \
+        nvidia_icd.json > "$share"/vulkan/icd.d/nvidia_icd.i686.json
+    cp -a nvidia_layers.json "$share"/vulkan/implicit_layer.d/
+    for f in 10_nvidia.json 10_nvidia_wayland.json 15_nvidia_gbm.json \
+             20_nvidia_xcb.json 20_nvidia_xlib.json
+    do cp -a "$f" "$share"/glvnd/egl_vendor.d/
+    done
+    cp -a nvidia-drm-outputclass.conf "$share"/X11/xorg.conf.d/
+    cp -a nvidia-dbus.conf "$share"/dbus-1/system.d/
+    cp -a nvidia-application-profiles-580.159.04-rc \
+          nvidia-application-profiles-580.159.04-key-documentation "$share"/nvidia/
+
+    # A udev rule so /dev/nvidia* is created with sane permissions, plus a
+    # PCI class rule that auto-loads the whole driver stack at boot when an
+    # NVIDIA GPU is actually present (nothing else triggers it, and the
+    # KERNEL== rules below only fire AFTER the modules are inserted).
+    mkdir -p "$target/Resources/Unmanaged/etc/udev/rules.d"
+    cat > "$target/Resources/Unmanaged/etc/udev/rules.d/60-nvidia.rules" <<'EOF'
+PCIEVENT="/bin/sh -c '/usr/bin/nvidia-modprobe -c 0 -m -u -d >/dev/null 2>&1 || true'"
+SUBSYSTEM=="pci", ACTION=="add", ATTRS{vendor}=="0x10de", ATTR{class}=="0x030000", TAG+="uaccess", RUN+=$PCIEVENT
+SUBSYSTEM=="pci", ACTION=="add", ATTRS{vendor}=="0x10de", ATTR{class}=="0x030200", TAG+="uaccess", RUN+=$PCIEVENT
+KERNEL=="nvidia", RUN+="/usr/bin/nvidia-modprobe -c 0 >/dev/null 2>&1"
+KERNEL=="nvidia_modeset", RUN+="/usr/bin/nvidia-modprobe -c 0 -m >/dev/null 2>&1"
+KERNEL=="nvidia_uvm", RUN+="/usr/bin/nvidia-modprobe -c 0 -u >/dev/null 2>&1"
+KERNEL=="nvidia_drm", RUN+="/usr/bin/nvidia-modprobe -c 0 -d >/dev/null 2>&1"
+SUBSYSTEM=="nvidia", KERNEL=="card*", RUN+="/usr/bin/nvidia-modprobe -c 0 >/dev/null 2>&1"
+EOF
+    # modprobe options + nouveau blacklist (PACKAGED via unmanaged_files so the
+    # ISO gets them; the Settings-dir copy in pre_link is not shipped).
+    mkdir -p "$target/Resources/Unmanaged/etc/modprobe.d"
+    cat > "$target/Resources/Unmanaged/etc/modprobe.d/nvidia.conf" <<'EOF'
+blacklist nouveau
+options nvidia-drm modeset=1 fbdev=1
+EOF
+    # nvidia-settings-friendly Xorg OutputClass (packaged; the Settings-dir
+    # copy is not shipped). Duplicates nvidia-drm-outputclass.conf's match,
+    # adds the composition pipeline so X11 sessions get full nvidia-settings.
+    mkdir -p "$target/Resources/Unmanaged/usr/share/X11/xorg.conf.d"
+    cat > "$target/Resources/Unmanaged/usr/share/X11/xorg.conf.d/10-nvidia.conf" <<'EOF'
+Section "OutputClass"
+    Identifier    "nvidia"
+    MatchDriver   "nvidia-drm"
+    Driver        "nvidia"
+    Option        "AllowEmptyInitialConfiguration" "true"
+    Option        "NoLogo" "true"
+    Option        "ForceFullCompositionPipeline" "true"
+    Option        "TripleBuffer" "true"
+EndSection
+EOF
+}
+
+post_install() {
+    # Create the soname symlinks for the 64-bit libraries.
+    private__create_lib_symlinks "$target/lib"
+    # And for the 32-bit libraries.
+    private__create_lib_symlinks "$target/lib32"
+    # glvnd loads the vendor libs by these unversioned names.
+    ln -sf libGLX_nvidia.so.580.159.04 "$target/lib/libGLX_nvidia.so.0"
+    ln -sf libEGL_nvidia.so.580.159.04 "$target/lib/libEGL_nvidia.so.0"
+    ln -sf libGLX_nvidia.so.580.159.04 "$target/lib32/libGLX_nvidia.so.0"
+    ln -sf libEGL_nvidia.so.580.159.04 "$target/lib32/libEGL_nvidia.so.0"
+    # Register the 32-bit library dir for the dynamic linker.
+    local confd="$target/Resources/Defaults/Settings/ld.so.conf.d"
+    mkdir -p "$confd"
+    echo "$target/lib32" > "$confd/nvidia-32.conf"
+}
+
+private__create_lib_symlinks() {
+    local dir="$1"
+    [ -d "$dir" ] || return 0
+    cd "$dir" || return 0
+    for f in lib*.so* libnvidia-*.so* libcuda.so* libvdpau_nvidia.so* libnvoptix.so*
+    do
+        [ -f "$f" ] || continue
+        local soname=$(readelf -d "$f" 2>/dev/null | awk -F'[' '/SONAME/{gsub(/]/,"",$2); print $2}')
+        [ -n "$soname" ] && [ "$soname" != "$f" ] && ln -sf "$f" "$soname"
+    done
+}
+
+pre_link() {
+    # Xorg device configuration for a chroot/installed tree WITHOUT the
+    # packaged usr/share files (compile-time convenience). The authoritative,
+    # packaged copies are written in do_install under Resources/Unmanaged and
+    # land in /usr/share/X11/xorg.conf.d + /etc/modprobe.d on the ISO.
+    mkdir -p "${settings_target}/X11/xorg.conf.d"
+    cat > "${settings_target}/X11/xorg.conf.d/10-nvidia.conf" <<'EOF'
+Section "OutputClass"
+    Identifier    "nvidia"
+    MatchDriver   "nvidia-drm"
+    Driver        "nvidia"
+    Option        "AllowEmptyInitialConfiguration" "true"
+    Option        "NoLogo" "true"
+    Option        "ForceFullCompositionPipeline" "true"
+    Option        "TripleBuffer" "true"
+EndSection
+EOF
+
+    # modprobe: blacklist nouveau, enable DRM modesetting for Wayland/NSC.
+    mkdir -p "${settings_target}/modprobe.d"
+    cat > "${settings_target}/modprobe.d/nvidia.conf" <<'EOF'
+blacklist nouveau
+options nvidia-drm modeset=1 fbdev=1
+EOF
+}
+
+post_install_message="
+NVIDIA 580.159.04 installed.
+- The driver stack auto-loads at boot on NVIDIA hardware (udev PCI rule);
+  verify with:            nvidia-smi
+- Tune settings with:     nvidia-settings   (full panel under the plasmax11
+  session; Wayland shows the basic GPU info page)
+- modprobe blacklist/options, the udev PCI load rule and the Xorg OutputClass
+  are packaged files now: /etc/modprobe.d/nvidia.conf,
+  /etc/udev/rules.d/60-nvidia.rules, /usr/share/X11/xorg.conf.d/10-nvidia.conf
+The nvidia kernel modules were built for kernel release $kernelrelease and
+installed to /lib/modules/$kernelrelease/kernel/drivers/video (through the
+/System/Index lib links).
+Module dependency info (modules.dep) is regenerated by CompressAndBuildISO, so
+modprobe will find the nvidia modules on the Live CD.
+"
