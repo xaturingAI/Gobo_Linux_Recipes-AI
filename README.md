@@ -1,7 +1,6 @@
 These are Recipes for Gobo Linux 
 
-ALL OF THESE WHERE MADE BY AI AMD TESTED BY ME THE (HUMAN) 
-
+Reicpes  where made by AI, and then Tested to make they Compiled and work by me 
 AI WHERE USED TO MAKE so I have chosen not upload to main GoBo Recipes  Unless the MAIN solo Dev are okay with intell then this will remain on my own GitHub page 
 
 
