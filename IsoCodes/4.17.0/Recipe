@@ -1,0 +1,23 @@
+# Custom recipe for IsoCodes 4.17.0 (autotools; data package)
+#
+# Part of the Pantheon stack port. Provides the ISO country/language/script/
+# currency code databases + iso-codes.pc (prefix/domains variables).
+# gnome-desktop 44.5's meson.build does dependency('iso-codes') unconditionally
+# (no disable option) and reads iso_codes_dep.get_variable(pkgconfig: 'prefix')
+# to define ISO_CODES_PREFIX at compile time.
+#
+# Build BEFORE Gnome-Desktop. Autotools (ships prebuilt configure; meson.build
+# only exists on main, not in the 4.17.0 tag tarball).
+#
+# file_md5 verified against the salsa.debian.org v4.17.0 archive.
+
+compile_version=017-GIT
+url="https://salsa.debian.org/iso-codes-team/iso-codes/-/archive/v4.17.0/iso-codes-v4.17.0.tar.gz"
+file_size=15459699
+file_md5=f4b460577728ba331e078ad8bd246c98
+dir='iso-codes-v4.17.0'
+recipe_type=configure
+
+configure_options=(
+    --prefix=/usr
+)

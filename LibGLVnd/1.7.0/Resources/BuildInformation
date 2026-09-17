@@ -1,0 +1,5 @@
+Build type: meson
+Source: https://gitlab.freedesktop.org/glvnd/libglvnd/-/archive/v1.7.0/libglvnd-v1.7.0.tar.gz
+Build order: foundation, before Mesa 25.3.6 (Mesa requires libglvnd >= 1.3.2 with -Dglvnd=enabled).
+Bump from ISO's 1.2.0; preserves NVIDIA glvnd EGL/GLX vendor dispatch (egl_vendor.d/10_nvidia.json).
+Provides egl.pc, glesv2.pc, gl.pc, glesv1_cm.pc, opengl.pc and dispatch libs.

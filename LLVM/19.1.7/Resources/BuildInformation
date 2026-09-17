@@ -1,0 +1,5 @@
+Build type: cmake
+Source: https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-19.1.7.tar.gz
+Build order: foundation, before Mesa 25.3.6.
+Core llvm project only (llvm-project-llvmorg-19.1.7/llvm subdir), shared libLLVM.so dylib, X86+AMDGPU targets.
+Provides llvm-config (Mesa finds it via meson config-tool), libLLVM.so, LLVM static component libs.

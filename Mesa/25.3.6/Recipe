@@ -1,0 +1,96 @@
+# Custom recipe for Mesa 25.3.6 (meson)
+#
+# Part of the Pantheon desktop stack port. Bump from the ISO's Mesa 19.3.3:
+# Mutter 48.7's native backend hard-requires gbm >= 21.3 (config-tool finds
+# gbm via this build) plus libinput >= 1.27 and logind/elogind.
+#
+# Built WITH glvnd (preserves the NVIDIA proprietary driver's glvnd EGL/GLX
+# vendor dispatch) -- requires the LibGLVnd 1.7.0 bump built first.
+#
+# Driver scope (gaming LiveCD): llvmpipe (software fallback for the desktop)
+# + radeonsi (AMD GPUs) + virgl (VirtIO Guest/the QEMU/KVM virtio-gpu used by
+# the build/test VM, so sway/wlroots get a real hardware DRI2/EGL screen
+# instead of falling back to llvmpipe. The gallium option is "virgl", not
+# "virtio"). NVIDIA uses its own closed driver, so Mesa Vulkan drivers are
+# disabled. LLVM 19.1.7 must precede this (Mesa needs LLVM >= 18 for
+# radeonsi/llvmpipe, found via llvm-config). python-mako is required at build
+# time (installed via Alien PIP3 in step_pantheon).
+#
+# Note: gles1/gles2/osmesa/gallium-{nine,opencl,xa,xvmc} options were removed
+# in Mesa 25.x; GLES1/2 ship via EGL, OSMesa via swrast.
+#
+# Linker note: the ISO ships Binutils 2.33.1 with gold as the default linker
+# (System/Index/bin/ld -> ld.gold). GCC 14.2.0 + Mesa's auto-enabled
+# -mtls-dialect=gnu2 emits TLSDESC relocs that gold 2.33.1 cannot relax in
+# executable links ("TLS relocation against invalid instruction" in u_debug.c).
+# Force the bfd linker (-fuse-ld=bfd) which handles TLSDESC fine. These args
+# must stay single-token: BuildType_meson word-splits meson_variables.
+
+compile_version=017-GIT
+url="https://archive.mesa3d.org/mesa-25.3.6.tar.xz"
+file_size=43485532
+file_md5=fe1b37ff00a88a81d8f6cb53919e4d38
+dir='mesa-25.3.6'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dplatforms=x11,wayland
+    -Dgallium-drivers=llvmpipe,radeonsi,virgl
+    -Dvulkan-drivers=[]
+    -Dglvnd=enabled
+    -Degl=enabled
+    -Dgbm=enabled
+    -Dopengl=true
+    -Dglx=dri
+    -Dshared-glapi=enabled
+    -Dllvm=enabled
+    -Dshared-llvm=enabled
+    -Dtools=[]
+    -Dgallium-va=disabled
+    -Dvalgrind=disabled
+    -Dlibunwind=disabled
+    -Dlmsensors=disabled
+    -Dbuild-tests=false
+    -Db_lto=false
+    -Dcpp_rtti=false
+    -Dc_link_args=-fuse-ld=bfd
+    -Dcpp_link_args=-fuse-ld=bfd
+)
+
+pre_install() {
+    # Messes with meson install: GoboSymlinkProgram leaves /usr/{lib,include,
+    # share}/* subdirs (dri, gbm, egl, EGL, GLES, sdk, ...) as SYMLINKS to
+    # /Programs/Mesa/<ver>/... . A FRESH install (no --keep) runs
+    # Pre_Installation_Preparation first, which renames the live tree to
+    # <ver>-safelinking and rewrites those index symlinks to point at
+    # /Programs/Mesa/<ver>-safelinking/... . During SandboxInstall the
+    # -safelinking tree is a temp copy not visible at /Programs/Mesa/<ver>/
+    # (and gets consumed by the safe-copy), so the symlinks are DANGLING.
+    # meson install cannot resolve a dangling-symlink as a parent dir:
+    #   - /usr/lib/dri:  os.makedirs(..., exist_ok=True) swallows the
+    #     FileExistsError on the dangling leaf, then shutil.copyfile dies
+    #     FileNotFoundError '/usr/lib/dri/libdril_dri.so'
+    #   - /usr/lib/gbm:  FileExistsError: [Errno 17] File exists: '/usr/lib/gbm'
+    #   - /usr/include/EGL: FileNotFoundError '.../eglext_angle.h'
+    # Same class as the Weston/13.0.0 pre_install clears. Remove EVERY /usr
+    # symlink targeting the Mesa tree (lib, include, share) UNCONDITIONALLY so
+    # the fresh install creates real dirs. Idempotent each build.
+    # Note: /usr -> /System/Index, so globbing $base/* already descends through
+    # the index symlink; no -L needed (and find -L -type l never matches).
+    Log_Normal "Clearing stale Mesa /usr symlinks before install"
+    # Prune EVERY /usr-side entry (any depth) pointing into the Mesa tree.
+    # The previous two-level loop missed deeper nests (e.g.
+    # /usr/include/GL/internal/dri_interface.h, /usr/lib/dri -> dir symlink)
+    # which still surface as DANGLING symlinks in the SandboxInstall overlay
+    # and make meson's open(dst,'wb') fail ENOENT. find -lname matches the
+    # link text, so dangling links are caught too. -delete also clears empty
+    # dirs left behind (post-order). Never follows into the Mesa tree itself.
+    for base in /usr/lib /usr/include /usr/share; do
+        [ -e "$base" ] || continue
+        find "$base" -lname '/Programs/Mesa/*' -print -delete 2>/dev/null | while read -r removed; do
+            Log_Normal "  removing symlink $removed -> $(readlink "$removed")"
+        done
+    done
+    return 0
+}

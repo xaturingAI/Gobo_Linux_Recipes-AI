@@ -1,0 +1,4 @@
+[Name] Mesa
+[Summary] Mesa 25.3.6: DRI/gallium drivers, GBM, EGL/GLX (software + radeonsi, glvnd)
+[License] MIT
+[Homepage] https://www.mesa3d.org/

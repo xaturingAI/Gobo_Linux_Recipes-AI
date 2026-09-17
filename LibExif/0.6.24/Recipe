@@ -1,0 +1,24 @@
+# Custom recipe for LibExif 0.6.24 (autotools)
+#
+# Part of the Pantheon stack port. EXIF tag parsing library (C). Required by
+# PantheonPhotos 8.0.2: dependency('libexif') >= 0.6.16, and by LibGphoto2
+# 2.5.31 (which links its exif handling against libexif).
+#
+# Small libtool package; builds standalone (no deps beyond glibc). Docs and
+# NLS off. Installs libexif.pc.
+#
+# file_md5 + file_size verified against the github v0.6.24 RELEASE asset
+# libexif-0.6.24.tar.bz2 (the release asset ships the generated configure
+# script; the tag archive tarball does not).
+
+compile_version=017-GIT
+url="https://github.com/libexif/libexif/releases/download/v0.6.24/libexif-0.6.24.tar.bz2"
+file_size=1992163
+file_md5=00ea6e7ff62d3fd41ea9b2139746703c
+dir='libexif-0.6.24'
+recipe_type=configure
+
+configure_options=(
+    --disable-docs
+    --disable-nls
+)

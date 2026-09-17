@@ -1,0 +1,5 @@
+[Name] Libsoup3
+[Summary] libsoup HTTP library v3
+[License] LGPL-2.0-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/libsoup
+[Description] libsoup-3.0.pc used by geocode-glib, geoclue and libgweather (the ISO only ships libsoup-2.4).

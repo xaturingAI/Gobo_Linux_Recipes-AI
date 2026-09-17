@@ -1,0 +1,5 @@
+[Name] LCMS2
+[Summary] Color management engine (LittleCMS)
+[Description] LCMS2 is the color management engine used by colord and GTK4. Bumped from the ISO's 2.9 to 2.17 for the GNOME 48 stack. Build AFTER nothing (no deps) and BEFORE colord + GTK 4.18. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] MIT
+[Homepage] https://github.com/mm2/Little-CMS

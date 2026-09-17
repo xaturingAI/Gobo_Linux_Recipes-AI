@@ -1,0 +1,15 @@
+# Custom recipe for GtkThemeElementary 8.2.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/stylesheet/archive/refs/tags/8.2.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/stylesheet/archive/refs/tags/8.2.2.tar.gz"
+file_size=177051
+file_md5=bea532d2f035f8d3061427f31ba56861
+dir='stylesheet-8.2.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

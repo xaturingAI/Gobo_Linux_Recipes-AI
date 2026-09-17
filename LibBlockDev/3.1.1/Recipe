@@ -1,0 +1,36 @@
+# Custom recipe for LibBlockDev 3.1.1 (autotools release tarball)
+#
+# Part of the Pantheon stack port. UDisks2 2.10's build-time dependency
+# (bd-utils + blockdev.pc); plugins are dlopen()ed at runtime.
+#
+# Slim utility-only build: every optional plugin disabled so no cryptsetup/
+# parted/mdraid/kmod deps are needed. UDisks2 is configured with matching
+# --disable-* flags. NO systemd anywhere (sysvinit ISO).
+compile_version=017-GIT
+url="https://github.com/storaged-project/libblockdev/releases/download/3.1.1-1/libblockdev-3.1.1.tar.gz"
+file_size=1056270
+file_md5=28d43f2d6bff85245502a8c4c478c5a3
+dir='libblockdev-3.1.1'
+recipe_type=configure
+
+do_configuration() {
+    ./configure --prefix="$target" \
+        --sysconfdir="$target/etc" \
+        --without-crypto \
+        --without-lvm \
+        --without-lvm_dbus \
+        --without-btrfs \
+        --without-kbd \
+        --without-vfat \
+        --without-dm \
+        --without-mdraid \
+        --without-mpath \
+        --without-nvdimm \
+        --without-nvme \
+        --without-part \
+        --without-fs \
+        --without-smart \
+        --without-smartmon \
+        --without-tools \
+        --without-python3
+}

@@ -1,0 +1,16 @@
+LibGLVnd
+LLVM
+LibDrm
+Expat
+ZLib
+Wayland
+Wayland-Protocols
+LibX11
+LibXCB
+LibXext
+LibXdamage
+LibXShmfence
+LibXpresent
+LibXfixes
+LibXcomposite
+XorgProto

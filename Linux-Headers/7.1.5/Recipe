@@ -1,0 +1,43 @@
+# Custom recipe for Linux-Headers 7.1.5
+#
+# Replaces the ISO's Linux-Headers 5.4.15 (kernel UAPI circa 2020). The
+# Pantheon stack needs newer kernel interfaces that 5.4.15 headers lack:
+#  - VMADDR_CID_LOCAL (linux/vm_sockets.h, kernel >= 6.13), used unguarded by
+#    elogind 257.16 in socket-util.c:1775/1853
+#  - x25_hdlc_proto (linux/hdlc/ioctl.h, kernel >= 6.13), referenced by the
+#    bundled src/basic/linux/if.h if_settings union
+# Bumping to the 7.1.5 UAPI (the kernel this ISO actually builds, built by the
+# Linux recipe) makes /usr/include/linux match the running kernel, so the
+# c_args define + shadow-header hacks in the Elogind recipe are dropped.
+#
+# Same tarball/URL as the Linux recipe (already cached in Data/Compile/Archives).
+# `make headers` runs from a fresh, unconfigured tree (no .config) and writes
+# sanitized headers to usr/include; we copy those to $target/include -- the same
+# layout the ISO's Linux-Headers 5.4.15 package used (verified against the
+# running ISO's /Programs/Linux-Headers/5.4.15). `headers_install` itself is
+# skipped because it requires rsync, which the ISO does not ship.
+
+compile_version=017-GIT
+url="https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.1.5.tar.xz"
+file_size=158401920
+file_md5=75f719d50ea10e0bb623a95f468600cb
+dir='linux-7.1.5'
+recipe_type=makefile
+
+# headers_install has no build step; the makefile type's default do_build
+# would run `make all` and compile the whole kernel. No-op it.
+do_build() { :; }
+
+do_install() {
+    # `make headers_install` shells out to rsync, which the ISO does not ship.
+    # Run `make headers` (generates sanitized UAPI headers in usr/include, no
+    # rsync) and copy the *.h files with plain cp, preserving the tree. Only
+    # headers are copied (mirroring rsync's include='*.h'), so kernel build
+    # artifacts like usr/include/Makefile never land in the index.
+    make headers || Die "'make headers' failed."
+    find usr/include -type f -name '*.h' -printf '%P\n' | while read -r f
+    do
+        mkdir -p "$target"/include/"$(dirname "$f")"
+        cp -a "usr/include/$f" "$target"/include/"$f"
+    done
+}

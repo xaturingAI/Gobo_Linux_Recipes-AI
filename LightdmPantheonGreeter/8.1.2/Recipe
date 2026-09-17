@@ -1,0 +1,16 @@
+# Custom recipe for LightdmPantheonGreeter 8.1.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/greeter/archive/refs/tags/8.1.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/greeter/archive/refs/tags/8.1.2.tar.gz"
+file="greeter-8.1.2.tar.gz"
+file_size=960886
+file_md5=c6d6e7f3834a8522ea14669b87b92e54
+dir='greeter-8.1.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

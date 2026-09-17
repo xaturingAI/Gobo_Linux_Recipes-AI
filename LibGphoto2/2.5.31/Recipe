@@ -1,0 +1,26 @@
+# Custom recipe for LibGphoto2 2.5.31 (autotools)
+#
+# Part of the Pantheon stack port. Digital camera (PTP/PTP2) access library.
+# Required by PantheonPhotos 8.0.2: dependency('libgphoto2') >= 2.4.2 (camera
+# import backend).
+#
+# Builds on libusb-1.0 (ISO index), libexif (built before; gphoto2 links the
+# exif handling), libxml-2.0, libcurl and libjpeg (ISO). Serial/ws232, GD
+# (gdlib image support) and internal/external docs off; NLS off.
+#
+# file_md5 + file_size verified against the github gphoto release tarball
+# (libgphoto2-2.5.31.tar.xz, top-level dir libgphoto2-2.5.31).
+
+compile_version=017-GIT
+url="https://github.com/gphoto/libgphoto2/releases/download/v2.5.31/libgphoto2-2.5.31.tar.xz"
+file_size=6322264
+file_md5=a09a3ee4286c196c4287f61792c345e8
+dir='libgphoto2-2.5.31'
+recipe_type=configure
+
+configure_options=(
+    --disable-docs
+    --disable-nls
+    --without-gdlib
+    --without-ws232
+)

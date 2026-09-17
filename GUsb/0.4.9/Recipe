@@ -1,0 +1,33 @@
+# Custom recipe for GUsb 0.4.9 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. GObject wrapper for libusb-1.0; colord
+# 1.4.8 hard-requires gusb >= 0.2.7 (dependency() unconditional in its
+# meson.build -- the daemon's hardware colorimeter sensors link gusb).
+#
+# Requires GLib >= 2.44 (have 2.84), libusb-1.0 (ISO base), json-glib >= 1.1.1
+# (have 1.10.0). Build AFTER GLib/JSON-GLib and BEFORE Colord.
+#
+# - introspection OFF: colord only needs the C library + gusb-1.0.pc, not the
+#   typelib; keeps GI tooling out of this package's dependency closure.
+# - vapi: needs introspection, so off too.
+# - tests/umockdev/docs: not shipped on the ISO.
+# - usb.ids: no hwdata on the ISO; the compiled-in path is harmless, it is
+#   only read at runtime for vendor/product name resolution.
+#
+# file_md5 verified against the GitHub release tarball.
+
+compile_version=017-GIT
+url="https://github.com/hughsie/libgusb/releases/download/0.4.9/libgusb-0.4.9.tar.xz"
+file_size=51672
+file_md5=354a3227334991ea4e924843c144bd82
+dir='libgusb-0.4.9'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Ddocs=false
+    -Dtests=false
+    -Dintrospection=true
+    -Dvapi=true
+    -Dumockdev=disabled
+)

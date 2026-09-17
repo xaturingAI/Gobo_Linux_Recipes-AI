@@ -1,0 +1,18 @@
+# Custom recipe for Libhandy 1.8.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://download.gnome.org/sources/libhandy/1.8/libhandy-1.8.3.tar.xz
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libhandy/1.8/libhandy-1.8.3.tar.xz"
+file_size=1791428
+file_md5=af586a91ff6d4093a6e7e283dfab5f7f
+dir='libhandy-1.8.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dintrospection=enabled
+    -Dgtk_doc=false
+    -Dtests=false
+    -Dexamples=false
+)

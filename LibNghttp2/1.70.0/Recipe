@@ -1,0 +1,22 @@
+# Custom recipe for LibNghttp2 1.70.0 (autotools)
+#
+# Part of the Pantheon stack port. libsoup3 3.6.6 hard-requires the
+# libnghttp2 pkg-config (HTTP/2). Built with --enable-lib-only so only the
+# core library is produced -- no app/examples/hpack-tools/python/cxx11 and
+# no optional external deps (openssl/libev/c-ares/libxml2 all skipped).
+#
+# Build BEFORE Libsoup3.
+#
+# file_md5 verified against github.com/nghttp2 release tarball.
+
+compile_version=017-GIT
+url="https://github.com/nghttp2/nghttp2/releases/download/v1.70.0/nghttp2-1.70.0.tar.xz"
+file_size=2018996
+file_md5=3df2b4b51caa13b76032bfd2d11d4ab2
+dir='nghttp2-1.70.0'
+recipe_type=configure
+
+configure_options=(
+    --enable-lib-only
+    --disable-dependency-tracking
+)

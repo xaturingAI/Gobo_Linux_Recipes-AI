@@ -1,0 +1,4 @@
+[Name] LLVM
+[Summary] LLVM 19 core libraries + llvm-config (build dep for Mesa 25.3.6)
+[License] Apache-2.0 WITH LLVM-exception
+[Homepage] https://llvm.org/

@@ -1,0 +1,68 @@
+# Custom recipe for IBus 1.5.29 (autotools)
+#
+# Part of the Pantheon stack port. libibus-1.0 + ibus-1.0.vapi for
+# WingpanelIndicatorKeyboard, SwitchboardPlugKeyboard, SwitchboardPlugLocale.
+#
+# Client libs only -- the ISO has no ibus-daemon use case (sysvinit, no
+# systemd units; keyboard layouts on the LiveCD are handled by X11 setxkbmap).
+# Everything UI/engine/wayland/xim is disabled; dconf support is kept ON
+# because configure hard-requires it when building the core (Dconf 0.40.0 is
+# built just before this in the pantheon chain). Vala bindings enabled so
+# valac finds ibus-1.0.vapi.
+#
+# data/dconf's install-data-hook runs a bare `dconf update` when DESTDIR is
+# empty (Compile's UnionSandbox installs without DESTDIR), which dies on the
+# missing system database /etc/dconf/db. Neutralize it via pre_build -- the
+# schema files themselves still install fine.
+# IMPORTANT: patch Makefile.IN, never Makefile.am -- touching a .am file
+# makes maintainer-mode try to regenerate with automake, and the chroot's
+# Automake (1.16.4) != the one that generated aclocal.m4 (1.16.5) ->
+# "version mismatch" build failure. With .am untouched and .in newer,
+# make considers everything up to date.
+compile_version=017-GIT
+url="https://github.com/ibus/ibus/releases/download/1.5.29/ibus-1.5.29.tar.gz"
+file_size=3989295
+file_md5=997d158eb448564b4d1713ec7ebba2ad
+dir='ibus-1.5.29'
+recipe_type=configure
+
+pre_build() {
+    # 1) data/dconf install hook: bare `dconf update` dies on the missing
+    #    system db /etc/dconf/db. Neutralize.
+    sed -i 's|^.*dconf update;.*$|\t: ; \\|' "$sourcedir/data/dconf/Makefile.in"
+    # 2) bindings/pygobject auto-enables itself when pygobject-3.0.pc is on
+    #    the index (no configure toggle!) and installs IBus.py into the
+    #    python site-packages OUTSIDE the program tree (double install ->
+    #    File exists under UnionSandbox). Drop the subdir at the Makefile.in
+    #    level (never touch .am files -- see automake note above).
+    sed -i 's|^@ENABLE_PYGOBJECT_TRUE@PYGOBJECT_DIR = pygobject$|@ENABLE_PYGOBJECT_TRUE@PYGOBJECT_DIR =|' \
+        "$sourcedir/bindings/Makefile.in"
+}
+
+do_configuration() {
+    # NOTE flag names verified against configure.ac: systemd gate is
+    # --disable-systemd-services (AC_ARG_ENABLE(systemd-services), line 430);
+    # there is NO --disable-xtest or --disable-systemd in 1.5.29 (xtest has
+    # no toggle; key-snooper is the only input-related disable).
+    ./configure --prefix="$target" \
+        --sysconfdir="$target/etc" \
+        --disable-ui \
+        --disable-engine \
+        --disable-gtk2 \
+        --disable-gtk3 \
+        --disable-gtk4 \
+        --disable-wayland \
+        --disable-xim \
+        --disable-key-snooper \
+        --disable-appindicator \
+        --disable-libnotify \
+        --disable-emoji-dict \
+        --disable-unicode-dict \
+        --disable-python-library \
+        --disable-systemd-services \
+        --disable-tests \
+        --disable-install-tests \
+        --disable-gtk-doc \
+        --enable-dconf \
+        --enable-vala
+}

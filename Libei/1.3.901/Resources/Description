@@ -1,0 +1,5 @@
+[Name] libei
+[Summary] XDG input emulation library (TETHER protocol)
+[Description] libei implements the TETHER input-emulation protocol for Wayland compositors (sends keystrokes, mouse moves, touches via DBus from clients). Mutter 48+ requires libei >= 1.3.901. Build AFTER GLib 2.84 + systemd-stub (libudev) and BEFORE Mutter. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/libinput/libei

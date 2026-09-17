@@ -1,0 +1,36 @@
+# Custom recipe for PipeWire 1.4.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. The libpipewire client library that
+# Mutter 48+ uses for screen-cast (remote_desktop feature). We build ONLY
+# libpipewire (the client library + headers), not the full daemon -- the
+# daemon needs systemd and a running session bus, which the ISO doesn't
+# have. libpipewire.so can still be dlopen()-ed by Mutter at runtime.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://github.com/PipeWire/pipewire/archive/refs/tags/1.4.0.tar.gz"
+file_size=2556081
+file_md5=875810a2d0c83c01c21f599f26c341ef
+dir='pipewire-1.4.0'
+recipe_type=meson
+
+# - gstreamer: optional; ISO doesn't ship it.
+# - session-manager: the daemon if built; we don't build it.
+# - tests/examples: not shipped on the ISO.
+meson_variables=(
+    --buildtype=release
+    "-Ddocs=disabled"
+    "-Dman=disabled"
+    "-Dtests=disabled"
+    "-Dinstalled_tests=disabled"
+    "-Dgstreamer=disabled"
+    "-Dexamples=disabled"
+    "-Dsession-managers="
+    "-Dsystemd=disabled"
+    "-Dbluez5=disabled"
+    "-Djack=disabled"
+    "-Dpipewire-alsa=disabled"
+    "-Dpipewire-jack=disabled"
+    "-Dudevrulesdir=/System/Index/lib/udev/rules.d"
+)

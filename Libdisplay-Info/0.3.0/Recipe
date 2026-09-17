@@ -1,0 +1,19 @@
+# Custom recipe for libdisplay-info 0.3.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Parses EDID/DisplayID descriptors from
+# monitors; Mutter 48+ depends on it (>= 0.2). Build AFTER GLib 2.84 and
+# BEFORE Mutter.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libd/libdisplay-info/libdisplay-info_0.3.0.orig.tar.bz2"
+file_size=115512
+file_md5=f336637cc0a8f527736f13e99a172a90
+dir='libdisplay-info-0.3.0'
+recipe_type=meson
+
+# - no meson options exist for 0.3.0 (build always compiles everything).
+meson_variables=(
+    --buildtype=release
+)

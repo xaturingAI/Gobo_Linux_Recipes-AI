@@ -1,0 +1,23 @@
+# Custom recipe for GweatherLocations 2026.2 (meson)
+#
+# Part of the Pantheon stack port. Data-only package (Locations.bin + XML)
+# that ships the gweather-locations.pc pkg-config which libgweather 4.6.0
+# consults for its location database. Lives on gitlab.gnome.org (Anubis
+# bot-gated) so the GitHub mirror tag tarball is used.
+#
+# Pure data + a python script; needs only python3 on the build host.
+#
+# Build AFTER Libsoup3/GeocodeGlib and BEFORE Libgweather4.
+#
+# file_md5 verified against the github.com/GNOME/gweather-locations release.
+
+compile_version=017-GIT
+url="https://github.com/GNOME/gweather-locations/archive/refs/tags/2026.2.tar.gz"
+file_size=7943953
+file_md5=4ac251c45a5a2f5df7f7651925270afa
+dir='gweather-locations-2026.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+)

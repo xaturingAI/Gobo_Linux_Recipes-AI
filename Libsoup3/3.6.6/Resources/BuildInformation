@@ -1,0 +1,3 @@
+Build type: meson
+Source: https://download.gnome.org/sources/libsoup/3.6/libsoup-3.6.6.tar.xz
+Build order: part of the Pantheon session stack (see Recipes/pantheon-recipes.md).

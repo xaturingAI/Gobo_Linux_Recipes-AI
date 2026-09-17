@@ -1,0 +1,5 @@
+[Name] JSON-GLib
+[Summary] GLib-based JSON parser/writer library
+[Description] JSON-GLib is a JSON parser/writer built on GLib/GObject. Bumped from the ISO's 1.6 to 1.10.x for the GNOME 48 stack. Required by gnome-desktop-4, libgweather, libadwaita, and many other GNOME 48 libs. Build AFTER GLib 2.84 and BEFORE gnome-desktop-4. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU LGPL v2.1+
+[Homepage] https://gitlab.gnome.org/GNOME/json-glib

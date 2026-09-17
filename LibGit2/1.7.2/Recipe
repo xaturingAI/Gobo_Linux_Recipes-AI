@@ -1,0 +1,38 @@
+# Custom recipe for LibGit2 1.7.2 (cmake)
+#
+# Part of the Pantheon stack port. Embeddable git library, the low-level
+# backend for LibGit2-Glib (which PantheonCode links: libgit2-glib-1.0.pc).
+#
+# NOTE pinned to 1.7.2, NOT 1.8.x: libgit2 1.8 moved the git_error_* setter
+# functions (git_error_set_str et al.) out of the public git2/errors.h into
+# the deprecated git2/sys/errors.h, which git2.h does not include. LibGit2-Glib
+# 1.2.0 calls git_error_set_str under `#if LIBGIT2_VER_MAJOR > 0`, so against
+# 1.8.x it hits "implicit declaration of 'git_error_set_str'". 1.7.2 keeps the
+# setters in the public errors.h (line 166), matching the API ggit was written
+# for. ggit needs libgit2 >= 0.25.0, so 1.7.2 is fine.
+#
+# Builds with bundled http-parser (USE_HTTP_PARSER default builtin), zlib
+# (ISO), and HTTPS via OpenSSL (USE_HTTPS=OpenSSL; OpenSSL 1.1.1w headers are
+# on the index from the step_winedev build). SSH OFF (libssh2 is not on the
+# ISO and USE_SSH defaults to OFF anyway). Tests, CLI and examples off;
+# shared libs on.
+#
+# file_md5 + file_size verified against the github v1.7.2 tag tarball.
+
+compile_version=017-GIT
+url="https://github.com/libgit2/libgit2/archive/refs/tags/v1.7.2.tar.gz"
+file_size=7548186
+file_md5=fa4f30e57c67fabee18c5961af72fb3f
+dir='libgit2-1.7.2'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_TESTS=OFF
+    -DBUILD_CLI=OFF
+    -DBUILD_EXAMPLES=OFF
+    -DUSE_SSH=OFF
+    -DUSE_HTTPS=OpenSSL
+    -DUSE_ICONV=ON
+)

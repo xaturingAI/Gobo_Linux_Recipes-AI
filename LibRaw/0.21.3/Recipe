@@ -1,0 +1,28 @@
+# Custom recipe for LibRaw 0.21.3 (autotools)
+#
+# Part of the Pantheon stack port. RAW image decoding library. Required by
+# PantheonPhotos 8.0.2: dependency('libraw') >= 0.13.2 (raw photo support).
+#
+# Builds on libjpeg, zlib, lcms2 (LCMS2 2.19.1 on the index) and openmp
+# (gcc). Jasper (JasPer codec) is disabled — it is not on the ISO and the
+# 0.21.x series no longer needs it. Examples + docs not installed.
+#
+# file_md5 + file_size verified against the official libraw.org release
+# tarball (this tarball ships the generated configure script; the github
+# archive tag tarball does not).
+
+compile_version=017-GIT
+url="https://www.libraw.org/data/LibRaw-0.21.3.tar.gz"
+file_size=1483982
+file_md5=b9d2b96a8e30ed76ff5b0da19f3fbe81
+dir='LibRaw-0.21.3'
+recipe_type=configure
+
+configure_options=(
+    --disable-examples
+    --disable-jasper
+    --enable-openmp
+    --enable-jpeg
+    --enable-zlib
+    --enable-lcms
+)

@@ -1,0 +1,27 @@
+# Custom recipe for LibGit2-Glib 1.2.0 (meson)
+#
+# Part of the Pantheon stack port. GLib/GObject bindings for libgit2.
+# Required by PantheonCode 8.3.2: dependency('libgit2-glib-1.0') >= 1.2.0.
+#
+# Builds on libgit2 (1.7.2; must stay < 1.8, see LibGit2 recipe) +
+# glib/gobject/gio/gmodule. introspection + vapi
+# ON (Code's vala code binds libgit2-glib via gir/vapi); ssh/python/gtk-doc
+# off. Provides libgit2-glib-1.0.pc.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libgit2-glib/1.2/libgit2-glib-1.2.0.tar.xz"
+file_size=140576
+file_md5=e77dd1cb02d0e25f79ce8eda8dba6a7d
+dir='libgit2-glib-1.2.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dintrospection=true"
+    "-Dvapi=true"
+    "-Dssh=false"
+    "-Dpython=false"
+    "-Dgtk_doc=false"
+)

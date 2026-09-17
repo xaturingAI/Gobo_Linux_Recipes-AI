@@ -1,0 +1,40 @@
+# Custom recipe for LLVM 19.1.7 (cmake)
+#
+# Part of the Pantheon desktop stack port. Mesa 25.3.6 needs LLVM >= 18 for
+# the radeonsi/llvmpipe drivers (llvmpipe is the software fallback for the
+# LiveCD desktop). Built from the llvm subproject of the llvm-project
+# release tag; only the core `llvm` project is compiled (no clang/lld/...).
+#
+# Build AFTER the GCC 14 toolchain (built in an earlier step). llvm-config
+# is installed into the index bin so Mesa's meson config-tool dependency
+# finds it.
+#
+# Shared dylib build (-DLLVM_BUILD_LLVM_DYLIB=ON) so Mesa links libLLVM.so
+# dynamically instead of a huge static link; X86 + AMDGPU targets cover
+# llvmpipe (JIT) and radeonsi (AMD shader backend). Docs/tests/bindings and
+# optional libs (terminfo/zlib/zstd/libxml2/ffi) are all disabled.
+
+compile_version=017-GIT
+url="https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-19.1.7.tar.gz"
+file="llvm-19.1.7.tar.gz"
+file_size=217422846
+file_md5=48b47ec165a22bd11e400259f96706a6
+dir='llvm-project-llvmorg-19.1.7/llvm'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    "-DLLVM_TARGETS_TO_BUILD=X86;AMDGPU"
+    -DLLVM_INCLUDE_TESTS=OFF
+    -DLLVM_INCLUDE_EXAMPLES=OFF
+    -DLLVM_INCLUDE_BENCHMARKS=OFF
+    -DLLVM_INCLUDE_DOCS=OFF
+    -DLLVM_ENABLE_TERMINFO=OFF
+    -DLLVM_ENABLE_ZLIB=OFF
+    -DLLVM_ENABLE_ZSTD=OFF
+    -DLLVM_ENABLE_LIBXML2=OFF
+    -DLLVM_ENABLE_FFI=OFF
+    -DLLVM_ENABLE_BINDINGS=OFF
+    -DLLVM_BUILD_LLVM_DYLIB=ON
+    -DLLVM_LINK_LLVM_DYLIB=ON
+)

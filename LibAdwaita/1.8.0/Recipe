@@ -1,0 +1,31 @@
+# Custom recipe for LibAdwaita 1.8.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. GNOME 4 widget library on top of GTK4.
+# Build AFTER GTK 4.18 + appstream-glib (not yet, optional) and BEFORE
+# Mutter + Granite 7 + Pantheon apps.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libadwaita/1.8/libadwaita-1.8.0.tar.xz"
+file_size=2688964
+file_md5=1320dcde814b4b426f9f0720c2730d45
+dir='libadwaita-1.8.0'
+recipe_type=meson
+
+# - docs/gtk-doc/man: not shipped on the ISO.
+# - introspection ON + vapi ON: valac needs --pkg libadwaita-1 for every
+#   GTK4 elementary app. The vapi is generated from the GIR via vapigen
+#   (gnome.generate_vapi, packages: ['gio-2.0','gtk4']), so this package must
+#   be built AFTER GTK4 (with introspection, provides Gtk-4.0.gir) and AFTER
+#   Vala (provides vapigen + the gio-2.0/gtk4 vapi files).
+# - examples/tests: not shipped on the ISO.
+meson_variables=(
+    --buildtype=release
+    "-Ddocumentation=false"
+    "-Dintrospection=enabled"
+    "-Dvapi=true"
+    "-Dtests=false"
+    "-Dexamples=false"
+    "-Ddefault_library=shared"
+)
