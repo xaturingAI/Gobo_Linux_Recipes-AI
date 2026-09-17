@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# WirePlumber: PipeWire session manager (system-wide instance)
+#
+# Companion to the PipeWire boot task -- that task normally starts the session
+# manager itself.  This task lets you (re)start just the session manager
+# against an already-running daemon, e.g. after editing a WirePlumber config:
+#
+#     WirePlumber Stop
+#     WirePlumber Start
+#
+# Uses the `main-systemwide` profile: the default 0.5.17 config ships it to
+# disable the session-only modules (logind, portal permissionstore,
+# reserve-device) that make no sense for a root system-wide instance.
+op="$1"
+[ "$op" ] || op="start"
+
+WP="$(readlink -f /Programs/WirePlumber/Current)/bin/wireplumber"
+
+start() {
+    pgrep -x wireplumber >/dev/null 2>&1 && exit 0
+    [ -x "$WP" ] || { echo "WirePlumber: binary missing ($WP)"; exit 1; }
+    mkdir -p /Data/Variable/log
+    chmod 1777 /Data/Variable/log
+    export XDG_RUNTIME_DIR=/run
+    export PIPEWIRE_RUNTIME_DIR=/run/pipewire
+    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+    setsid -f "$WP" --profile main-systemwide \
+        </dev/null >>/Data/Variable/log/wireplumber.log 2>&1 &
+}
+
+stop() {
+    pkill -x wireplumber 2>/dev/null
+}
+
+case "$op" in
+    [Ss]tart) start ;;
+    [Ss]top)  stop ;;
+    *) echo "usage: WirePlumber [start|stop]"; exit 2 ;;
+esac

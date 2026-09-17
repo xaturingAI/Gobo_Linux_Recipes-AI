@@ -1,0 +1,67 @@
+# Custom recipe for WirePlumber 0.5.17 (meson) -- the PipeWire session manager
+#
+# Part of the live audio stack.  Session/policy manager for the system-wide
+# PipeWire 1.4.0 daemon (see Recipes/PipeWire/1.4.0): device/enumeration,
+# default device + default format selection, routing, profiles.
+#
+# WirePlumber's configuration engine is Lua; by default (`-Dsystem-lua=false`)
+# it builds the Lua bundled as a meson *subproject* STATICALLY into the
+# libwireplumber library, so NO separate Lua program is needed on the ISO at
+# runtime and there is no Lua 5.4 requirement (the ISO ships Lua 5.3.5 only).
+# The meson wrap pulls lua-5.5.0 from lua.org plus a wrapdb patch; both are
+# pre-staged into subprojects/packagecache by pre_build from the recipe's
+# second/third URLs, so meson never needs to download either (offline-safe).
+#
+# Build AFTER PipeWire 1.4.0 -- its libpipewire-0.3 / libspa-0.2 pkg-config
+# files satisfy the `libpipewire-0.3 >= 1.0.2` dependency (the pre-existing
+# client-only LibPipewire 1.4.0 satisfies it too, but the full daemon recipe
+# is the intended predecessor in the `pipewire` build step).
+#
+# elogind/systemd integration is OFF: the daemon runs system-wide as root
+# (not in a per-user session), and the 0.5.17 default config ships the
+# `systemwide` profile (`--profile main-systemwide`) that disables the
+# session-only modules (logind, portal permissionstore, reserve-device).
+#
+# Daemon startup is wired by the Gobo init system via
+# Resources/Tasks/WirePlumber (symlinked into /System/Tasks by SymlinkProgram)
+# and invoked with `--profile main-systemwide`; the PipeWire boot task also
+# starts it automatically.
+#
+# Hashes verified against the 0.5.17 tag archive, lua.org lua-5.5.0 tarball
+# and the wrapdb lua patch zip (patch_hash in subprojects/lua.wrap is SHA256,
+# the wrap source_hash is checked by meson against the staged tarball).
+
+compile_version=017-GIT
+urls=(
+    "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.17/wireplumber-0.5.17.tar.gz"
+    "https://www.lua.org/ftp/lua-5.5.0.tar.gz"
+    "https://wrapdb.mesonbuild.com/v2/lua_5.5.0-1/get_patch"
+)
+files=( "wireplumber-0.5.17.tar.gz" "lua-5.5.0.tar.gz" "lua_5.5.0-1_patch.zip" )
+file_sizes=( 689731 396950 2361 )
+file_md5s=( 63ceb98e9c88c025e56f57641b84fc24 c8b73c52a8c3c80978512f17347ee24d 82e3f5bb22383a7a16d17d3a8f9cb254 )
+dir='wireplumber-0.5.17'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dsystem-lua=false"
+    "-Dsystemd=disabled"
+    "-Delogind=disabled"
+    "-Dintrospection=disabled"
+    "-Ddoc=disabled"
+    "-Dtests=false"
+    "-Ddbus-tests=false"
+    "-Dmodules=true"
+    "-Ddaemon=true"
+    "-Dtools=true"
+)
+
+pre_build() {
+    # Stage the bundled-Lua wrap inputs before `meson setup` runs, so meson's
+    # subproject resolver finds them in the packagecache and does not attempt
+    # a wrap download (the build host may be offline).
+    mkdir -p "$sourcedir/subprojects/packagecache"
+    cp "$compileArchivesDir/lua-5.5.0.tar.gz" "$sourcedir/subprojects/packagecache/lua-5.5.0.tar.gz"
+    cp "$compileArchivesDir/lua_5.5.0-1_patch.zip" "$sourcedir/subprojects/packagecache/lua_5.5.0-1_patch.zip"
+}
