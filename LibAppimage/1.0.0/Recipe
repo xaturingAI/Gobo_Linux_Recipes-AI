@@ -1,0 +1,71 @@
+#!/bin/bash
+# libappimage 1.0.0 -- AppImage library (reference implementation).
+#
+# Part of the AppImage support tier (AppImageKit / libappimage, ROADMAP phase 4).
+# Implements AppImage handling: type detection, mounting, extraction and the
+# C/C++ API used by desktop-integration frontends (appimaged, AppImageLauncher).
+# Running ordinary AppImages needs NONE of this -- the ISO's FUSE already does
+# that; this library is for tools that inspect/build/integrate AppImages.
+#
+# Build system: cmake (mono-repo). In v1.0.0 the following are REQUIRED system
+# pkg-config deps and are all present on the ISO:
+#     glib-2.0 / gobject-2.0 / gio-2.0 (>= 2.40)
+#     zlib
+#     cairo
+# and, only because the bundled squashfuse path imports it via pkg-config, a
+# usable FUSE dev install (fuse.h + fuse.pc) -- the ISO ships Fuse 2.9.9.
+#
+# Everything else is usable either as a system package or fetched+bundled
+# inside the cmake build tree (ExternalProject_Add), so this recipe leaves them
+# BUNDLED to stay self-contained:
+#     squashfuse  (git)          - libfuse-based squashfs FUSE layer
+#     xdg-utils-cxx (git)        - XDG BaseDir/DesktopEntry C++ bindings
+#     boost 1.69.0 (filesystem)  - C++ dep for the C++ API
+#
+# 01-squashfuse-unistd.patch (auto-applied by Compile, patch -Np1): the pinned
+# squashfuse git 1f98030 fails on GCC 14+ -- ll.c uses rmdir() without
+# <unistd.h>, an implicit-declaration error. The patch adds a sed line to
+# libappimage's src/patches/patch-squashfuse.sh.in so the ExternalProject
+# PATCH step inserts `#include <unistd.h>` on ll.c's first line.
+#
+# 02-boost-url.patch: the bundled boost 1.69.0 is fetched from
+# dl.bintray.com, which sunset in 2021 (download step fails with the original
+# URL). Point it at the official archives.boost.io mirror; the pinned SHA256
+# URL_HASH still verifies the downloaded tarball. (GitHub release URLs 404.)
+#
+# 03-hashlib-cstdint.patch: libappimage's own utils/hashlib.h uses uint8_t but
+# never includes <cstdint> -- a hard error with modern libstdc++ where it is
+# no longer pulled in transitively. Adds the include.
+#
+# xz and libarchive however are switched to the ISO's system copies via
+# USE_SYSTEM_XZ / USE_SYSTEM_LIBARCHIVE (the bundled xz 5.2.3 tarball URL is
+# long dead; libarchive is a base ISO program). If we later build native
+# Boost/squashfuse/xdg-utils-cxx recipes, mirror the Arch PKGBUILD and set
+# USE_SYSTEM_BOOST / USE_SYSTEM_SQUASHFUSE / USE_SYSTEM_XDGUTILS too.
+#
+# BUILD_TESTING=OFF is mandatory: lib/gtest is a git SUBMODULE that the release
+# tarball does not inline, and lib/CMakeLists.txt hard-fails at configure time
+# whenever testing is on and lib/gtest is empty.
+#
+# The bundled ExternalProject fetches run at CONFIGURE time => this recipe needs
+# network + git + autotools in the chroot at build time (the build host has all
+# of these; the webkit/flatpak tiers already rely on it).
+#
+# file_size + file_md5 verified against
+# https://github.com/AppImageCommunity/libappimage/archive/refs/tags/v1.0.0.tar.gz
+# (note the AppImageCommunity org and the v-prefixed tag).
+
+compile_version=017-GIT
+url="https://github.com/AppImageCommunity/libappimage/archive/refs/tags/v1.0.0.tar.gz"
+file_size=2076712
+file_md5=b353704acb9388602a2289f64355f838
+dir='libappimage-1.0.0'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_SKIP_RPATH=True
+    -DUSE_SYSTEM_XZ=ON
+    -DUSE_SYSTEM_LIBARCHIVE=ON
+    -DBUILD_TESTING=OFF
+)
