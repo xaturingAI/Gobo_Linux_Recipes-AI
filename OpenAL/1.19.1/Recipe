@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# 64-bit OpenAL-Soft runtime for NATIVE Linux games (matches the ISO's
+# 32-bit Lib32-openal stack). Same Debian-binary manifest trick as Lib32-openal:
+# unpack the amd64 libopenal1 .deb and install the versioned .so.1 into the
+# program's lib/ (→ /System/Index/lib). No dev symlink/headers — build-time
+# consumers would need a source openal-soft recipe; games only need libopenal.so.1.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/o/openal-soft/libopenal1_1.19.1-2_amd64.deb"
+file_size=500936
+file_md5=bd9c3a4f4839ce83d6f26274142059d4
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib
+    cp -a usr/lib/x86_64-linux-gnu/libopenal.so.1* "$target"/lib/ || Die "Failed copying 64-bit openal."
+}
