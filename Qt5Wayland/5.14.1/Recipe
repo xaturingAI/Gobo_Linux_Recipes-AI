@@ -1,0 +1,300 @@
+#!/bin/bash
+
+# QtWayland 5.14.1 — Qt Wayland platform plugin + Qt5WaylandClient library.
+#
+# The ISO's Qt 5.14.1 ships with the X11 (qxcb), eglfs/offscreen/linuxfb/qvnc/
+# qwebgl/minimal platform plugins ONLY — no Wayland support. Building every Qt
+# module from source would take hours, so we build just the qtwayland module
+# against the already-installed Qt (qmake lives in Programs/Qt/5.14.1) and
+# install it into its own program tree (Programs/Qt5Wayland/5.14.1).
+#
+# Layout produced by this recipe:
+#   /Programs/Qt5Wayland/5.14.1/lib/                         libQt5WaylandClient.so*, libQt5WaylandCompositor.so*
+#   /Programs/Qt5Wayland/5.14.1/plugins/platforms/           libqwayland-egl.so, libqwayland-generic.so
+#   /Programs/Qt5Wayland/5.14.1/plugins/generic/             libqwaylandtouch.so
+#   /Programs/Qt5Wayland/5.14.1/include/QtWaylandClient/     headers (for building other Qt wayland apps)
+#   /Programs/Qt5Wayland/5.14.1/include/QtWaylandCompositor/ headers
+#
+# apply-live-fixes.sh (section 14d) then symlinks
+#   plugins/platforms/libqwayland-{egl,generic}.so -> /Programs/Qt/5.14.1/plugins/platforms/
+#   lib/libQt5WaylandClient.so.5                    -> /System/Index/lib/libQt5WaylandClient.so.5
+# so Qt clients (VLC's Qt interface, etc.) pick up the Wayland platform on a
+# Wayland session.
+#
+# Build requirements (all present in the chroot): qmake, wayland-scanner,
+# wayland-protocols, wayland client headers, libxkbcommon, g++,
+# qtbase-everywhere-src-5.14.1.tar.xz (staged alongside this tarball — it is
+# NOT a second download; it only contains the two support-library sources).
+
+compile_version=017-GIT
+
+# NOTE: recipe_version 2 — also builds libQt5FontDatabaseSupport.a +
+# libQt5XkbCommonSupport.a from the matching qtbase source (see
+# build_support_libs below) before running qtwayland's own build.
+url="https://download.qt.io/archive/qt/5.14/5.14.1/submodules/qtwayland-everywhere-src-5.14.1.tar.xz"
+file_size=544744
+file_md5=fb18289f426280ced78523503a98a195
+recipe_type=manifest
+uncompress=no
+
+# Rebuild the static support libs that the installed Qt 5.14.1 lacks but
+# qtwayland's client/compositor link against. The installed Qt package ships
+# every *Support.prl (so qmake's qtHaveModule() thinks each static lib is
+# present and absolutizes /Programs/Qt/5.14.1/lib/libQt5*Support.a into the
+# link line) but the .a archives were stripped. qtwayland's client lib needs
+# FIVE of them: FontDatabase, XkbCommon, EventDispatcher, Theme, Service.
+# We compile only the qtbase sources qtwayland actually pulls in, against the
+# installed Qt headers, with include paths pinned to the Program trees so the
+# build does not depend on System/Index.
+#
+# The sixth optional support lib, QtLinuxAccessibilitySupport, would need the
+# at-spi DBus adaptor codegen (qdbusxml2cpp + atspi) that we don't want to
+# reproduce by hand; it is NOT used by the Wayland platform plugin, so instead
+# of building it we remove its module metadata before qmake runs. That makes
+# qtHaveModule(linuxaccessibility_support-private) return false, so qmake omits
+# linuxaccessibility (and its downstream accessibility_support) from the link.
+build_support_libs() {
+    local qtar="$compileArchivesDir/qtbase-everywhere-src-5.14.1.tar.xz"
+    [ -f "$qtar" ] || Die "qtbase tarball not found (stage it): $qtar"
+
+    local QTD=/Programs/Qt/5.14.1
+    local QTI="$QTD/include"
+    QTBUILD="$compileSourcesDir/qtbase-support-build"
+    rm -rf "$QTBUILD"
+    mkdir -p "$QTBUILD/src" "$QTBUILD/obj"
+    tar xJf "$qtar" -C "$QTBUILD/src" || Die "failed to extract qtbase tarball"
+
+    local QB="$QTBUILD/src/qtbase-everywhere-src-5.14.1"
+    local CFLAGS="-fPIC -O2 -std=c++1z -w"
+    local DEFS="-DQT_NO_DEBUG -DQT_NO_CAST_FROM_ASCII -D_LARGEFILE64_SOURCE \
+        -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DQT_NO_LINKED_LIST \
+        -DQT_NO_FOREACH -DQT_NO_JAVA_STYLE_ITERATORS \
+        -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT -DQT_USE_QSTRINGBUILDER \
+        -D_GNU_SOURCE"
+    local INC="-I$QTI -I$QTI/QtCore -I$QTI/QtGui -I$QTI/QtDBus \
+        -I$QTI/QtCore/5.14.1 -I$QTI/QtCore/5.14.1/QtCore \
+        -I$QTI/QtGui/5.14.1 -I$QTI/QtGui/5.14.1/QtGui \
+        -I$QTI/QtFontDatabaseSupport/5.14.1 \
+        -I$QTI/QtFontDatabaseSupport/5.14.1/QtFontDatabaseSupport \
+        -I$QTI/QtXkbCommonSupport/5.14.1 \
+        -I$QTI/QtXkbCommonSupport/5.14.1/QtXkbCommonSupport \
+        -I$QTI/QtInputSupport/5.14.1 \
+        -I$QTI/QtEglSupport/5.14.1 \
+        -I$QTD/mkspecs/linux-g++ \
+        -I/Programs/FreeType/Current/include/freetype2 \
+        -I/Programs/Fontconfig/Current/include \
+        -I/Programs/XKBcommon/Current/include \
+        -I/Programs/LibGLVnd/Current/include"
+    local PS="$QB/src/platformsupport"
+    INC="$INC -I$PS/eventdispatchers -I$PS/eglconvenience"
+
+    # QtLinuxAccessibilitySupport (and its QtAccessibilitySupport dep, which is
+    # only reachable through it) is not needed by the Wayland client and is the
+    # only one that would need at-spi DBus adaptor codegen. Drop its module
+    # metadata so qtwayland's qmake never adds either to the link line.
+    rm -f "$QTD/lib/libQt5LinuxAccessibilitySupport.prl" \
+          "$QTD/mkspecs/modules/qt_lib_linuxaccessibility_support_private.pri"
+
+    # FontDatabaseSupport + XkbCommonSupport (no Q_OBJECT -> no moc)
+    local FS="$PS/fontdatabases"
+    local XS="$PS/input/xkbcommon"
+    local SRC=(
+        "$FS/freetype/qfreetypefontdatabase.cpp"
+        "$FS/freetype/qfontengine_ft.cpp"
+        "$FS/fontconfig/qfontconfigdatabase.cpp"
+        "$FS/fontconfig/qfontenginemultifontconfig.cpp"
+        "$XS/qxkbcommon.cpp"
+        "$XS/qxkbcommon_3rdparty.cpp"
+    )
+
+    # EventDispatcherSupport (QUnixEventDispatcherQPA has Q_OBJECT -> run moc).
+    # qgenericunixeventdispatcher.cpp is compiled SEPARATELY with -DQT_NO_GLIB:
+    # its default createUnixEventDispatcher() instantiates QPAEventDispatcherGlib
+    # (qeventdispatcher_glib.cpp) when glib is available, which would drag glib
+    # linkage into libQt5WaylandClient.so. The Wayland client doesn't need the
+    # glib dispatcher; with QT_NO_GLIB it falls back to plain QUnixEventDispatcherQPA.
+    SRC+=(
+        "$PS/eventdispatchers/qunixeventdispatcher.cpp"
+    )
+    GLIBFREE=(
+        "$PS/eventdispatchers/qgenericunixeventdispatcher.cpp"
+    )
+
+    # ThemeSupport: qgenericunixthemes guards its D-Bus global-menu / tray code
+    # behind QT_NO_DBUS / QT_NO_SYSTEMTRAYICON, so we build it WITHOUT D-Bus to
+    # keep the lib self-contained (QtCore/QtGui only) and avoid pulling in the
+    # whole dbusmenu/dbustray source set. It is compiled separately below with
+    # those two defines; the other modules keep the default DEFS.
+    local THEME=(
+        "$PS/themes/qabstractfileiconengine.cpp"
+        "$PS/themes/genericunix/qgenericunixthemes.cpp"
+    )
+
+    # ServiceSupport (uses QtDBus via <QtDBus/...>)
+    SRC+=(
+        "$PS/services/genericunix/qgenericunixservices.cpp"
+    )
+
+    # EglSupport: libQt5EglSupport.a, needed by the Wayland EGL platform plugin
+    # (libqwayland-egl.so) and the linux-dmabuf compositor integration. The
+    # client/plugin link the q_configFromGLFormat/q_glFormatFromConfig/
+    # q_hasEglExtension helpers (qeglconvenience.cpp) and the compositor uses
+    # QEGLStreamConvenience (qeglstreamconvenience.cpp). Built against the
+    # LibGLVnd EGL headers; QEGLPlatformContext/pbuffer/eglfs sources are NOT
+    # needed by qtwayland. QT_EGL_NO_X11 avoids the X11 EGL header path.
+    local EGL_SRC=(
+        "$PS/eglconvenience/qeglconvenience.cpp"
+        "$PS/eglconvenience/qeglstreamconvenience.cpp"
+    )
+
+    local i name
+    for i in "${SRC[@]}"; do
+        name=$(basename "$i" .cpp)
+        g++ $CFLAGS $DEFS $INC -c -o "$QTBUILD/obj/$name.o" "$i" \
+            || Die "failed to compile Qt support source $name"
+    done
+    for i in "${THEME[@]}"; do
+        name=$(basename "$i" .cpp)
+        g++ $CFLAGS $DEFS -DQT_NO_DBUS -DQT_NO_SYSTEMTRAYICON $INC \
+            -c -o "$QTBUILD/obj/$name.o" "$i" \
+            || Die "failed to compile Qt theme support source $name"
+    done
+    for i in "${GLIBFREE[@]}"; do
+        name=$(basename "$i" .cpp)
+        g++ $CFLAGS $DEFS -DQT_NO_GLIB $INC \
+            -c -o "$QTBUILD/obj/$name.o" "$i" \
+            || Die "failed to compile Qt glib-free support source $name"
+    done
+    for i in "${EGL_SRC[@]}"; do
+        name=$(basename "$i" .cpp)
+        g++ $CFLAGS $DEFS -DQT_EGL_NO_X11 $INC \
+            -c -o "$QTBUILD/obj/$name.o" "$i" \
+            || Die "failed to compile Qt EGL support source $name"
+    done
+
+    # moc for the Q_OBJECT event-dispatcher class (QUnixEventDispatcherQPA).
+    "$QTD/bin/moc" $INC "$PS/eventdispatchers/qunixeventdispatcher_qpa_p.h" \
+        -o "$QTBUILD/obj/moc_qunixeventdispatcher_qpa.cpp" \
+        || Die "moc qunixeventdispatcher_qpa_p.h failed"
+    g++ $CFLAGS $DEFS $INC -c \
+        -o "$QTBUILD/obj/moc_qunixeventdispatcher_qpa.o" \
+        "$QTBUILD/obj/moc_qunixeventdispatcher_qpa.cpp" \
+        || Die "failed to compile moc_qunixeventdispatcher_qpa"
+
+    ( cd "$QTBUILD/obj" && ar rcs "$QTBUILD/libQt5FontDatabaseSupport.a" \
+        qfreetypefontdatabase.o qfontengine_ft.o \
+        qfontconfigdatabase.o qfontenginemultifontconfig.o ) \
+        || Die "failed to archive libQt5FontDatabaseSupport.a"
+    ( cd "$QTBUILD/obj" && ar rcs "$QTBUILD/libQt5XkbCommonSupport.a" \
+        qxkbcommon.o qxkbcommon_3rdparty.o ) \
+        || Die "failed to archive libQt5XkbCommonSupport.a"
+    ( cd "$QTBUILD/obj" && ar rcs "$QTBUILD/libQt5EventDispatcherSupport.a" \
+        qunixeventdispatcher.o qgenericunixeventdispatcher.o \
+        moc_qunixeventdispatcher_qpa.o ) \
+        || Die "failed to archive libQt5EventDispatcherSupport.a"
+    ( cd "$QTBUILD/obj" && ar rcs "$QTBUILD/libQt5ThemeSupport.a" \
+        qabstractfileiconengine.o qgenericunixthemes.o ) \
+        || Die "failed to archive libQt5ThemeSupport.a"
+    ( cd "$QTBUILD/obj" && ar rcs "$QTBUILD/libQt5ServiceSupport.a" \
+        qgenericunixservices.o ) \
+        || Die "failed to archive libQt5ServiceSupport.a"
+    ( cd "$QTBUILD/obj" && ar rcs "$QTBUILD/libQt5EglSupport.a" \
+        qeglconvenience.o qeglstreamconvenience.o ) \
+        || Die "failed to archive libQt5EglSupport.a"
+
+    # qtwayland's qmake bakes the .a paths into its Makefiles as
+    # /Programs/Qt/5.14.1/lib/libQt5*Support.a, so install them there now.
+    cp "$QTBUILD"/libQt5*Support.a "$QTD/lib/" \
+        || Die "cannot install support libs into $QTD/lib"
+    if [ -n "$target" ]; then
+        mkdir -p "$target/lib"
+        cp "$QTBUILD"/libQt5*Support.a "$target/lib/"
+    fi
+    Log_Info "built + installed Qt support libs"
+}
+
+# Extract + compile the module in pre_install (mirrors the Lib32-* manifest
+# recipes, which also unpack in pre_install). $target already exists here.
+
+pre_install() {
+    local tarball="$compileArchivesDir/qtwayland-everywhere-src-5.14.1.tar.xz"
+    local srcdir
+    [ -f "$tarball" ] || Die "qtwayland tarball not found: $tarball"
+
+    build_support_libs
+
+    tar xJf "$tarball" || Die "failed to extract qtwayland tarball"
+    if [ -d "qtwayland-everywhere-src-5.14.1" ]; then
+        srcdir="qtwayland-everywhere-src-5.14.1"
+    else
+        dir=$(tar tJf "$tarball" | head -1)
+        srcdir="${dir%/}"
+    fi
+
+    pushd "$srcdir" >/dev/null || Die "cannot cd into $srcdir"
+    # Make sure the Qt helpers + wayland-scanner resolve on PATH and that
+    # qmake's own bin dir is used for moc/uic/rcc if it ever spawns them.
+    export PATH="/Programs/Qt/5.14.1/bin:/System/Index/bin:$PATH"
+
+    # qtwayland's client pulls in the AT-SPI accessibility bridge guarded by the
+    # legacy macro QT_NO_ACCESSIBILITY_ATSPI_BRIDGE. A stock Qt build defines that
+    # macro in its generated qconfig.h when the at-spi bridge feature is disabled,
+    # but the ISO's installed qconfig.h is a trimmed stub that omits all legacy
+    # QT_NO_* macros — so the macro is undefined and qwaylandintegration.cpp tries
+    # to #include <QtLinuxAccessibilitySupport/...> (which we deliberately
+    # excluded above). Forcing -D... via qmake failed to propagate into the g++
+    # command line, so instead force both guards off so the client uses the plain
+    # QPlatformAccessibility() stub rather than the QSpiAccessibleBridge.
+    #   line 89 : #ifndef QT_NO_ACCESSIBILITY_ATSPI_BRIDGE  (around bridge include)
+    #   line 274: #ifndef QT_NO_ACCESSIBILITY_ATSPI_BRIDGE  (around bridge creation)
+    sed -i 's/#ifndef QT_NO_ACCESSIBILITY_ATSPI_BRIDGE/#if 0/' \
+        src/client/qwaylandintegration.cpp \
+        || Die "failed to patch qwaylandintegration.cpp AT-SPI guards"
+
+    # The installed Qt 5.14.1 reports many optional features (xcomposite-egl,
+    # vulkan, brcm-egl, drm/libhybris/vulkan server buffers) as enabled, so
+    # qtwayland's qmake tries to build a large set of OPTIONAL plugins that we
+    # don't install and that need yet more qtbase support libs (QEGLPlatformContext,
+    # QXlibEglIntegration, vulkan_support) which are deliberately out of scope.
+    # Restrict the build to only the plugins the recipe actually installs:
+    #   - plugins/platforms: keep qwayland-generic + qwayland-egl only
+    #   - plugins: drop the entire hardwareintegration subdir (we never install
+    #     any of its wayland-egl/dmabuf/xcomposite/vulkan integration plugins)
+    perl -0pi -e 's/#The following integrations.*qwayland-xcomposite-glx\n//s' \
+        src/plugins/platforms/platforms.pro \
+        || Die "failed to trim platforms.pro"
+    perl -0pi -e 's/\nSUBDIRS \+= \\\n    hardwareintegration\n/\n/' \
+        src/plugins/plugins.pro \
+        || Die "failed to drop hardwareintegration from plugins.pro"
+
+    /Programs/Qt/5.14.1/bin/qmake || Die "qmake configure of qtwayland failed"
+    make -j"$(nproc)" || Die "make (qtwayland) failed"
+    make install INSTALL_ROOT="$PWD/staging" || Die "make install (stage) of qtwayland failed"
+    popd >/dev/null
+}
+
+do_install() {
+    local S="qtwayland-everywhere-src-5.14.1"
+    # Prefer the INSTALL_ROOT staging tree; fall back to the in-tree build
+    # output (both have the same layout: lib/, plugins/, include/, ...).
+    if [ -d "$S/staging/Programs/Qt/5.14.1" ]; then
+        S="$S/staging/Programs/Qt/5.14.1"
+    fi
+
+    mkdir -p "$target"/lib "$target"/plugins/platforms "$target"/plugins/generic
+    cp -a "$S"/lib/libQt5WaylandClient.so* "$target"/lib/ || Die "cannot copy libQt5WaylandClient"
+    cp -a "$S"/lib/libQt5WaylandCompositor.so* "$target"/lib/ || Die "cannot copy libQt5WaylandCompositor"
+    [ -d "$QTBUILD" ] && \
+        cp -a "$QTBUILD"/libQt5FontDatabaseSupport.a "$QTBUILD"/libQt5XkbCommonSupport.a "$target"/lib/ || true
+    cp -a "$S"/plugins/platforms/libqwayland-egl.so "$S"/plugins/platforms/libqwayland-generic.so "$target"/plugins/platforms/ \
+        || Die "cannot copy QtWayland platform plugins"
+    [ -f "$S"/plugins/generic/libqwaylandtouch.so ] && \
+        cp -a "$S"/plugins/generic/libqwaylandtouch.so "$target"/plugins/generic/ || true
+
+    # Headers so future Qt wayland client apps can compile against them.
+    if [ -d "$S"/include/QtWaylandClient ]; then
+        mkdir -p "$target"/include
+        cp -a "$S"/include/QtWaylandClient "$S"/include/QtWaylandCompositor "$target"/include/ 2>/dev/null || \
+        cp -a "$S"/include/QtWaylandClient "$target"/include/ || Die "cannot copy QtWaylandClient headers"
+    fi
+}
