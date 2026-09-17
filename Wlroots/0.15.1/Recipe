@@ -1,0 +1,62 @@
+# Custom recipe for Wlroots 0.15.1 (meson)
+# Build AFTER XWayland: the xwayland feature is 'auto' and only enables if the
+# 'Xwayland' binary is findable at build time (find_program('Xwayland')).
+# Also needs Wayland, Wayland-Protocols, XKBcommon, LibInput (all earlier).
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/0.15.1/wlroots-0.15.1.tar.bz2"
+file_size=423138
+file_md5=d866abe05ebbcb1611b6273828302e87
+dir='wlroots-0.15.1'
+recipe_type=meson
+
+meson_variables=(
+    "-Dexamples=false"
+)
+
+pre_build() {
+    # GCC 14's -Werror=calloc-transposed-args rejects wlroots' old
+    # calloc(sizeof(X), N) idiom; swap the argument order in the two library
+    # files (the examples/ hits are gone via -Dexamples=false). Idempotent.
+    # NOTE: pre_build runs with CWD=$builddir (=$sourcedir/_build), so use
+    # $sourcedir (absolute) for any file references.
+    sed -i 's/calloc(sizeof(struct wlr_wl_output), 1)/calloc(1, sizeof(struct wlr_wl_output))/' \
+        "$sourcedir/backend/wayland/output.c"
+    sed -i 's/calloc(sizeof(unsigned int), group->\(ring\|strip\|button\)_count)/calloc(group->\1_count, sizeof(unsigned int))/' \
+        "$sourcedir/backend/libinput/tablet_pad.c"
+
+    # The ISO's 2020-era EGL headers lack EGL_WL_bind_wayland_display (the
+    # wlroots EGL backend needs PFNEGLQUERYWAYLANDBUFFERWL); append it to the
+    # build-chroot's eglext.h idempotently (EGL-Wayland's recipe already added
+    # EGL_NV_stream_consumer_eglimage + EGL_EXT_device_drm_render_node).
+    # Build-time only: the ISO rootfs is rebuilt from the reference ISO +
+    # packages, so the patched header never ships.
+    local eglext=/System/Index/include/EGL/eglext.h
+    if grep -q "EGL_WL_bind_wayland_display" "$eglext"
+    then Log_Normal "eglext.h already has EGL_WL_bind_wayland_display"
+    else
+        Log_Normal "Patching $eglext: adding EGL_WL_bind_wayland_display"
+        cat >> "$eglext" <<'EOF'
+
+#ifndef EGL_WL_bind_wayland_display
+#define EGL_WL_bind_wayland_display 1
+#define EGL_WAYLAND_BUFFER_WL           0x31D5
+#define EGL_WAYLAND_PLANE_WL            0x31D6
+#define EGL_TEXTURE_Y_U_V_WL            0x31D7
+#define EGL_TEXTURE_Y_UV_WL             0x31D8
+#define EGL_TEXTURE_Y_XUXV_WL           0x31D9
+#define EGL_TEXTURE_EXTERNAL_WL         0x31DA
+#define EGL_WAYLAND_Y_INVERTED_WL       0x31DB
+struct wl_display;
+struct wl_resource;
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLBINDWAYLANDDISPLAYWL) (EGLDisplay dpy, struct wl_display *display);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLUNBINDWAYLANDDISPLAYWL) (EGLDisplay dpy, struct wl_display *display);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYWAYLANDBUFFERWL) (EGLDisplay dpy, struct wl_resource *buffer, EGLint attribute, EGLint *value);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglBindWaylandDisplayWL (EGLDisplay dpy, struct wl_display *display);
+EGLAPI EGLBoolean EGLAPIENTRY eglUnbindWaylandDisplayWL (EGLDisplay dpy, struct wl_display *display);
+EGLAPI EGLBoolean EGLAPIENTRY eglQueryWaylandBufferWL (EGLDisplay dpy, struct wl_resource *buffer, EGLint attribute, EGLint *value);
+#endif
+#endif /* EGL_WL_bind_wayland_display */
+EOF
+    fi
+}

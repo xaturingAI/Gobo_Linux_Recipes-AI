@@ -1,0 +1,19 @@
+# Custom recipe for XorgProto 2024.1 (meson)
+# X.org protocol headers + compat *.pc files. Bumped from the ISO's 2019.2
+# because XWayland 24.1.2 needs inputproto >= 2.3.99.1 (2019.2 ships 2.3.2);
+# every xorgproto from 2022.2 on provides inputproto.pc at 2.3.99.2.
+# The merged package replaces XorgProto 2019.2 as the active header/.pc provider
+# (compile-time only — the ISO ships prebuilt binaries, so nothing breaks).
+# -Ddatadir=lib forces the generated pc files into lib/pkgconfig instead of
+# share/pkgconfig so Gobo's pkg-config (PKG_CONFIG_PATH=/System/Index/lib/pkgconfig)
+# actually finds them (same trick as EGLExternalPlatform).
+compile_version=017-GIT
+url="https://www.x.org/archive/individual/proto/xorgproto-2024.1.tar.gz"
+file_size=1115486
+file_md5=3a8456e5dc8e5d73931d259e054599d1
+dir='xorgproto-2024.1'
+recipe_type=meson
+
+meson_variables=(
+    "-Ddatadir=lib"
+)

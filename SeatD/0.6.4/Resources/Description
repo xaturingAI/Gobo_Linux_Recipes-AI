@@ -1,0 +1,4 @@
+[Name] SeatD
+[Summary] Minimal seat management daemon (seatd) and libseat
+[License] MIT
+[Homepage] https://git.sr.ht/~kennylevinsen/seatd

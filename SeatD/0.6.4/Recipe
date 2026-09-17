@@ -1,0 +1,27 @@
+# Custom recipe for SeatD 0.6.4 (meson)
+# Provides the seatd daemon + libseat, so sway/wlroots get a session+seat
+# manager without systemd/logind. man pages require scdoc (build first).
+# Based on the upstream gobo-recipes recipe, adapted to 'meson_variables'.
+compile_version=017-GIT
+url="https://git.sr.ht/~kennylevinsen/seatd/archive/0.6.4.tar.gz"
+file_size=38393
+file_md5=114604a0b346a40157839d5c8c8b2ce2
+file="seatd-0.6.4.tar.gz"
+dir='seatd-0.6.4'
+recipe_type=meson
+meson_variables=(
+    --buildtype=plain
+    -Dexamples=disabled
+    -Dserver=enabled
+    -Dman-pages=enabled
+)
+
+pre_build() {
+    # seatd canonicalizes device paths with realpath() before classifying
+    # them via literal string prefixes ("/dev/dri/", "/dev/input/event").
+    # On GoboLinux /dev is a symlink to /System/Kernel/Devices, so the
+    # canonical path never matches and every open fails with ENOENT
+    # ("is not a supported device type"). Accept both prefixes.
+    sed -i 's|return strncmp(prefix, path, prefixlen) == 0;|return strncmp(prefix, path, prefixlen) == 0 \|\| strncmp("/System/Kernel/Devices/dri/", path, strlen("/System/Kernel/Devices/dri/")) == 0;|' "$sourcedir/common/drm.c"
+    sed -i 's|return strncmp(prefix, path, prefixlen) == 0;|return strncmp(prefix, path, prefixlen) == 0 \|\| strncmp("/System/Kernel/Devices/input/event", path, strlen("/System/Kernel/Devices/input/event")) == 0;|' "$sourcedir/common/evdev.c"
+}

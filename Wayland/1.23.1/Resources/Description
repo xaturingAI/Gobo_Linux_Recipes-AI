@@ -1,0 +1,4 @@
+[Name] Wayland
+[Summary] Wayland display server protocol core library (libwayland, wayland-scanner)
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/wayland/wayland

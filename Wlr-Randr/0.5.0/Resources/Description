@@ -1,0 +1,4 @@
+[Name] Wlr-Randr
+[Summary] xrandr clone for wlroots compositors
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/emersion/wlr-randr

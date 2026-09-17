@@ -1,0 +1,16 @@
+# Custom recipe for wlr-protocols a741f0a (makefile install of protocol XMLs)
+# Wayland protocol definitions for wlroots compositors. Sway works without it
+# (it bundles its own copies), but wl-clipboard/grim/slurp/wlr-randr consumers
+# use these at build time. The default make target 'check' validates every XML
+# with wayland-scanner, so this MUST build after Wayland.
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/archive/a741f0a/wlr-protocols-a741f0a.tar.bz2"
+file_size=19833
+file_md5=f46c2b8a827aac6d20b504aa2ee2ee9d
+file="wlr-protocols-a741f0a.tar.bz2"
+dir='wlr-protocols-a741f0a'
+recipe_type=makefile
+makefile='Makefile'
+make_variables=(
+    "PREFIX=$target"
+)

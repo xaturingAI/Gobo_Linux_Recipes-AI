@@ -1,0 +1,4 @@
+[Name] Wayland-Protocols
+[Summary] Wayland protocol XML definitions and wayland-protocols pkgconfig
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/wayland/wayland-protocols

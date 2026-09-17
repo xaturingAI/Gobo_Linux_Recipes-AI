@@ -1,0 +1,4 @@
+[Name] Wayland-Utils
+[Summary] Wayland tools (wayland-info) to display compositor info
+[License] MIT/Expat
+[Homepage] https://gitlab.freedesktop.org/wayland/wayland-utils

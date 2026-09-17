@@ -1,0 +1,16 @@
+# Custom recipe for EGLExternalPlatform 1.2.1 (meson)
+# NVIDIA EGL_EXT_external_platform interface headers + eglexternalplatform.pc.
+# Required by EGL-Wayland: meson.build does dependency('eglexternalplatform', '>=1.1 <2').
+# -Ddatadir=lib forces the generated pc file into lib/pkgconfig instead of
+# share/pkgconfig so Gobo's pkg-config (PKG_CONFIG_PATH=/System/Index/lib/pkgconfig)
+# actually finds it.
+compile_version=017-GIT
+url="https://github.com/NVIDIA/eglexternalplatform/archive/refs/tags/1.2.1.tar.gz"
+file_size=10610
+file_md5=a255995b7926ee185310239e7cac1a1c
+dir='eglexternalplatform-1.2.1'
+recipe_type=meson
+
+meson_variables=(
+    "-Ddatadir=lib"
+)

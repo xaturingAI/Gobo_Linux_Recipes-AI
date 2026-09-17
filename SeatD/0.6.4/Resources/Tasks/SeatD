@@ -1,0 +1,16 @@
+#!/bin/sh
+# Boot task: seatd daemon (libseat seatd backend; grants DRM/input to the
+# `video` group). GoboLinux /dev is a symlink farm (/dev/dri ->
+# /System/Kernel/Devices/dri), which seatd 0.6.4's realpath-prefix checks
+# reject -- the recipe's pre_build patches both prefixes.
+
+case "$1" in
+[Ss]tart)
+    pgrep -x seatd >/dev/null 2>&1 && exit 0
+    mkdir -p /Data/Variable/log /run
+    seatd -g video >>/Data/Variable/log/seatd.log 2>&1 &
+    ;;
+[Ss]top)
+    pkill -x seatd
+    ;;
+esac

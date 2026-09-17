@@ -1,0 +1,4 @@
+[Name] Wlr-Protocols
+[Summary] Wayland protocols for wlroots compositors
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/wlroots/wlr-protocols

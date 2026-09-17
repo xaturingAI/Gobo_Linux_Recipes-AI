@@ -1,0 +1,13 @@
+# Custom recipe for Wayland-Protocols 1.44 (meson)
+# Based on the upstream gobo-recipes recipe, adapted to 'meson_variables'
+# for Compile 017-GIT. Version bump from 1.37: Wayland-Utils 1.3.0
+# (wayland-info) requires wayland-protocols >= 1.44.
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.44/downloads/wayland-protocols-1.44.tar.xz"
+file_size=124928
+file_md5=bbf053c2d62cf11e253cf2cc151c2df0
+dir='wayland-protocols-1.44'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+)
