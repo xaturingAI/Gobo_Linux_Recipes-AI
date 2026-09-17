@@ -1,0 +1,5 @@
+[Name] OpenSSL
+[Summary] Cryptography and TLS toolkit (libssl, libcrypto, openssl CLI)
+[License] Apache-2.0
+[Homepage] https://www.openssl.org
+[Description] OpenSSL is a robust, commercial-grade, full-featured toolkit for the Transport Layer Security and Secure Sockets Layer protocols. This 1.1.1w build replaces the ISO's 1.1.1d with the final 1.1.1 LTS release, adding the development headers that Python 3.11 needs to compile its _ssl and _hashlib modules.
