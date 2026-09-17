@@ -1,0 +1,5 @@
+[Name] KConfig
+[Summary] KDE Frameworks 6 configuration management
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kconfig
+[Description] KDE Frameworks 6 Tier 1: persistent configuration management (kdeglobals, apprc, etc).

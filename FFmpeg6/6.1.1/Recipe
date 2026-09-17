@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# FFmpeg 6.1.1 for the Plasma 6 stack, as a SEPARATE program (FFmpeg6), a
+# sibling of the ISO's FFmpeg 4.2.2 which stays untouched as Current for its
+# CLI and libavcodec.so.58 consumers (Audacious ffaudio). Purpose: kpipewire
+# 6.7.4 hard-requires a modern libavcodec -- src/pipewirebaseencodedstream.cpp
+# does #include <libavcodec/codec.h>, a header that only exists since FFmpeg
+# 5.0. kpipewire's pkg_check_modules libavcodec has no version floor, so its
+# configure succeeds and the build dies at compile (as seen with 4.2.2).
+#
+# PrepareProgram runs configure with --prefix=$target rewritten to the sandbox
+# (same pattern as the OpenSSL recipe). --conflict=overwrite lets this program
+# win the /System/Index include/libavcodec + lib pkgconfig names. The kpipewire
+# Recipe prepends PKG_CONFIG_PATH to this program's lib/pkgconfig so its .pc
+# Cflags/Libs (absolute -I/-L into /Programs/FFmpeg6/6.1.1) take precedence.
+# --disable-programs keeps the ffmpeg/ffplay/ffprobe CLIs out, so the system
+# keeps FFmpeg 4.2.2's tools; versioned SONAME libs (.so.60) coexist with .so.58.
+# libva auto-detects (headers live at /System/Index/include/va) -> h264_vaapi
+# encoder available for Plasma screen recording.
+#
+# --disable-vulkan: FFmpeg 6.1.1's Vulkan AV1 video decoder was written against
+# the pre-release MESA-named structs (VkVideoDecodeAV1ProfileInfoMESA & co).
+# Vulkan-Headers 1.4.357 renames them to the finalized KHR names, so
+# libavcodec/vulkan_av1.c + vulkan_decode.c fail to compile. Nothing in the
+# Plasma stack uses FFmpeg's Vulkan path (kpipewire encodes via VAAPI), so the
+# whole Vulkan subsystem is switched off rather than bumping to FFmpeg 7.x.
+compile_version=017-GIT
+url="https://www.ffmpeg.org/releases/ffmpeg-6.1.1.tar.xz"
+file_size=10458600
+file_md5=341d719415b7f95bb59f5016f2864ac6
+dir="ffmpeg-6.1.1"
+recipe_type=configure
+override_default_options=yes
+
+configure_options=(
+    "--prefix=$target"
+    --enable-shared
+    --disable-static
+    --enable-pic
+    --disable-programs
+    --disable-doc
+    --disable-htmlpages
+    --disable-manpages
+    --disable-debug
+    --disable-vulkan
+)
+
+symlink_options=(
+    "--conflict=overwrite"
+)

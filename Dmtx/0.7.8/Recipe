@@ -1,0 +1,15 @@
+# Custom recipe for libdmtx 0.7.8 (cmake)
+# DataMatrix encoder/decoder library; with WITH_DMTX=ON (default) Prison
+# makes find_package(Dmtx) REQUIRED.  Git tag tarball only ships CMake.
+compile_version=017-GIT
+url="https://github.com/dmtx/libdmtx/archive/refs/tags/v0.7.8.tar.gz"
+file_size=795008
+file_md5=2b4329190b65e2f8b23e4a329ec7d792
+dir='libdmtx-0.7.8'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DDMTX_STATIC=OFF
+)

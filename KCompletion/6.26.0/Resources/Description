@@ -1,0 +1,5 @@
+[Name] KCompletion
+[Summary] KDE Frameworks 6 completion/text input
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kcompletion
+[Description] KDE Frameworks 6 Tier 2: completion widget and history (KLineEdit, KComboBox completion). Used by Dolphin.

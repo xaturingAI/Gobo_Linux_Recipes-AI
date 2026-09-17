@@ -1,0 +1,5 @@
+[Name] KCrash
+[Summary] KDE Frameworks 6 crash handler
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kcrash
+[Description] KDE Frameworks 6 Tier 1: crash/segfault handler (Dr. Konqi backend).

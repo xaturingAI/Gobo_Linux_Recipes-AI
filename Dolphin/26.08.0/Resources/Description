@@ -1,0 +1,5 @@
+[Name] Dolphin
+[Summary] KDE file manager
+[License] GPL-2.0-only OR GPL-3.0-only
+[Homepage] https://invent.kde.org/utilities/dolphin
+[Description] KDE Plasma file manager. Qt6/KF6 consumer, no Plasma deps. Requires KIO, KParts, KFileMetadata, KCompletion, Solid.

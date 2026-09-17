@@ -1,0 +1,5 @@
+[Name] KConfigWidgets
+[Summary] KDE Frameworks 6 config GUI widgets
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kconfigwidgets
+[Description] KDE Frameworks 6 Tier 2: configuration GUI widgets (KColorScheme, KStandardAction, KFontChooser).

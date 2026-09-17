@@ -1,0 +1,5 @@
+[Name] KDBusAddons
+[Summary] KDE Frameworks 6 D-Bus addons
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kdbusaddons
+[Description] KDE Frameworks 6 Tier 1: D-Bus helpers (KDBusService, KDBusConnection, etc).

@@ -1,0 +1,5 @@
+[Name] kactivitymanagerd
+[Summary] Plasma 6 activity manager daemon
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/kactivitymanagerd
+[Description] Plasma 6 user activity tracking daemon. Manages recent documents, used files, resource scoring.
