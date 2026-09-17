@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# xrandr 1.5.2 -- the X11 resize/rotate/scale client (xorg app).
+#
+# Runtime dependency of Lutris (it runs `xrandr` to query/switch display
+# resolutions for games), and a generally handy X client for the Live CD.
+# Links against the ISO base libX11/libXrandr; builds standalone with the
+# bundled autotools (the xorg archives ship a generated configure).
+
+compile_version=017-GIT
+url="https://xorg.freedesktop.org/archive/individual/app/xrandr-1.5.2.tar.xz"
+file_size=174012
+file_md5=f822a8d5f233e609d27cc22d42a177cb
+dir='xrandr-1.5.2'
+recipe_type=configure
