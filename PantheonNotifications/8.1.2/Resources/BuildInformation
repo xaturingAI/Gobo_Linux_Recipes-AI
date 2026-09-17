@@ -1,0 +1,3 @@
+Build type: meson
+Source: https://github.com/elementary/notifications/archive/refs/tags/8.1.2.tar.gz
+Build order: part of the Pantheon stack (see Recipes/pantheon-recipes.md).

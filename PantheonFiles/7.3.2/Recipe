@@ -1,0 +1,21 @@
+# Custom recipe for PantheonFiles 7.3.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/files/archive/refs/tags/7.3.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/files/archive/refs/tags/7.3.2.tar.gz"
+file_size=5009540
+file_md5=1f2db8ecfdb24379f298d76514175527
+dir='files-7.3.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dwith-zeitgeist=disabled
+)
+
+do_patch() {
+    pushd "$basedir"
+    sed -i "s|^subdir('pantheon-files-cloud')|#subdir('pantheon-files-cloud')|" plugins/meson.build
+    popd
+}

@@ -1,0 +1,17 @@
+# Custom recipe for PantheonCode 8.3.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/code/archive/refs/tags/8.3.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/code/archive/refs/tags/8.3.2.tar.gz"
+file_size=2221958
+file_md5=24deb8c4f22bd5b7a192fcdc9f64a832
+dir='code-8.3.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dplugins=false
+    -Dheap-profiling-enabled=false
+    -Dcpu-profiling-enabled=false
+)
