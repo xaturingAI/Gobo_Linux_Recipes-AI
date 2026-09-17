@@ -1,0 +1,25 @@
+Autoconf configure recipe; PrepareProgram auto-adds the standard --prefix/
+--sysconfdir/--localstatedir/--mandir/--libexecdir. Build INSIDE the chroot
+in this order:
+  OpenSSL 1.1.1w  ->  Python 3.11.12  ->  (meson/ninja reinstall not needed;
+  PyCairo/PyGObject target python3.11 via -Dpython=python3.11)
+
+Key flags:
+  --enable-shared        libpython3.11.so.1.0 (needed by C extensions)
+  --with-system-expat    ISO Expat 2.2.9 (dev headers present)
+  --with-openssl=$goboIndex  explicit; ISO 1.1.1d had libs but NO headers
+  --with-ensurepip=install    pip/pip3.11 usable offline on the CD
+  --enable-loadable-sqlite-extensions   ISO SQLite 3.36.0 dev present
+
+Defaults to --prefix=$goboIndex so make install lands in /System/Index,
+sandboxed into Programs/Python/3.11.12 and linked back with --conflict=
+overwrite, replacing the python3 symlink that pointed at 3.8.1. python3.8,
+python3.11 and python3.11-config all stay available.
+
+Detected-without-headers on the CD: readline (module omitted) and uuid
+(_uuid omitted; uuid module falls back to os.urandom). GOBOLINUX NOTE: the
+install step's ensurepip uses the freshly built interpreter, so it is fully
+offline.
+
+sha256 379c9929a989a9d65a1f5d854e011f4872b142259f4fc0a8c4062d2815ed7fba
+(signature verified against python.org release key 64E628F8D684696D).

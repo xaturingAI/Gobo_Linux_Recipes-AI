@@ -1,0 +1,5 @@
+[Name] Python
+[Summary] Interpreted, interactive, object-oriented programming language (3.11.12)
+[License] PSF-2.0
+[Homepage] https://www.python.org
+[Description] Python 3.11.12, the final release of the 3.11 series, replaces the CD's Python 3.8.1 as the main interpreter. It is required by Lutris 0.5.22 (needs Python >= 3.10) and by the rebuilt Protontricks. The 3.8.1 installation is kept alongside (still invoked as python3.8). Bundled pip/ensurepip work offline on the CD.
