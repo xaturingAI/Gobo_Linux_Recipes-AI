@@ -1,0 +1,5 @@
+[Name] SDDM
+[Summary] QML-based display manager with native Wayland greeter
+[Description] The Simple Desktop Display Manager. 0.20.0 is the first release with a native Wayland greeter backend: it launches a Wayland compositor (weston by default) via [Wayland] CompositorCommand to host the greeter, and supports [General] DisplayServer=wayland. This is the minimum SDDM version able to host the greeter under a native Wayland compositor (0.18.1/0.19.0 hard-code an Xorg greeter). Requires Qt >= 5.15, so it must be built after the Qt 5.15.2 migration. PAM is mandatory in this series.
+[License] GPL-2.0+
+[Homepage] https://github.com/sddm/sddm

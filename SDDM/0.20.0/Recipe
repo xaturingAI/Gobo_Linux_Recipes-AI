@@ -1,0 +1,69 @@
+# Custom recipe for SDDM 0.20.0 (cmake)
+#
+# QML-based display manager (KDE's Simple Desktop Display Manager). 0.20.0 is
+# the FIRST release with a native Wayland greeter backend: instead of parking
+# an X server for the greeter, it spawns a Wayland compositor (weston by
+# default) and loads the greeter QML as a fullscreen-shell client.
+#
+#   [General] DisplayServer = wayland      (Configuration.h:41; x11 | x11-user | wayland)
+#   [Wayland] CompositorCommand = weston --shell=fullscreen-shell.so  (Configuration.h:81)
+#
+# 0.18.x/0.19.0 cannot do this: they hard-code XorgDisplayServer
+# (Display.cpp:54 in the 0.19 branch). So 0.20.0 is the minimum SDDM for a
+# native (weston-hosted) Wayland greeter on this ISO (see NOTES.md / live-fix
+# 6b + 14d and QT5.15-MIGRATION.md).
+#
+# Caveat: in this release the VT selection is hardcoded to tty1 at compile
+# time (sddm.log: "Using VT 1"); it IGNORES [General] VT=. The live ISO
+# therefore keeps tty1 getty-free so SDDM owns it (apply-live-fixes.sh 6b).
+#
+# Qt requirement: >= 5.15 (CMakeLists:97 find_package(Qt 5.15.0 ... QuickTest)).
+# Must be built AFTER the base Qt 5.14.1 is replaced by Qt 5.15.2 (the
+# migration made Programs/Qt/Current -> 5.15.2). Pinned via -DQt5_DIR.
+#
+# Build-time deps (none new vs 0.18.1 -- weston is a runtime subprocess, not a
+# link dependency):
+#   ECM (Extra-CMake-Modules)  find_package(ECM)
+#   PAM headers                /System/Index/include/security (Linux-PAM)
+#   libxau  (LIBXAU)           xau.pc
+#   libxcb                     xcb.pc
+#   xkbcommon                  xkbcommon.pc (XKBCommon 1.7.0 from step_wayland)
+#   Qt 5.15.2 (Core DBus Gui Qml Quick LinguistTools Test QuickTest)
+#
+# Runtime requirements on the ISO:
+#   elogind daemon (seat/session tracking via USE_ELOGIND=ON; no systemd)
+#   a Wayland compositor for the greeter (weston is the default CompositorCommand)
+#
+# Config path note vs 0.18.1: $CONFIG_FILE = <sysconfdir>/sddm.conf and
+# $SYSTEM_CONFIG_DIR = <prefix>/lib/sddm/sddm.conf.d. The live-fix writes
+# Resources/Defaults/Settings/sddm.conf (Gobo default-settings tree) and
+# re-points /etc/sddm.conf at it so the daemon sees DisplayServer=wayland.
+#
+# Source: the v0.20.0 GitHub release has NO attached tarballs (assets array is
+# empty), so we use the tag source archive. sha256 matches the upstream
+# annotated source; md5/size computed locally at authoring time.
+compile_version=017-GIT
+url="https://github.com/sddm/sddm/archive/refs/tags/v0.20.0.tar.gz"
+file_size=3552722
+file_md5=7af67d5fb767639861d35c80eb4e1191
+dir='sddm-0.20.0'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_PREFIX_PATH=/System/Index
+    # Gobo keeps libraries in /lib (no /lib64); must match other recipes.
+    -DCMAKE_INSTALL_LIBDIR=lib
+    # Never let the build bake RPATHs pointing at the compile sandbox.
+    -DCMAKE_SKIP_RPATH=True
+    # Resolve Qt against the 5.15.2 migration tree (see header).
+    -DQt5_DIR=/Programs/Qt/5.15.2/lib/cmake/Qt5
+    # No systemd/logind on the ISO -- elogind provides the logind shim.
+    -DNO_SYSTEMD=ON
+    -DUSE_ELOGIND=ON
+    -DENABLE_JOURNALD=OFF
+    -DBUILD_MAN_PAGES=OFF
+    # SDDM 0.19+ made PAM mandatory (the Passwd auth backend was removed).
+    # Elogind supplies the seat/adm + session tracking on this ISO.
+    -DENABLE_PAM=ON
+)
