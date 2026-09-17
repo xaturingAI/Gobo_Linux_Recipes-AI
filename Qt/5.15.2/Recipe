@@ -1,0 +1,166 @@
+#!/bin/bash
+
+# Qt 5.15.2 — full monolithic rebuild, replacing the base ISO's Qt 5.14.1.
+#
+# WHY: SDDM 0.20.0 (the first SDDM with a native Wayland greeter) hard-requires
+# Qt >= 5.15.0 in CMakeLists.txt:97 (find_package(Qt 5.15.0 ...)). The base ISO
+# ships Qt 5.14.1 (a full Gobo package at Programs/Qt/5.14.1), so SDDM's
+# configure rejects every 5.14.1 cmake config it finds. The only path forward is
+# to build Qt 5.15.2 and make it the active Qt (Programs/Qt/Current -> 5.15.2),
+# because Qt 5.x keeps the same SONAMEs across 5.14->5.15, so the ISO's prebuilt
+# apps keep working against the newer libs without recompiling consumers.
+#
+# Gobo packages Qt as ONE program (Programs/Qt/<ver>) containing every module,
+# exactly like the base 5.14.1 package. The base was built from the monolithic
+# "single" tarball -- download.qt.io/archive/qt/5.14/5.14.1/single/
+# qt-everywhere-src-5.14.1.tar.xz -- and installed with -prefix /Programs/Qt/<ver>
+# (proven by the Qt5Wayland recipe's staging tree Programs/Qt/5.14.1). We mirror
+# that exactly for 5.15.2:
+#   https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz
+#   -prefix /Programs/Qt/5.15.2  (same path -> same qt.conf -> runtime relocates)
+#
+# Module selection mirrors the base 5.14.1 include/ set (everything except
+# QtWebEngine and the cross-platform/enterprise macextras/winextras/androidextras):
+# qt3d qtbase qtcharts qtconnectivity qtdatavis3d qtdeclarative qtgamepad
+# qtgraphicaleffects qtimageformats qtlocation qtlottie qtmultimedia qtnetworkauth
+# qtpurchasing qtquick3d qtquickcontrols qtquickcontrols2 qtquicktimeline
+# qtremoteobjects qtscript qtscxml qtsensors qtserialbus qtserialport qtspeech
+# qtsvg qttools qttranslations qtvirtualkeyboard qtwayland qtwebchannel
+# qtwebglplugin qtwebsockets qtwebview qtx11extras qtxmlpatterns.
+#
+# WebEngine is skipped (the base did not ship it; no ISO app links libQt5WebEngine;
+# and it drags in chromium + ICU + ninja we don't want).
+#
+# Build time: hours. GCC 14 vs Qt 5.15.2 (2020) can surface deprecated-header /
+# warning-as-error issues; Qt builds default to NOT -Werror, and configure is
+# non-interactive here (-opensource -confirm-license --batch friendly), so the
+# user must drive `pkg Qt 5.15.2` and report any configure/make failure back.
+#
+# NOTE: do NOT uninstall/remove the base 5.14.1 program. The recipe installs a
+# separate Programs/Qt/5.15.2; the ISO Merge step keeps only the newest version's
+# files where they collide (5.15.2 wins /usr symlinks via build.sh), and
+# apply-live-fixes.sh + build.sh already flip Programs/Qt/Current -> the active
+# (newest) Qt dynamically. Consumers that hard-reference 5.14.1 will be relinked
+# by the merge; anything still pointing at 5.14.1 specific paths is handled by
+# the merge's version-collapse (only newest survives).
+
+compile_version=017-GIT
+url="https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz"
+file_size=586690220
+file_md5=e1447db4f06c841d8947f0a6ce83a7b5
+dir='qt-everywhere-src-5.15.2'
+recipe_type=manifest
+uncompress=no
+
+# Optional feature knobs. Toggle here rather than editing the configure line.
+#   -sql-sqlite: base Qt has UseFlags "sqlite"; ISO ships Programs/SQLite.
+#   -sql-psql/mysql: disable by default (no PostgreSQL/MySQL server on ISO).
+#   DBUS: base Qt is built with DBus (qconfig.pri: "dbus"); keep on (SDDM needs
+#         QtDBus), SDDM also needs it.
+#   xkbcommon: qtbase links libxkbcommon for the qxkb keyboard layout in the
+#         xcb platform; the chroot has Programs/XKBcommon. Keep default-ON.
+sqlite="on"
+psql="off"
+mysql="off"
+
+pre_install() {
+    local tarball="$compileArchivesDir/qt-everywhere-src-5.15.2.tar.xz"
+    [ -f "$tarball" ] || Die "Qt tarball not found (stage it): $tarball"
+
+    tar xJf "$tarball" || Die "failed to extract Qt tarball"
+    if [ -d "qt-everywhere-src-5.15.2" ]; then
+        srcdir="qt-everywhere-src-5.15.2"
+    else
+        dir=$(tar tJf "$tarball" | head -1)
+        srcdir="${dir%/}"
+    fi
+
+    # GCC >= 11 (and 14 here) no longer pulls <limits>/<type_traits>/<utility>
+    # in transitively, but Qt 5.15.2 has ~100 headers/sources that use
+    # std::numeric_limits / std::move / std::is_* without including the
+    # relevant standard header ("'numeric_limits' is not a class/member of
+    # 'std'", first seen in qfloat16.h/qendian.h at the qmake bootstrap, then
+    # qbytearraymatcher.h, ...). Rather than patch each file, add the three
+    # universal standard headers to the master QtCore/qglobal.h header that
+    # every Qt TU includes first. This one insert fixes the whole tree.
+    QG="$srcdir/qtbase/src/corelib/global/qglobal.h"
+    if [ -f "$QG" ] && ! grep -q '#include <limits>' "$QG"; then
+        sed -i '0,/^#include <algorithm>/s//#include <algorithm>\n#include <limits>\n#include <type_traits>\n#include <utility>/' "$QG"
+    fi
+    # Redundant belt-and-braces for the two headers hit at the earliest (qmake
+    # bootstrap) stage, in case a TU reaches them without qglobal.h in between.
+    for hdr in \
+        "$srcdir/qtbase/src/corelib/global/qfloat16.h" \
+        "$srcdir/qtbase/src/corelib/global/qendian.h"; do
+        grep -q '#include <limits>' "$hdr" || \
+            sed -i '0,/^#include <string.h>/s//#include <string.h>\n#include <limits>/' "$hdr"
+    done
+
+    pushd "$srcdir" >/dev/null || Die "cannot cd into $srcdir"
+    export PATH="/System/Index/bin:$PATH"
+
+    # Build flags matching the base 5.14.1: shared, non-debug, no static,
+    # no separate_debug_info. -no-icu is avoided: the ISO HAS an ICU (WebKit2GTK
+    # depends on it), so keep Qt's default ICU detection on for proper
+    # QString::toLower()/collation (base also used ICU-enabled builds).
+    local skip=""
+    for m in qtwebengine qtandroidextras qtmacextras qtwinextras \
+             qtactiveqt qtdoc; do
+        skip="$skip -skip $m"
+    done
+
+    local sql
+    if [ "$sqlite" = "on" ]; then sql="-sql-sqlite -plugin-sql-sqlite"; else sql="-no-sql-sqlite"; fi
+    [ "$psql" = "on" ]   && sql="$sql -sql-psql -plugin-sql-psql"   || sql="$sql -no-sql-psql"
+    [ "$mysql" = "on" ]  && sql="$sql -sql-mysql -plugin-sql-mysql" || sql="$sql -no-sql-mysql"
+
+    ./configure \
+        -prefix /Programs/Qt/5.15.2 \
+        -opensource -confirm-license \
+        -release -no-static -shared -no-separate-debug-info \
+        $sql \
+        $skip \
+        -nomake examples -nomake tests \
+        2>&1 | tee "$compileSourcesDir/qt-configure.log"
+    local conf_rc=${PIPESTATUS[0]}
+
+    # Qt's top-level configure exits 0 exactly when it has configured the tree
+    # and built qmake (it prints the full "Qt is now configured for building"
+    # summary + "Creating qmake ... Done."). rc is the authoritative signal;
+    # a -f Makefile probe is unreliable here because -top-level configure only
+    # emits the super-module Makefile (no flat qtbase/Makefile) and the probe's
+    # cwd/path relative to the compile sandbox is fragile. `make` below will
+    # fail loudly if configure ever leaves the tree un-built.
+    if [ "$conf_rc" -ne 0 ]; then
+        Die "Qt configure failed rc=$conf_rc (see qt-configure.log)"
+    fi
+    Log_Info "Qt configure OK"
+
+    make -j"$(nproc)" 2>&1 | tee "$compileSourcesDir/qt-make.log" \
+        || Die "Qt make failed (see qt-make.log)"
+
+    mkdir -p "$PWD/staging"
+    make install INSTALL_ROOT="$PWD/staging" 2>&1 \
+        | tee "$compileSourcesDir/qt-install.log" \
+        || Die "Qt make install failed (see qt-install.log)"
+    popd >/dev/null
+}
+
+do_install() {
+    local S="qt-everywhere-src-5.15.2"
+    # INSTALL_ROOT + -prefix /Programs/Qt/5.15.2 stages under staging/. Copy
+    # that whole tree into the (existing) target Program dir.
+    if [ -d "$S/staging/Programs/Qt/5.15.2" ]; then
+        ( cd "$S/staging/Programs/Qt/5.15.2" && cp -a ./. "$target/" ) \
+            || Die "cannot copy staged Qt into $target"
+    else
+        Die "expected staging tree $S/staging/Programs/Qt/5.15.2 not found"
+    fi
+
+    # qt.conf with the runtime prefix (base 5.14.1 ships the same file pointing
+    # at Programs/Qt/5.14.1). Ensures qmake/tools resolve their prefix correctly
+    # once Programs/Qt/Current is flipped to 5.15.2.
+    mkdir -p "$target/bin"
+    printf '[Paths]\nPrefix = /Programs/Qt/5.15.2\n' > "$target/bin/qt.conf" \
+        || Die "cannot write $target/bin/qt.conf"
+}
