@@ -1,0 +1,5 @@
+[Name] KDocTools
+[Summary] KDE Frameworks 6 documentation tools
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kdoctools
+[Description] KDE Frameworks 6 Tier 2: documentation build tools (KDocTools, meilib, KHelpClient).

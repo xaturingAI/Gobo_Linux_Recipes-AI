@@ -1,0 +1,5 @@
+[Name] Konsole
+[Summary] KDE terminal emulator
+[License] GPL-2.0-only OR GPL-3.0-only
+[Homepage] https://invent.kde.org/utilities/konsole
+[Description] KDE Plasma terminal emulator. Qt6/KF6 consumer, no Plasma deps. Requires KTextEditor, KPTY, Sonnet, KConfigWidgets, KService.

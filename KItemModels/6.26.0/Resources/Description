@@ -1,0 +1,5 @@
+[Name] KItemModels
+[Summary] KDE Frameworks 6 item model classes
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kitemmodels
+[Description] KDE Frameworks 6 Tier 2: proxy models for Qt item models (KSelectionProxyModel, KDescendantsProxyModel).

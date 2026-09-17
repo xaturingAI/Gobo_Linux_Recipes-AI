@@ -1,0 +1,5 @@
+[Name] KParts
+[Summary] KDE Frameworks 6 component framework
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kparts
+[Description] KDE Frameworks 6: KParts component embedding framework. Core of Dolphin's URL navigation.

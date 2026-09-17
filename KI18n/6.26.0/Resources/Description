@@ -1,0 +1,5 @@
+[Name] KI18n
+[Summary] KDE Frameworks 6 internationalization
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/ki18n
+[Description] KDE Frameworks 6 Tier 1: internationalization library (KLocalizedString, gettext integration).

@@ -1,0 +1,5 @@
+[Name] Kirigami
+[Summary] KDE Frameworks 6 QtQuick UI framework
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kirigami
+[Description] KDE Frameworks 6 Tier 1: convergent QML UI components for Plasma shell and Kirigami apps.

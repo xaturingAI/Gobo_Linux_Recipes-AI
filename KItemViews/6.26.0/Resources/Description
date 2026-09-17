@@ -1,0 +1,5 @@
+[Name] KItemViews
+[Summary] KDE Frameworks 6 item view utilities
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kitemviews
+[Description] KDE Frameworks 6 Tier 2: item view addons (KategorizedView, KListWidget, KTreeWidget).

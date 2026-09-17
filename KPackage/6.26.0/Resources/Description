@@ -1,0 +1,5 @@
+[Name] KPackage
+[Summary] KDE Frameworks 6 package structure framework
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kpackage
+[Description] KDE Frameworks 6 Tier 2: package structure framework for Plasma themes, wallpaper plugins, etc.

@@ -1,0 +1,5 @@
+[Name] KNotifications
+[Summary] KDE Frameworks 6 notification system
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/knotifications
+[Description] KDE Frameworks 6 Tier 2: notification framework (KNotification, audio/video notifications).
