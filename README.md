@@ -1,3 +1,29 @@
+These are Reicpes for Gobo Linux 
+
+ALL OF THESE WHERE MADE BY AI AMD TESTED BY ME THE (HUMAN) 
+
+AI WHERE USED TO MAKE so I have chossen not upload to main GoBo Recipes  Unless the MAIN solo Dev are okay with intell then this will remain on my own github page 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Recipes/Plasma6-core — KDE Plasma 6.7 desktop stack (single flat dir)
 
 Home for EVERY recipe needed to build KDE Plasma 6.7 (Qt 6.10 + KDE Frameworks
