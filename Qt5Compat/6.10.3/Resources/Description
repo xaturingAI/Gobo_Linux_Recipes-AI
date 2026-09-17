@@ -1,0 +1,5 @@
+[Name] qt5compat
+[Summary] Qt 6 compatibility layer for Qt5 APIs
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Qt 6 backward-compat shim providing removed Qt5 classes (QRegExp, QTextCodec, etc). Some KF6/Plasma modules need this.

@@ -1,0 +1,5 @@
+[Name] xdg-desktop-portal-kde
+[Summary] Plasma 6 XDG desktop portal backend
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/xdg-desktop-portal-kde
+[Description] Plasma 6 XDG Desktop Portal implementation (file chooser, screenshot, screencast, settings).

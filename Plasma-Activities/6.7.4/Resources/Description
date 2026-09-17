@@ -1,0 +1,5 @@
+[Name] plasma-activities
+[Summary] Plasma 6 activities library
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/plasma-activities
+[Description] Plasma 6 activities client library (KActivities). Used by KRunner and workspace.

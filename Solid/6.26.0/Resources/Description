@@ -1,0 +1,5 @@
+[Name] Solid
+[Summary] KDE Frameworks 6 device/hardware abstraction
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/solid
+[Description] KDE Frameworks 6 Tier 1: hardware/device detection and management library.

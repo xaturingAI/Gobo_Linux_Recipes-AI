@@ -1,0 +1,5 @@
+[Name] qtdeclarative
+[Summary] Qt 6 QML/Quick engine + QuickControls2
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Qt 6 declarative module: QML engine, QtQuick, and QuickControls2. Provides the QML runtime for Plasma shell.

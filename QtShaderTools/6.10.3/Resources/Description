@@ -1,0 +1,5 @@
+[Name] qtshadertools
+[Summary] Qt 6 shader tools (shaderc, spirv-cross)
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Qt 6 shader compilation tools. Required by QtQuick/QtDeclarative for OpenGL/Vulkan shader support.

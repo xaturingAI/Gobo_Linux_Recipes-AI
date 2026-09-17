@@ -1,0 +1,5 @@
+[Name] qtsvg
+[Summary] Qt 6 SVG rendering support
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Qt 6 SVG image format plugin and SVG rendering library. Required by Plasma/Breeze icons and themes.

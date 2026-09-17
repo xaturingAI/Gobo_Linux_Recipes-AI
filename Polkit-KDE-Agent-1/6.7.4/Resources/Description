@@ -1,0 +1,5 @@
+[Name] polkit-kde-agent-1
+[Summary] Plasma 6 PolicyKit authentication agent
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/polkit-kde-agent-1
+[Description] Plasma 6 PolicyKit authentication agent (policy dialog for privilege escalation).

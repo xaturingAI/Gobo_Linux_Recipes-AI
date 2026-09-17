@@ -1,0 +1,5 @@
+[Name] plasma-workspace
+[Summary] Plasma 6 desktop workspace shell
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/plasma-workspace
+[Description] Plasma 6 workspace: panels, taskbar, systray, clock, logout screen, splash, run dialog (Alt+F2).

@@ -1,0 +1,24 @@
+# Custom recipe for qtdeclarative 6.10.3 (cmake)
+# Qt 6 module. Installs to /Programs/Qt6/6.10.3 (NOT /Programs/Qt).
+# The Qt5 SDDM/greeter closure must remain intact.
+compile_version=017-GIT
+url="https://download.qt.io/official_releases/qt/6.10/6.10.3/submodules/qtdeclarative-everywhere-src-6.10.3.tar.xz"
+file_size=38084496
+file_md5=594ea174eb0eb8749cde3bbe72dded76
+dir='qtdeclarative-everywhere-src-6.10.3'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_PREFIX=/Programs/Qt6/6.10.3
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DFEATURE_system_xcb=ON
+    -DFEATURE_wayland=ON
+    -DFEATURE_icu=ON
+    -DFEATURE_reduce_relocations=OFF
+)

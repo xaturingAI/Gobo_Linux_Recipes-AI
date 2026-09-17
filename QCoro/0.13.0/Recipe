@@ -1,0 +1,30 @@
+# Custom recipe for QCoro 0.13.0 (cmake, Qt6 coroutine library)
+# Plasma-Workspace 6.7.4 requires find_package(QCoro6 COMPONENTS Core)
+# (CMakeLists.txt:63) — QCoro is neither Qt nor KDE, and ships no system
+# package config, so it is built into its own prefix. Installs the
+# QCoro6Config.cmake package; dependents must list /Programs/QCoro/0.13.0
+# in CMAKE_PREFIX_PATH. Scope trimmed to Core/DBus/Network so only QtBase
+# is needed at build time; WebSockets/Quick/QML/QtTest/Examples off.
+# CMAKE_POSITION_INDEPENDENT_CODE=ON: the QCoro static libs (libQCoro6*.a)
+# link into KDE shared objects (e.g. powerdevil brightnesscontrolplugin),
+# which requires PIC objects on x86-64.
+compile_version=017-GIT
+url="https://github.com/qcoro/qcoro/archive/refs/tags/v0.13.0.tar.gz"
+file_size=163436
+file_md5=1cc2b522b90d8d0842523f751e75c99b
+dir='qcoro-0.13.0'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DCMAKE_INSTALL_PREFIX=/Programs/QCoro/0.13.0
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DQCORO_BUILD_EXAMPLES=OFF
+    -DQCORO_BUILD_TESTING=OFF
+    -DQCORO_WITH_QTWEBSOCKETS=OFF
+    -DQCORO_WITH_QTQUICK=OFF
+    -DQCORO_WITH_QML=OFF
+    -DQCORO_WITH_QTTEST=OFF
+)

@@ -1,0 +1,5 @@
+[Name] qtimageformats
+[Summary] Qt 6 image format plugins (TGIF, TGA, MNG, etc)
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Additional image format plugins for Qt 6 (TGA, MNG, TIFF, WBMP, etc). Extends QImage/QtGui format support.

@@ -1,0 +1,70 @@
+# Custom recipe for plasma-nm 6.7.4 (cmake, Plasma)
+# NetworkManager + ModemManager UI frontends: system tray applet
+# (org.kde.plasma.networkmanagement), KCMs + editor (mobile-broadband).
+# REQUIRED (CMakeLists.txt): Qt6 Core/DBus/Gui/Network/Quick/QuickWidgets/
+# Widgets; Qt6Keychain >= 0.16.0 CONFIG (QtKeyChain 0.16.0 recipe); KF6
+# ColorScheme Completion CoreAddons DBusAddons KIO I18n JobWidgets
+# NetworkManagerQt (libnm >= 1.4.0) Notifications Service Solid WidgetsAddons
+# WindowSystem KCMUtils Svg ModemManagerQt; Plasma >= 6.7.0 (LibPlasma's
+# PlasmaConfig 6.7.4); ecm_find_qmlmodule org.kde.prison + org.kde.kirigamiaddons.formcard
+# REQUIRED; QCoro6 Core/DBus; pkg_check libnm. Build order: after
+# LibPlasma + the ModemManagerQt/Mobile-Broadband-Provider-Info/QtKeyChain
+# chain (all earlier in step_plasma). OpenConnect VPN plugin self-disables via
+# pkg_check (openconnect not on the ISO); we force it off for clarity.
+#
+# The applet is a plugin-less plasma_add_applet module (same ECM 6.26
+# QT_NO_PLUGIN QML-install quirk as plasma-desktop/workspace), so the QML is
+# copied into $target by pre_link() to show up under /System/Index/lib/qml.
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/plasma-nm-6.7.4.tar.xz"
+file_size=1560640
+file_md5=2dd1ab12f435d709e055b635629f5c14
+dir='plasma-nm-6.7.4'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QCoro/0.13.0;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_OPENCONNECT=OFF
+)
+
+pre_build() {
+    # ecm_find_qmlmodule(org.kde.prison 1.0 REQUIRED) resolves only via a
+    # kde-qmlmodule.version in ${KDE_INSTALL_FULL_QMLDIR}/${MODULEDIR} or a
+    # "# KDE-qmldir-Version:" line in the qmldir; Prison's qmldir has neither,
+    # so ECM falls through to qmlplugindump whose import path is this package's
+    # still-empty prefix and fails, aborting configure. Seed symlinks to the
+    # installed Prison/KQuickCharts module trees into $target/lib/qml so the
+    # version check succeeds (kde-qmlmodule.version 6.26.0 >= 1.0) before the
+    # dump is ever attempted. Same trick for org.kde.quickcharts (OPTIONAL).
+    [ -d /Programs/Prison/6.26.0/lib/qml/org/kde/prison ] || return 0
+    mkdir -p "$target/lib/qml/org/kde"
+    ln -sfn /Programs/Prison/6.26.0/lib/qml/org/kde/prison \
+        "$target/lib/qml/org/kde/prison"
+    ln -sfn /Programs/KQuickCharts/6.26.0/qml/org/kde/quickcharts \
+        "$target/lib/qml/org/kde/quickcharts"
+}
+
+pre_link() {
+    # Plugin-less QML applet module (org.kde.plasma.networkmanagement): same
+    # ECM 6.26 QT_NO_PLUGIN bug as plasma-desktop/workspace applets, same fix
+    # -- copy the built QML module tree from $builddir into $target so the
+    # live /System/Index/lib/qml gets its applet code.
+    [ -d "$builddir" ] || return 0
+    while IFS= read -r moddir
+    do
+        case "$moddir" in
+            *plasma/applet/org/kde/plasma/*) ;;
+            *) continue ;;
+        esac
+        local suffix="${moddir##*plasma/applet/}"
+        if [ -e "$target/lib/qml/plasma/applet/$suffix" ]; then
+            continue
+        fi
+        mkdir -p "$target/lib/qml/plasma/applet/$(dirname "$suffix")"
+        cp -a "$moddir" "$target/lib/qml/plasma/applet/$suffix"
+    done < <(find "$builddir" -type d -path "*plasma/applet/org/kde/plasma/*" 2>/dev/null)
+}

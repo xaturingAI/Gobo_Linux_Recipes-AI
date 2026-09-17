@@ -1,0 +1,28 @@
+# Custom recipe for QQC2-Desktop-Style 6.26.0 (cmake, KF6)
+# The QtQuick.Controls 2 desktop look that Plasma 6 themes QtQuick apps with.
+# Plasma apps (and Plasma-Workspace's own ocs/qml uses) rely on it being
+# present as /KBASE qml import; libqml has it under lib/qml/org/kde/desktop,
+# which merge_qml_index() mirrors into the live /System/Index/lib/qml tree.
+#
+# REQUIRED build deps (CMakeLists.txt): Qt6 Core/Quick/Gui/Widgets/
+# QuickControls2 (all from QtBase + QtDeclarative 6.10.3) + KF6 Config +
+# KirigamiPlatform (KDE/Kirigami 6.26.0). KF6IconThemes/ColorScheme and X11
+# are optional finds. org.kde.sonnet qmlmodule is an optional spellcheck find.
+# Build right after KDE/Kirigami line in step_plasma (needs KirigamiPlatform).
+compile_version=017-GIT
+url="https://download.kde.org/stable/frameworks/6.26/qqc2-desktop-style-6.26.0.tar.xz"
+file_size=92456
+file_md5=32ed9af7586b5a31b34ebde4debbec9a
+dir='qqc2-desktop-style-6.26.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

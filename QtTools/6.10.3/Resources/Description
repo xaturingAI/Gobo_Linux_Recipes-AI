@@ -1,0 +1,5 @@
+[Name] qttools
+[Summary] Qt 6 developer tools (linguist, designer, qmake)
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Qt 6 tools: linguist, designer, qmake, qtdiag. Some KF6 modules reference Qt6Tools for deployqt/lupdate.

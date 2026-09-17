@@ -1,0 +1,18 @@
+# Custom recipe for polkit-qt-1 0.201.1 (cmake)
+# Qt6 bindings for Polkit (C library from Flatpak-Core). Required by
+# KAuth (find_package(PolkitQt6-1)). Qt6-only build.
+compile_version=017-GIT
+url="https://download.kde.org/stable/polkit-qt-1/polkit-qt-1-0.201.1.tar.xz"
+file_size=58492
+file_md5=0b255fb033de543c3010ebec33f4d233
+dir='polkit-qt-1-0.201.1'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DQT_MAJOR_VERSION=6
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+)
