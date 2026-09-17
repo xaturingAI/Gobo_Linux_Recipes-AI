@@ -1,0 +1,5 @@
+[Name] PyCairo
+[Summary] Python 3 bindings for the Cairo 2D graphics library (module cairo)
+[License] MIT
+[Homepage] https://pycairo.readthedocs.io
+[Description] PyCairo is a set of Python bindings for the Cairo graphics library. This 1.20.1 build targets Python 3.11 and is a dependency of PyGObject's gi.cairo integration and of Lutris.

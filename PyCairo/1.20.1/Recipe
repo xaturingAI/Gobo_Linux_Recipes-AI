@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# PyCairo 1.20.1 for GoboLinux, built against Python 3.11 (the CD's new main
+# interpreter). C extension (cairo) compiled with setuptools/meson against
+# python3.11; -Dpython=python3.11 makes meson's find_installation resolve the
+# interpreter from the index PATH (python3.11 becomes available once the
+# Python 3.11.12 recipe is installed).
+#
+# The ISO's Cairo 1.16 dev tree (cairo-*.pc) is used; the build only needs
+# python3.11 + libpython3.11.so (--enable-shared) + cairo headers.
+compile_version=017-GIT
+url="https://github.com/pygobject/pycairo/releases/download/v1.20.1/pycairo-1.20.1.tar.gz"
+file_size=344639
+file_md5=fa88a28cadbfb34192fe743d32c0ee33
+dir='pycairo-1.20.1'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    -Dpython=python3.11
+)
