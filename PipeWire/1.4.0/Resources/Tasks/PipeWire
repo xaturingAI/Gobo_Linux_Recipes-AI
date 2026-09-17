@@ -1,0 +1,87 @@
+#!/bin/bash
+#
+# PipeWire: system-wide media server + WirePlumber session manager +
+# pipewire-pulse (PulseAudio compatibility server)
+#
+# Gobo has no systemd user services, so this boot-level Task runs the daemons
+# as ONE shared system instance; the ISO is a personal live system with a
+# single desktop user (live).  pipewire owns the audio graph, wireplumber is
+# the session/policy manager and pipewire-pulse speaks the classic PulseAudio
+# protocol for libpulse apps.  All sockets live under /run (tmpfs), owned
+# root:audio mode 2770, so any session user in the `audio` group can connect
+# (apply-live-fixes.sh section 39 puts live/sddm in that group).
+#
+# Client env for sessions is exported via /System/Settings/environment
+# (pam_env) by apply-live-fixes.sh section 40:
+#     PIPEWIRE_RUNTIME_DIR=/run/pipewire
+#     PULSE_SERVER=unix:/run/pulse/native
+#
+# Started from the Gobo BootUp / StartLiveCD scripts via:  PipeWire Start
+# (StartTask PipeWire).  Idempotent: every daemon is pgrep-guarded by its
+# exact full-path command line (note: pipewire and pipewire-pulse are the
+# SAME binary name so `pgrep -x pipewire` matches both -- never use it).
+op="$1"
+[ "$op" ] || op="start"
+
+PW="$(readlink -f /Programs/PipeWire/Current)/bin/pipewire"
+PULSE="$PW-pulse"          # /Programs/PipeWire/Current/bin/pipewire-pulse
+MP="$(readlink -f /Programs/WirePlumber/Current)/bin/wireplumber"
+
+LOG=/Data/Variable/log
+RUNDIR=/run/pipewire
+PULSEDIR=/run/pulse
+
+start() {
+    mkdir -p "$LOG"
+    chmod 1777 "$LOG"
+
+    mkdir -p "$RUNDIR" "$PULSEDIR"
+    # setgid so the native socket inherits group `audio`; umask 007 makes the
+    # socket 0660 root:audio -> connected user sessions can open it.
+    chown root:audio "$RUNDIR" "$PULSEDIR" 2>/dev/null \
+        || { chown root:root "$RUNDIR" "$PULSEDIR"; }
+    chmod 2770 "$RUNDIR" "$PULSEDIR"
+
+    # run the whole stack against /run (system-wide).  dbus session bus does
+    # not exist as a separate daemon here: point GDBus at the system bus
+    # (MessageBus is up by the time this task runs at boot).
+    export XDG_RUNTIME_DIR=/run
+    export PIPEWIRE_RUNTIME_DIR="$RUNDIR"
+    export PULSE_RUNTIME_PATH="$PULSEDIR"
+    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+    umask 007
+
+    [ -x "$PW" ] || { echo "PipeWire: daemon binary missing ($PW)"; exit 1; }
+
+    if ! pgrep -f "^$PW\$" >/dev/null 2>&1; then
+        setsid -f "$PW" </dev/null >>"$LOG/pipewire.log" 2>&1 &
+    fi
+    # wait for the native socket so wireplumber always finds the daemon
+    i=0
+    while [ ! -S "$RUNDIR/pipewire-0" ] && [ "$i" -lt 30 ]; do
+        i=$((i + 1)); sleep 0.5
+    done
+
+    if [ -x "$MP" ] && ! pgrep -f "^$MP " >/dev/null 2>&1; then
+        setsid -f "$MP" --profile main-systemwide \
+            </dev/null >>"$LOG/wireplumber.log" 2>&1 &
+    fi
+
+    if [ -x "$PULSE" ] && ! pgrep -f "^$PULSE\$" >/dev/null 2>&1; then
+        setsid -f "$PULSE" </dev/null >>"$LOG/pipewire-pulse.log" 2>&1 &
+    fi
+    return 0
+}
+
+stop() {
+    pkill -f '^.*/bin/pipewire-pulse$' 2>/dev/null
+    pkill -x wireplumber 2>/dev/null
+    pkill -f '^.*/bin/pipewire$' 2>/dev/null
+    return 0
+}
+
+case "$op" in
+    [Ss]tart) start ;;
+    [Ss]top)  stop ;;
+    *) echo "usage: PipeWire [start|stop]"; exit 2 ;;
+esac
