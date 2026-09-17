@@ -1,0 +1,10 @@
+manifest recipe: pre_install compiles the two-file C++ source directly
+(vdpauinfo.cpp + VDPDeviceImpl.h) -- no autotools/configure run.
+
+- Version 1.4 matches the ISO's LibVDPAU 1.4 API (1.5 would need vdpau >= 1.5).
+- g++ vdpauinfo.cpp -o vdpauinfo -I$goboIndex/include -lvdpau -lX11
+  (headers + libs resolve via the index; LibVDPAU + LibX11 provide the
+  unversioned libvdpau.so/libX11.so dev symlinks).
+- No man page shipped upstream; the built binary is the only artifact.
+- Source URL is the Debian pool's pristine upstream orig tarball (md5
+  matches the official .dsc) because freedesktop gitlab is bot-gated.

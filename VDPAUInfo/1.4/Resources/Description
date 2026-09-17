@@ -1,0 +1,5 @@
+[Name] VDPAUInfo
+[Summary] VDPAU device capabilities query tool
+[License] MIT/X11
+[Homepage] https://gitlab.freedesktop.org/vdpau/vdpauinfo
+[Description] vdpauinfo queries a VDPAU device (via the X11 display connection) and prints every decode profile, output/bitmap surface format and mixer parameter the device supports. On the Live CD it reports the NVIDIA VDPAU backend (libvdpau_nvidia.so.1) capabilities.

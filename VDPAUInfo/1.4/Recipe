@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# vdpauinfo - VDPAU capabilities query tool (the CLI counterpart to the
+# vdpauinfo(1) utility, used with the NVIDIA VDPAU backend).
+#
+# Built directly from the two-file C++ source (vdpauinfo.cpp +
+# VDPDeviceImpl.h) against the ISO's LibVDPAU 1.4 headers + X11 -- no
+# autotools run is needed (the upstream tarball has no generated configure
+# script, and the chroot lacks xorg-macros for XORG_CHANGELOG). Version 1.4
+# matches the ISO's LibVDPAU 1.4 API exactly.
+#
+# SOURCE NOTE: fetched from the Debian pool's pristine upstream orig tarball
+# (checksums match the .dsc); the freedesktop gitlab endpoint is bot-gated
+# and refuses non-interactive downloads.
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/v/vdpauinfo/vdpauinfo_1.4.orig.tar.bz2"
+file_size=11811
+file_md5=4f1d55f33cd72082ab65f7f0b90ff33a
+dir='vdpauinfo-1.4'
+recipe_type=manifest
+manifest=(
+    "vdpauinfo:bin/vdpauinfo"
+)
+
+pre_install() {
+    g++ -O2 -I$goboIndex/include vdpauinfo.cpp -o vdpauinfo -lvdpau -lX11 \
+        || Die "vdpauinfo build failed"
+}
