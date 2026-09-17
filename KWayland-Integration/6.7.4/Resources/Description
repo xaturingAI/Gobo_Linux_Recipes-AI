@@ -1,0 +1,5 @@
+[Name] kwayland-integration
+[Summary] Plasma 6 KWindowSystem Wayland backend
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/kwayland-integration
+[Description] Plasma 6 Wayland integration plugin for KWindowSystem (window management via KWayland).

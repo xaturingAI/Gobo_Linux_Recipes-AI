@@ -1,0 +1,41 @@
+# Custom recipe for ModemManager 1.24.2 (meson)
+# GLib-based daemon for Mobile Broadband Interface Model devices plus the
+# libmm-glib client library. Required at BUILD time by KF6ModemManagerQt
+# 6.26.0: its bundled cmake/FindModemManager.cmake does
+# pkg_search_module(ModemManager REQUIRED IMPORTED_TARGET), so the daemon's
+# modmmanager.pc + headers must be installed first (data/ModemManager.pc.in
+# ships in this tree; freedesktop.org release tarballs stop at 1.18.x, so the
+# 1.24.2 source was staged from the gitlab.freedesktop.org mobile-broadband/
+# ModemManager.git tag 1.24.2, commit f2b9ab1).
+#
+# Hard deps all already on the ISO: glib-2.0 >= 2.56 + gio-unix + gmodule
+# (GLib), dbus-1, libudev (Eudev 3.2.9), gudev-1.0 (LibGudev 238),
+# polkit-gobject-1 (Polkit 126), gettext (Gettext). Disabled: mbim/qmi/qrtr
+# (no modem backends on the ISO), systemd units + suspend/resume + journal
+# (elogind stack), introspection (no g-i in tree), man/gtk-doc/bash-completion/
+# tests/examples.
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/archive/1.24.2/ModemManager-1.24.2.tar.xz"
+file_size=1371024
+file_md5=e01af25aa97df56220917567a372ffb7
+dir='ModemManager-1.24.2'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    -Dudev=true
+    -Dudevdir=lib/udev
+    -Dsystemdsystemunitdir=no
+    -Dsystemd_suspend_resume=false
+    -Dsystemd_journal=false
+    -Dpowerd_suspend_resume=false
+    -Dmbim=false
+    -Dqmi=false
+    -Dqrtr=false
+    -Dintrospection=false
+    -Dvapi=false
+    -Dman=false
+    -Dgtk_doc=false
+    -Dbash_completion=false
+    -Dtests=false
+    -Dexamples=false
+)

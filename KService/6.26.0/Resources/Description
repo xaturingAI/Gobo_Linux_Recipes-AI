@@ -1,0 +1,5 @@
+[Name] KService
+[Summary] KDE Frameworks 6 service/desktop integration
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kservice
+[Description] KDE Frameworks 6 Tier 2: service registry, .desktop file handling, MIME type association.

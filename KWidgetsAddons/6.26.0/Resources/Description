@@ -1,0 +1,5 @@
+[Name] KWidgetsAddons
+[Summary] KDE Frameworks 6 extra widgets
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kwidgetsaddons
+[Description] KDE Frameworks 6 Tier 1: additional Qt widgets (KPasswordLineEdit, KPaginatedWidget, etc).

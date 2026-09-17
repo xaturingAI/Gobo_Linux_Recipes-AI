@@ -1,0 +1,20 @@
+# Custom recipe for Mobile-Broadband-Provider-Info 20240407 (meson)
+# The MMoN carrier/location database (serviceproviders.xml + apns-conf.xml)
+# that plasma-nm's mobile-broadband account editor reads. Built BEFORE
+# plasma-nm: its CMakeLists does
+# pkg_get_variable(BROADBANDPROVIDER_DATABASE mobile-broadband-provider-info database)
+# so the generated mobile-broadband-provider-info.pc (with the `database`
+# variable pointing at serviceproviders.xml) must be merged into /System/Index.
+#
+# meson-based; the produced files go to share/mobile-broadband-provider-info/.
+# The `tests` subdir only uses grep/xmllint (LibXML2 in-tree), not run at
+# build. xsltproc + gettext already present. glib/gio not required.
+compile_version=017-GIT
+url="https://gitlab.gnome.org/GNOME/mobile-broadband-provider-info/-/archive/20240407/mobile-broadband-provider-info-20240407.tar.gz"
+file_size=54555
+file_md5=c19ce676d290a539b8672e5e8fb80ed6
+dir='mobile-broadband-provider-info-20240407'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+)

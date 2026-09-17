@@ -1,0 +1,5 @@
+[Name] layer-shell-qt
+[Summary] Plasma 6 wlr-layer-shell Qt/Wayland integration
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/layer-shell-qt
+[Description] Plasma 6 Wayland wlr-layer-shell protocol support for Qt panels/shells.

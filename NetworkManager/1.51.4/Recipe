@@ -1,0 +1,55 @@
+# Custom recipe for NetworkManager 1.51.4 (meson)
+# Required by KF6NetworkManagerQt 6.26.0, which Plasma-Workspace 6.7.4
+# hard-requires on LINUX (CMakeLists.txt:104): networkmanager-qt's CMake does
+# pkg_search_module(NetworkManager REQUIRED IMPORTED_TARGET libnm>=1.4.0), so
+# the libnm client library + headers + libnm.pc must exist. libnm only ships
+# inside the NetworkManager source tree, so the whole daemon is built.
+#
+# Scope trimmed for the ISO: no wifi/wwan/bt/ppp/ovs/nmtui/nmcli/cloud-setup,
+# elogind session+suspend tracking (no systemd on the ISO, same as polkitd),
+# no systemd-journal (syslog backend), no selinux/audit yet, no g-i/vapi/docs/
+# tests/eBPF/ifupdown/ifcfg-rh. polkit left ON (polkit-gobject-1 present) so
+# the policy rules install; crypto=gnutls (NSS not built on the ISO, GnuTLS
+# 3.6.12 present; NM only needs gnutls >= 2.12). Hard build deps we have:
+# uuid, libudev (Eudev), dbus-1, libndp (LibNDP), gio-unix/gmodule (GLib),
+# jansson, libpsl, libcurl, polkit-gobject-1, perl, xsltproc, meson.
+#
+# Installs into its own prefix; the Index import exposes libnm.pc to
+# pkg-config and the daemon's D-Bus service to the merged ISO rootfs.
+#
+# file_md5 / file_size verified against download.gnome.org NetworkManager
+# 1.51.4 tarball.
+compile_version=017-GIT
+url="https://download.gnome.org/sources/NetworkManager/1.51/NetworkManager-1.51.4.tar.xz"
+file_size=6133012
+file_md5=756867cb74f0e3379498751dd744406b
+dir='NetworkManager-1.51.4'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    -Ddocs=false
+    -Dtests=no
+    -Dintrospection=false
+    -Dvapi=false
+    -Dwifi=false
+    -Dwext=false
+    -Diwd=false
+    -Dmodem_manager=false
+    -Dofono=false
+    -Dnm_cloud_setup=false
+    -Dppp=false
+    -Dovs=false
+    -Dteamdctl=false
+    -Dnmtui=false
+    -Dnmcli=false
+    -Dcrypto=gnutls
+    -Dsession_tracking=elogind
+    -Dsuspend_resume=elogind
+    -Dsystemdsystemunitdir=no
+    -Dsystemd_journal=false
+    -Dselinux=false
+    -Dlibaudit=no
+    -Debpf=false
+    -Difupdown=false
+    -Difcfg_rh=false
+)

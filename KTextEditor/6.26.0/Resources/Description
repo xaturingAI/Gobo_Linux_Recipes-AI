@@ -1,0 +1,5 @@
+[Name] KTextEditor
+[Summary] KDE Frameworks 6 advanced text editor component
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/ktexteditor
+[Description] KDE Frameworks 6: Kate editor component (KTextEditor). Used by Konsole split-view and KDevelop.

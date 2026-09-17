@@ -1,0 +1,5 @@
+[Name] KSyntaxHighlighting
+[Summary] KDE Frameworks 6 syntax highlighting engine
+[License] MIT
+[Homepage] https://invent.kde.org/frameworks/ksyntaxhighlighting
+[Description] KDE Frameworks 6 Tier 2: KSyntaxHighlighting definition-based syntax highlighter (Kate/KTextEditor backend).
