@@ -1,0 +1,25 @@
+# Custom recipe for usb-modeswitch 2.6.1 (makefile)
+#
+# Many USB 4G/5G sticks enumerate as a virtual CD-ROM (Windows driver disc) and
+# must be "mode switched" into their modem (MBIM/QMI/tty) personality before
+# ModemManager can see them.  usb_modeswitch performs that switch; the udev
+# rule it installs triggers it automatically for known devices, and the
+# `usb_modeswitch` binary can be invoked by hand for unknown ones.
+#
+# Links libusb-1.0 (LibUSB 1.0.23 is already on the base ISO with headers +
+# pkg-config).  The default `all` target also builds the TCL dispatcher script
+# (a plain `cp`, no tclsh needed at build time); the shipped udev helper uses it
+# at runtime.  The compiled `usb_modeswitch` binary is the part ModemManager
+# setups rely on.
+#
+# Installs Programs/USB-Modeswitch/2.6.1/sbin/usb_modeswitch plus its udev rule
+# (lib/udev) and /etc/usb_modeswitch.conf defaults.
+
+compile_version=017-GIT
+url="https://www.draisberghof.de/usb_modeswitch/usb-modeswitch-2.6.1.tar.bz2"
+file_size=45471
+file_md5=69d00d6ed7097b97d972a159d14cfba1
+dir='usb-modeswitch-2.6.1'
+recipe_type=makefile
+
+install_target="install"
