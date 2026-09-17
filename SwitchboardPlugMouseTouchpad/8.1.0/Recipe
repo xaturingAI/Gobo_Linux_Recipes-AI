@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugMouseTouchpad 8.1.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-mouse-touchpad/archive/refs/tags/8.1.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-mouse-touchpad/archive/refs/tags/8.1.0.tar.gz"
+file="settings-mouse-touchpad-8.1.0.tar.gz"
+file_size=706425
+file_md5=bca27933952bc0e195aa7b208489e00c
+dir='settings-mouse-touchpad-8.1.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

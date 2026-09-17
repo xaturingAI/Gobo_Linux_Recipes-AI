@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugAbout 8.2.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-system/archive/refs/tags/8.2.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-system/archive/refs/tags/8.2.3.tar.gz"
+file="settings-system-8.2.3.tar.gz"
+file_size=699245
+file_md5=163a0bbbda85461cd06529bf1524d12b
+dir='settings-system-8.2.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugNotifications 8.0.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-notifications/archive/refs/tags/8.0.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-notifications/archive/refs/tags/8.0.1.tar.gz"
+file="settings-notifications-8.0.1.tar.gz"
+file_size=298578
+file_md5=37ca9a770db22d2d2c26c39cdffe5244
+dir='settings-notifications-8.0.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

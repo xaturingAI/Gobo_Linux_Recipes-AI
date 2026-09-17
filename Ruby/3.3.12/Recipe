@@ -1,0 +1,38 @@
+# Custom recipe for Ruby 3.3.12 (autotools)
+#
+# Part of the Pantheon stack port. WebKit2GTK/WebKitGTK 2.46.5 hard-require a
+# Ruby >= 2.5 interpreter (WebKitCommon.cmake: find_package(Ruby 2.5) then
+# fatal "Ruby 2.5 or higher is required"): the JSC code generators
+# (offlineasm/bytecode .rb scripts) run it at build time. The ISO ships no
+# Ruby. Only the interpreter is needed, but a stock build also gives the ISO
+# a full ruby (openssl/zlib exts find the ISO OpenSSL 1.1.1 + zlib; the
+# exts whose system deps are absent -- psych/libyaml, readline, gdbm,
+# fiddle -- are auto-skipped by configure).
+#
+# Build BEFORE WebKit2GTK/WebKitGTK; the release tarball ships generated
+# parse.c, so no bison/gperf are required. PrepareProgram passes
+# --prefix=$target (autoconf configure).
+#
+# makefile='GNUmakefile': Ruby's build system defines the real targets
+# (`all: $(SHOWFLAGS) main docs`, `install: install-nodoc`) in common.mk,
+# which is only pulled in through GNUmakefile (-include uncommon.mk ->
+# defs/gmake.mk). Gobo's makefile/configure build types run `make -f
+# Makefile`, which reads only the generated stub Makefile (empty `all:`, no
+# install target) -> "Nothing to be done for 'all'" / "No rule to make
+# target 'install'". `make -f GNUmakefile` is what upstream `make` does.
+#
+# file_md5 + file_size verified against cache.ruby-lang.org 3.3.12 tarball.
+
+compile_version=017-GIT
+url="https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.12.tar.gz"
+file_size=21489887
+file_md5=c6c276876f7f7fa1d40e47347928e9bd
+dir='ruby-3.3.12'
+recipe_type=configure
+makefile='GNUmakefile'
+
+configure_options=(
+    --disable-install-doc
+    --disable-install-rdoc
+    --disable-install-capi
+)

@@ -1,0 +1,53 @@
+# Custom recipe for SessionSettings 8.1.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon stack port. The actual "pantheon-session" package
+# (repo renamed elementary/session-settings). Installs the pantheon.session /
+# pantheon-wayland.session gnome-session files, the X11 + Wayland desktop
+# entries (Classic Session / Secure Session) and the pantheon-prefixed gsd +
+# gnome-keyring autostart files (OnlyShowIn=Pantheon) under /etc/xdg/autostart.
+#
+# Requires gnome-settings-daemon.pc (GnomeSettingsDaemon), desktop-file-install
+# (DesktopFileUtils) and gnome-keyring-daemon (GnomeKeyring) at build time.
+# do_patch drops the onboard on-screen-keyboard and Orca autostarts (neither
+# is shipped on the ISO; stock meson hard-requires both binaries). Systemd
+# units are skipped (-Dsystemd=false).
+#
+# Build LAST in the session stack.
+#
+# file_md5 verified against the elementary GitHub release tarball.
+
+compile_version=017-GIT
+url="https://github.com/elementary/session-settings/archive/refs/tags/8.1.0.tar.gz"
+file_size=21222
+file_md5=3e4e7c08995c6fe20cc653256f1f3260
+dir='session-settings-8.1.0'
+recipe_type=meson
+
+do_patch() {
+    # Note: run in a subshell -- the meson recipe type invokes `meson setup`
+    # from the build dir, so do_patch must not leave cwd inside the source dir.
+    ( cd "$sourcedir"
+      # onboard and Orca are not shipped on this ISO; their find_program() calls
+      # are hard requirements and their autostart .desktop inputs do not exist.
+      # Drop them (gnome-keyring autostart patching is kept intact).
+      sed -i "/^onboard = find_program('onboard')$/d" session/meson.build
+      sed -i "/^orca = find_program('orca')$/d" session/meson.build
+      sed -i "/onboard_prefix = onboard.path()/d" session/meson.build
+      sed -i "/orca_prefix = orca.path()/d" session/meson.build
+      sed -i "/'onboard-autostart'/d" session/meson.build
+      sed -i "/'orca-autostart'/d" session/meson.build
+      # gnome-keyring only ships pkcs11 + secrets autostart .desktop files on
+      # this ISO (no gnome-keyring-ssh.desktop), and meson resolves the dict
+      # input paths as real files -> "File ... does not exist". Drop the ssh
+      # entry from both branches (detect-program-prefixes true and false).
+      sed -i "/'gnome-keyring-ssh':/d" session/meson.build )
+}
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemd=false
+    -Ddetect-program-prefixes=false
+    -Dx11=true
+    -Dmimeapps-list=true
+    -Dfallback-session=gala
+)

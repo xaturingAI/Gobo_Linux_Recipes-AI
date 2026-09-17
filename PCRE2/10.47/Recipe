@@ -1,0 +1,27 @@
+# Custom recipe for PCRE2 10.47 (autotools)
+#
+# Part of the Pantheon stack port. GLib 2.84.4 hard-requires the
+# libpcre2-8 pkg-config (regex engine); the ISO only ships legacy PCRE 8.43.
+# Without this, meson tries the pcre2 wrap fallback and fails on the
+# .tar.bz2 download (unknown archive format).
+#
+# Only the 8-bit library is built: the whole GNOME/GTK stack uses
+# libpcre2-8. --disable-static keeps .a files out of the index.
+#
+# Build BEFORE GLib.
+#
+# file_md5 verified against the github.com/PCRE2Project/pcre2 release tarball.
+
+compile_version=017-GIT
+url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.47/pcre2-10.47.tar.gz"
+file_size=2792969
+file_md5=2261078304c4e6904d1c94c9ffd04fd8
+dir='pcre2-10.47'
+recipe_type=configure
+
+configure_options=(
+    --disable-pcre2-16
+    --disable-pcre2-32
+    --disable-static
+    --disable-dependency-tracking
+)

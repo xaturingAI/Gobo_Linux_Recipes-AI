@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugKeyboard 8.1.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-keyboard/archive/refs/tags/8.1.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-keyboard/archive/refs/tags/8.1.1.tar.gz"
+file="settings-keyboard-8.1.1.tar.gz"
+file_size=829326
+file_md5=1875dfda2f5535f680300e30c5010866
+dir='settings-keyboard-8.1.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)
