@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugWacom 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-wacom/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-wacom/archive/refs/tags/8.0.2.tar.gz"
+file="settings-wacom-8.0.2.tar.gz"
+file_size=99821
+file_md5=bc4ef5944978966e55cfe5b54b47bc3b
+dir='settings-wacom-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

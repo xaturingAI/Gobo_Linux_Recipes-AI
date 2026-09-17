@@ -1,0 +1,34 @@
+# Custom recipe for Unifdef 2.12 (plain Makefile)
+#
+# Part of the Pantheon stack port. Command-line C preprocessor conditional
+# stripper, required by WebKitGTK 2.46.5 (OptionsGTK.cmake:
+# find_package(Unifdef REQUIRED); FindUnifdef.cmake does find_program(unifdef),
+# so the installed binary must be on PATH during the webkit build -> a normal
+# Index install puts it in /System/Index/bin, which the Compile environment's
+# PATH includes).
+#
+# Must be the AUTHOR's release tarball (dotat.at), NOT the github archive:
+# reversion.sh errors "Your copy of unifdef is incomplete" unless version.sh
+# exists or .git is present; the github tag archive has neither (version.sh is
+# gitignored), while the release tarball ships pre-generated version.sh +
+# version.h.
+#
+# No configure script exists; the Makefile is upstream. The Makefile install
+# rule uses `prefix = ${HOME}` and derives bindir/mandir from it;
+# SandboxInstall's makefile handler passes installprefix=<pkg dir>, so we pin
+# prefix=$target via install_variables so bin/unifdef lands in the sandbox's
+# $target/bin. The engine's makefile install then overlays it onto the program
+# tree.
+#
+# md5/size verified against the dotat.at release tarball.
+
+compile_version=017-GIT
+url="https://dotat.at/prog/unifdef/unifdef-2.12.tar.gz"
+file_size=87091
+file_md5=b225312c110cd2600ca7166bd0419751
+dir='unifdef-2.12'
+recipe_type=makefile
+
+install_variables=(
+    "prefix=$target"
+)

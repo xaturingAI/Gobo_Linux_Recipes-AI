@@ -1,0 +1,5 @@
+[Name] Weston
+[Summary] Wayland reference compositor (SDDM greeter host)
+[Description] The Wayland reference compositor + libweston. Provides the compositor that SDDM 0.18.1's Wayland display server (DisplayServer=wayland) needs to host its greeter via `weston --kiosk`. Without a greeter compositor the Pantheon desktop cannot run natively on Wayland. Weston 13.0.0 is the stable release matching this ISO's Wayland 1.23.1 stack; it uses libseat (SeatD) for DRM seat handling and libdisplay-info 0.3.0 for output metadata.
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/wayland/weston

@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorNotifications 7.1.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/panel-notifications/archive/refs/tags/7.1.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/panel-notifications/archive/refs/tags/7.1.1.tar.gz"
+file_size=180679
+file_md5=04254512e3ab9ae4791e5723df69e7b1
+dir='panel-notifications-7.1.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

@@ -1,0 +1,3 @@
+Build type: meson
+Source: https://github.com/elementary/panel-bluetooth/archive/refs/tags/8.0.0.tar.gz
+Build order: part of the Pantheon stack (see Recipes/pantheon-recipes.md).

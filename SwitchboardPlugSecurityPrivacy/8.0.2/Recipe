@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugSecurityPrivacy 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-security-privacy/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-security-privacy/archive/refs/tags/8.0.2.tar.gz"
+file="settings-security-privacy-8.0.2.tar.gz"
+file_size=776247
+file_md5=22e8ae487008a4504db883989dc9cae0
+dir='settings-security-privacy-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

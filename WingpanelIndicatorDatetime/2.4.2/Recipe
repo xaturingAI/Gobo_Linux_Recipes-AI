@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorDatetime 2.4.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/panel-datetime/archive/refs/tags/2.4.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/panel-datetime/archive/refs/tags/2.4.2.tar.gz"
+file_size=153908
+file_md5=5f2930f486aa338e7ca4a5ead59ad76e
+dir='panel-datetime-2.4.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

@@ -1,0 +1,115 @@
+# Custom recipe for Weston 13.0.0 (Wayland reference compositor; meson)
+#
+# Purpose: SDDM 0.18.1's Wayland display server (DisplayServer=wayland) needs a
+# compositor to host the greeter ("CompositorCommand", default `weston --kiosk`).
+# Without one the greeter cannot start under Wayland, so the Pantheon desktop
+# cannot run natively on Wayland.  This recipe provides that compositor.
+#
+# Weston 13.0.0 (Nov 2023) is a stable release that builds cleanly with meson
+# against this ISO's stack:
+#   - Wayland 1.23.1, Wayland-Protocols 1.44
+#   - LibInput 1.31.3, LibDrm (2.4.121+), XKBcommon 1.7.0, Pixman 0.44.2
+#   - Mesa 25.3.6 (EGL/GLES2 for renderer-gl)
+#   - libseat (SeatD 0.6.4) for the DRM backend's seat handling (weston 13
+#     removed the logind launcher in favour of libseat)
+#   - libdisplay-info 0.3.0 (weston 13 needs >= 0.1)
+#
+# Verified source SHA256 (upstream announcement):
+#   52ff1d4aa2394a2e416c85a338b627ce97fa71d43eb762fd4aaf145d36fc795a
+# Local MD5 computed from the downloaded tarball.
+
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/wayland/weston/-/releases/13.0.0/downloads/weston-13.0.0.tar.xz"
+file_size=1986520
+file_md5=cdd0ec2c360eebdf878f1b5d3113dc6c
+dir='weston-13.0.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    # Backends: keep DRM (real hardware) + headless (SDDM kiosk default);
+    # drop pipewire/rdp/vnc/vaapi which need extra deps we don't ship.
+    "-Dbackend-drm=true"
+    "-Dbackend-drm-screencast-vaapi=false"
+    "-Dbackend-headless=true"
+    "-Dbackend-pipewire=false"
+    "-Dbackend-rdp=false"
+    "-Dscreenshare=false"
+    "-Dbackend-vnc=false"
+    "-Dbackend-wayland=false"
+    "-Dbackend-x11=false"
+    "-Dbackend-default=headless"
+    # Shells: SDDM 0.20.0's default [Wayland] CompositorCommand is
+    # "weston --shell=fullscreen-shell.so", so the fullscreen shell plugin is
+    # REQUIRED (shell-fullscreen=true builds libfullscreen-shell.so). kiosk is
+    # a clean alternative for --shell=kiosk; desktop is a useful fallback.
+    "-Dshell-desktop=true"
+    "-Dshell-fullscreen=true"
+    "-Dshell-ivi=false"
+    "-Dshell-kiosk=true"
+    # EGL/GLES2 renderer (software llvmpipe in QEMU, GPU otherwise).
+    "-Drenderer-gl=true"
+    # No systemd on this ISO (Elogind/seatd instead).
+    "-Dsystemd=false"
+    # No remote output / colour management / extra image codecs needed for a
+    # greeter compositor.
+    "-Dremoting=false"
+    "-Dpipewire=false"
+    "-Dcolor-management-lcms=false"
+    "-Dimage-jpeg=false"
+    "-Dimage-webp=false"
+    # xwayland is handled by mutter/gala for the real session; the greeter
+    # compositor does not need to embed Xwayland.
+    "-Dxwayland=false"
+    # Keep the build lean: no sample/demo clients, tools, wcap, or tests.
+    "-Ddemo-clients=false"
+    "-Dsimple-clients="
+    "-Dtools="
+    "-Dwcap-decode=false"
+    "-Dresize-pool=false"
+    "-Dtest-junit-xml=false"
+    "-Dtest-skip-is-failure=false"
+    "-Ddoc=false"
+)
+
+pre_build() {
+    # GCC 14's -Werror=calloc-transposed-args rejects Weston's old
+    # calloc(sizeof(X), N) idiom; swap the argument order across the source.
+    # Idempotent: only swaps when the old form is present.
+    Log_Normal "Patching GCC 14 calloc-transposed-args in weston source"
+    find "$sourcedir" -name '*.c' -o -name '*.h' | \
+        xargs grep -l 'calloc(sizeof(' 2>/dev/null | while read f
+    do
+        sed -i -E 's/calloc\(sizeof\(([A-Za-z0-9_ *]+)\),\s*([0-9]+)\)/calloc(\2, sizeof(\1))/g' "$f"
+    done
+}
+
+pre_install() {
+    # Stale Gobo SymlinkProgram links from PREVIOUS failed installs leave broken
+    # symlinks under /usr/lib and /usr/include pointing at the not-yet-created
+    # /Programs/Weston/<ver>/... install tree, e.g.
+    #   /usr/lib/libweston-13       -> /Programs/Weston/13.0.0/lib/libweston-13
+    #   /usr/include/libweston-13   -> /Programs/Weston/13.0.0/include/libweston-13
+    #   /usr/include/weston         -> /Programs/Weston/13.0.0/include/weston
+    # Meson "meson install" wants to CREATE those real directories (for the
+    # gl-renderer plugin and public headers) and cannot descend through the
+    # broken-link parents, so it dies with either
+    #   FileExistsError: [Errno 17] File exists: '/usr/lib/libweston-13'
+    #   FileNotFoundError: [Errno 2] No such file or directory: '/usr/include/libweston-13/libweston/'
+    # Clear them all (any of lib, include, share, bin) before SandboxInstall so
+    # the fresh install can create its own directories. Idempotent.
+    Log_Normal "Clearing stale weston /usr links before install"
+    for stale in \
+        /usr/lib/libweston-13 /usr/lib/weston \
+        /usr/include/libweston-13 /usr/include/weston \
+        /usr/share/libweston-13 /usr/share/weston \
+        /usr/bin/weston /usr/bin/weston-terminal /usr/bin/weston-launch
+    do
+        [ -L "$stale" ] && rm -f "$stale"
+        [ -e "$stale" ] && rm -rf "$stale"
+    done
+    # Ensure the hook always reports success: the trailing test/&& above
+    # returns 1 whenever a link is absent, and Run_Hook treats a non-zero
+    # as "Failure in pre-install operation".
+    return 0
+}

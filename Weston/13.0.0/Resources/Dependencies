@@ -1,0 +1,15 @@
+# Build-time pkg-config / header dependencies for Weston 13.0.0
+# (all present on the ISO / System/Index as of the Pantheon wayland port)
+- Wayland (>= 1.20)
+- Wayland-Protocols (>= 1.32)
+- LibInput (>= 1.16)
+- LibDrm
+- XKBcommon
+- Pixman
+- Mesa (EGL, GLESv2 headers)
+- libseat (SeatD)
+- libdisplay-info (>= 0.1)
+- libdrm headers
+- libxkbcommon headers
+# Runtime: seatd/elogind + DRM node access for the DRM backend; Mesa
+# software rendering (llvmpipe) in QEMU via LIBGL_ALWAYS_SOFTWARE.

@@ -1,0 +1,74 @@
+# Custom recipe for WebKit2GTK 2.46.5 (GTK3 API 4.1; cmake)
+#
+# Part of the Pantheon stack port. The GTK 3 web engine, needed by
+# PantheonMail 8.0.1: dependency('webkit2gtk-4.1') +
+# dependency('webkit2gtk-web-extension-4.1'). This is the webkitgtk 2.46.5
+# tarball built with -DUSE_GTK4=OFF, which yields the 4.1 API (soup3, so the
+# 4.1 infix is correct, not 4.0).
+#
+# The SAME tarball is also built as WebKitGTK 2.46.5 (GTK4 API 6.0) for
+# PantheonCapnetAssist; 2.46.x is a single-binary-per-port release (USE_GTK4 is
+# an either/or public option), so two separate builds are required. Both install
+# into distinct program trees (webkit2gtk-4.1.pc vs webkitgtk-6.0.pc), so they
+# coexist on the index.
+#
+# Build environment: runs after GTK+ 3.24.43 (x11+wayland), GStreamer 1.26.1 +
+# Gst-Plugins-Base (gstreamer components auto-detected), LibHyphen 2.8.8
+# (FindHyphen via /usr -> Index), Unifdef 2.12 (find_program on PATH), LibIcal,
+# libsoup3, gio, ICU, libseccomp, bubblewrap. GTK4-era extras (skia) unused;
+# cairo path -> requires Fontconfig + Freetype (both on the ISO).
+#
+# Flags:
+#  - USE_GTK4=OFF        -> 4.1 API (Mail); soup3 by default (USE_SOUP2 off).
+#  - USE_GBM=OFF         -> libgbm.pc is not on the ISO (USE_LIBDRM stays ON,
+#                           libdrm.pc is present).
+#  - ENABLE_GAMEPAD=OFF  -> libmanette not on the ISO (default is already OFF).
+#  - ENABLE_INTROSPECTION=OFF, ENABLE_DOCUMENTATION=OFF -> Mail only needs the
+#    pcs; introspection would pull girepository-1.0/2.0 pc friction.
+#  - ENABLE_MINIBROWSER=OFF (already default OFF).
+#  - ENABLE_SPELLCHECK=OFF -> skip Enchant (OptionsGTK.cmake:373 FATAL_ERROR
+#    "Enchant is needed for ENABLE_SPELLCHECK"; enchant-2 not on the ISO and no
+#    consumer in the stack uses webkit spellcheck).
+#  - USE_JPEGXL=OFF, USE_AVIF=OFF, USE_WOFF2=OFF, USE_LIBBACKTRACE=OFF ->
+#    skip libjxl/libavif/libwoff2dec/libbacktrace (none on the ISO; all four
+#    default PUBLIC ON and FATAL_ERROR when the pc is missing).
+#  - ENABLE_PDFJS=OFF -> WebKit downloads pdf.js at build time when it is not
+#    bundled in the tarball (no ThirdParty/ dir); the chroot is offline.
+#    USE_LCMS stays ON (LCMS2 present); ENABLE_JOURNALD_LOG stays ON
+#    (libelogind.pc present); ENABLE_BUBBLEWRAP_SANDBOX stays ON (bwrap 0.11.0
+#    present, runtime-only check).
+#  - USE_GSTREAMER_TRANSCODER=OFF -> gst-transcoder (separate project from core
+#    GStreamer; gstreamer-transcoder-1.0.pc not on the ISO). GStreamerChecks
+#    fatals when ENABLE_MEDIA_RECORDER (ON) + USE_GSTREAMER_TRANSCODER (ON) +
+#    pc missing. MediaRecorder's only real GTK impl is behind this flag, so the
+#    feature is effectively inert without it. ENABLE_WEB_RTC stays OFF
+#    (defaults to ENABLE_EXPERIMENTAL_FEATURES=OFF) so gstreamer-webrtc (from
+#    gst-plugins-bad, not built) is never probed.
+#  - X11 + Wayland targets stay ON (GTK+ rebuild supports both).
+#
+# file_md5 + file_size verified against the webkitgtk.org release tarball.
+
+compile_version=017-GIT
+url="https://webkitgtk.org/releases/webkitgtk-2.46.5.tar.xz"
+file_size=42898600
+file_md5=095d7f72acb300839c9879a4f95bf941
+dir='webkitgtk-2.46.5'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DPORT=GTK
+    -DUSE_GTK4=OFF
+    -DUSE_GBM=OFF
+    -DENABLE_GAMEPAD=OFF
+    -DENABLE_INTROSPECTION=OFF
+    -DENABLE_DOCUMENTATION=OFF
+    -DENABLE_MINIBROWSER=OFF
+    -DENABLE_SPELLCHECK=OFF
+    -DENABLE_PDFJS=OFF
+    -DUSE_JPEGXL=OFF
+    -DUSE_AVIF=OFF
+    -DUSE_WOFF2=OFF
+    -DUSE_LIBBACKTRACE=OFF
+    -DUSE_GSTREAMER_TRANSCODER=OFF
+)

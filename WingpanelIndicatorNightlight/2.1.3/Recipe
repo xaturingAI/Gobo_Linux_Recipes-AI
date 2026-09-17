@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorNightlight 2.1.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/panel-nightlight/archive/refs/tags/2.1.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/panel-nightlight/archive/refs/tags/2.1.3.tar.gz"
+file_size=81543
+file_md5=fcfd96d9e4df2da2eaf02def956f7f33
+dir='panel-nightlight-2.1.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

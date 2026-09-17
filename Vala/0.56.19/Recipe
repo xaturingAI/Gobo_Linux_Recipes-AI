@@ -1,0 +1,18 @@
+# Custom recipe for Vala 0.56.19 (elementary OS 8 era; configure)
+#
+# Part of the Pantheon desktop stack port. Source: https://download.gnome.org/sources/vala/0.56/vala-0.56.19.tar.xz
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/vala/0.56/vala-0.56.19.tar.xz"
+file_size=4007612
+file_md5=a2dc825de503fad703584cfb0ed50302
+dir='vala-0.56.19'
+recipe_type=configure
+
+configure_options=(
+    # valadoc pulls in libgvc (graphviz) via PKG_CHECK_MODULES -> configure
+    # error since graphviz isn't on the ISO. valadoc is the API-doc generator;
+    # not needed for building the compiler/vapigen tools.
+    --disable-valadoc
+    --disable-dtd-validation
+)
