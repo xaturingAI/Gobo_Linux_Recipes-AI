@@ -1,0 +1,17 @@
+# Vulkan demos and tools (vulkaninfo) 1.4.357.0.
+url="https://github.com/KhronosGroup/Vulkan-Tools/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz"
+file_size=820293
+file_md5=67f3a0425387a8904cbe942f7f2af169
+file="Vulkan-Tools-vulkan-sdk-1.4.357.0.tar.gz"
+dir="Vulkan-Tools-vulkan-sdk-1.4.357.0"
+recipe_type=cmake
+cmake_options=(
+   -DCMAKE_BUILD_TYPE=Release
+   -DCMAKE_SKIP_RPATH=True
+   -DCMAKE_PREFIX_PATH=/System/Index
+   -DBUILD_CUBE=OFF
+   -DBUILD_VULKANINFO=ON
+   -DBUILD_WSI_XCB_SUPPORT=ON
+   -DBUILD_WSI_XLIB_SUPPORT=ON
+   -DBUILD_WSI_WAYLAND_SUPPORT=ON
+)
