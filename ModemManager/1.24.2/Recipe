@@ -1,41 +1,41 @@
-# Custom recipe for ModemManager 1.24.2 (meson)
-# GLib-based daemon for Mobile Broadband Interface Model devices plus the
-# libmm-glib client library. Required at BUILD time by KF6ModemManagerQt
-# 6.26.0: its bundled cmake/FindModemManager.cmake does
-# pkg_search_module(ModemManager REQUIRED IMPORTED_TARGET), so the daemon's
-# modmmanager.pc + headers must be installed first (data/ModemManager.pc.in
-# ships in this tree; freedesktop.org release tarballs stop at 1.18.x, so the
-# 1.24.2 source was staged from the gitlab.freedesktop.org mobile-broadband/
-# ModemManager.git tag 1.24.2, commit f2b9ab1).
+# Custom recipe for ModemManager 1.24.2 (meson) -- rebuilt WITH QMI+MBIM
 #
-# Hard deps all already on the ISO: glib-2.0 >= 2.56 + gio-unix + gmodule
-# (GLib), dbus-1, libudev (Eudev 3.2.9), gudev-1.0 (LibGudev 238),
-# polkit-gobject-1 (Polkit 126), gettext (Gettext). Disabled: mbim/qmi/qrtr
-# (no modem backends on the ISO), systemd units + suspend/resume + journal
-# (elogind stack), introspection (no g-i in tree), man/gtk-doc/bash-completion/
-# tests/examples.
+# The base Gobo ISO ships ModemManager 1.24.2 built with -Dmbim=false -Dqmi=false
+# (no libqmi/libmbim recipes existed), so it can only drive AT/PPP modems and
+# most 4G/5G sticks are invisible to it.  This recipe rebuilds the SAME version
+# with both back ends ENABLED, against the Libqmi 1.30/Libqmi 1.34 packages built
+# just before it in step_network (Libmbim 1.30 + Libqmi 1.34).
+#
+# The step removes the stale /Programs/ModemManager/1.24.2 tree and tarball
+# first, then `compile`s fresh (a plain same-version `compile` would otherwise
+# skip the installed tree), and packages the result; `mmcli` is the front end
+# and the ModemManager Gobo task (wired by apply-live-fixes.sh section 41)
+# starts the daemon at boot.
+#
+# systemd/elogind suspend-resume and journald integration are off (no systemd);
+# polkit is disabled (the daemon is root-launched on the LiveCD), and
+# tests/examples/introspection/vala/man pages are skipped.
+
 compile_version=017-GIT
-url="https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/archive/1.24.2/ModemManager-1.24.2.tar.xz"
-file_size=1371024
-file_md5=e01af25aa97df56220917567a372ffb7
+url="https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/archive/1.24.2/ModemManager-1.24.2.tar.gz"
+file_size=2120956
+file_md5=b72860c54670f362e947edba160fa98e
 dir='ModemManager-1.24.2'
 recipe_type=meson
+
 meson_variables=(
     --buildtype=release
-    -Dudev=true
-    -Dudevdir=lib/udev
-    -Dsystemdsystemunitdir=no
-    -Dsystemd_suspend_resume=false
-    -Dsystemd_journal=false
-    -Dpowerd_suspend_resume=false
-    -Dmbim=false
-    -Dqmi=false
-    -Dqrtr=false
-    -Dintrospection=false
-    -Dvapi=false
-    -Dman=false
-    -Dgtk_doc=false
-    -Dbash_completion=false
-    -Dtests=false
-    -Dexamples=false
+    "-Dqmi=true"
+    "-Dmbim=true"
+    "-Dqrtr=false"
+    "-Dsystemd_suspend_resume=false"
+    "-Dsystemd_journal=false"
+    "-Dpolkit=no"
+    "-Dtests=false"
+    "-Dexamples=false"
+    "-Dintrospection=false"
+    "-Dvapi=false"
+    "-Dman=false"
+    "-Dgtk_doc=false"
+    "-Dbash_completion=false"
 )
