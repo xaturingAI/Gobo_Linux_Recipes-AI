@@ -1,0 +1,5 @@
+[Name] Fribidi
+[Summary] Free Unicode Bidirectional Algorithm library
+[Description] FriBidi implements the Unicode Bidirectional Algorithm and is required by Pango and GTK4 for shaping right-to-left scripts (Arabic, Hebrew, etc.). Not shipped on the 017.01 ISO. Build BEFORE HarfBuzz + Pango. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU LGPL v2.1+
+[Homepage] https://github.com/fribidi/fribidi

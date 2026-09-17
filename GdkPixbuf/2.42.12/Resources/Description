@@ -1,0 +1,5 @@
+[Name] GdkPixbuf
+[Summary] Image loading library (GTK companion)
+[Description] GdkPixbuf is the image loading library used by GTK and the GNOME stack. Bumped from the ISO's 2.42 to 2.42.x latest for the GNOME 48 stack. Build AFTER GLib 2.84 and BEFORE libgweather, libadwaita. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU LGPL v2.1+
+[Homepage] https://gitlab.gnome.org/GNOME/gdk-pixbuf

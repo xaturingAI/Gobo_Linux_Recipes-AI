@@ -1,0 +1,24 @@
+# Custom recipe for ClutterGtk 1.8.4 (autotools)
+#
+# Part of the Pantheon stack port. GTK+ embedding support for Clutter
+# (a GtkWidget that hosts a ClutterStage). Required by LibChamplain's
+# widgetry mode (champlain-gtk-0.12.pc) which the elementary Calendar and
+# Tasks map views embed.
+#
+# Builds on Clutter 1.26.4 + GTK+ 3.24.43. introspection ON (champlain's
+# introspection references ClutterGtk-1.0 GIR), gtk-doc off.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/clutter-gtk/1.8/clutter-gtk-1.8.4.tar.xz"
+file_size=331508
+file_md5=b363ac9878e2337be887b8ee9e1da00e
+dir='clutter-gtk-1.8.4'
+recipe_type=configure
+
+configure_options=(
+    --disable-gtk-doc
+    --disable-maintainer-flags
+    --enable-introspection=yes
+)

@@ -1,0 +1,63 @@
+# Custom recipe for GStreamer Plugins Good 1.26.1 (meson)
+#
+# Part of the Pantheon stack port (media tier). Adds the good plugin set so
+# the desktop ISO can actually PLAY media, not just build against gstreamer:
+#   - mpg123/flump3dec (MP3 decode), flac, wavparse/id3demux/isomp4/matroska/
+#     avi demuxers, autodetect, audiofx/equalizer, jpeg/png/gdkpixbuf,
+#     souphttpsrc (libsoup3), ximagesrc, gtksink.
+#   - VP8/VP9 + H.264/AAC + MP3 decode actually come from gst-libav (built
+#     next, linked against the ISO's FFmpeg 4.2.2), so libvpx is NOT needed.
+#
+# Deps on the ISO: glib, gstreamer-1.0 + plugins-base (1.26.1), orc (orc-0.4.pc),
+# flac, libmpg123, libjpeg, libpng, gdk-pixbuf, cairo, libsoup-3.0, gtk+-3.0.
+# Explicitly disabled: vpx/pulse/jack/lame/twolame/oss*/shout2/v4l2/qt5/qt6
+# (deps absent or irrelevant on this ISO).
+#
+# taglib DISABLED: the ISO's TagLib 1.11.1 is static-only (libtag.a, no .so)
+# and its taglib.pc has no Libs.private -lz, so the final link of the taglib
+# plugin dies with undefined 'inflate*' from tzlib.cpp. The plugin is only
+# ID3v2/APE tag WRITING (id3v2mux/apev2mux); read-side id3demux is separate
+# and unaffected.
+#
+# Tests/examples/doc/nls off.
+#
+# file_md5 + file_size verified against gstreamer.freedesktop.org tarball.
+
+compile_version=017-GIT
+url="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.26.1.tar.xz"
+file_size=2975136
+file_md5=75644ae22b83c716651cbbe5ec09f163
+dir='gst-plugins-good-1.26.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dorc=enabled"
+    "-Dflac=enabled"
+    "-Dmpg123=enabled"
+    "-Djpeg=enabled"
+    "-Dpng=enabled"
+    "-Dgdk-pixbuf=enabled"
+    "-Dcairo=enabled"
+    "-Dgtk3=enabled"
+    "-Dximagesrc=enabled"
+    "-Dsoup=enabled"
+    "-Dsoup-version=3"
+    "-Dtaglib=disabled"
+    "-Dvpx=disabled"
+    "-Dpulse=disabled"
+    "-Djack=disabled"
+    "-Dlame=disabled"
+    "-Dtwolame=disabled"
+    "-Doss=disabled"
+    "-Doss4=disabled"
+    "-Dshout2=disabled"
+    "-Dv4l2=disabled"
+    "-Dqt5=disabled"
+    "-Dqt6=disabled"
+    "-Dexamples=disabled"
+    "-Dtests=disabled"
+    "-Ddoc=disabled"
+    "-Dnls=disabled"
+    "-Ddefault_library=shared"
+)

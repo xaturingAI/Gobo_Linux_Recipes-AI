@@ -1,0 +1,30 @@
+# Custom recipe for Exiv2 0.28.5 (cmake)
+#
+# Part of the Pantheon stack port. Image metadata (EXIF/IPTC/XMP) library,
+# backend for GExiv2 (which PantheonPhotos links: gexiv2.pc).
+#
+# Builds on zlib, libexpat (both on the ISO index) for XMP support, and
+# iconv (glibc). No system brotli on the ISO, so the JPEG-XL-box brotli path
+# is disabled (EXIV2_ENABLE_BROTLI=OFF; otherwise cmake does
+# find_package(Brotli REQUIRED)); inih config reader is absent too
+# (EXIV2_ENABLE_INIH=OFF, non-fatal find). Samples/tests/docs/NLS off.
+#
+# file_md5 + file_size verified against the github v0.28.5 tag tarball.
+
+compile_version=017-GIT
+url="https://github.com/Exiv2/exiv2/archive/refs/tags/v0.28.5.tar.gz"
+file_size=46932602
+file_md5=f8de9495e03f06be5152ecae3a82815c
+dir='exiv2-0.28.5'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DEXIV2_ENABLE_BROTLI=OFF
+    -DEXIV2_ENABLE_INIH=OFF
+    -DEXIV2_ENABLE_NLS=OFF
+    -DEXIV2_BUILD_UNIT_TESTS=OFF
+    -DEXIV2_BUILD_SAMPLES=OFF
+    -DEXIV2_BUILD_FUZZ_TESTS=OFF
+    -DEXIV2_BUILD_DOC=OFF
+)

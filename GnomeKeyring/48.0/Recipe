@@ -1,0 +1,31 @@
+# Custom recipe for GnomeKeyring 48.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Provides gnome-keyring-daemon + the
+# gnome-keyring D-Bus service and the /etc/xdg/autostart entries that
+# session-settings 8.1.0 re-tags for Pantheon. Links gck-1/gcr-base-3 (from
+# Gcr3), libgcrypt and p11-kit (all present once Gcr3 is built).
+#
+# No systemd (socket activation disabled), no SELinux, no SSH agent, no PAM
+# helper, no manpage. The keyring is D-Bus activated so it starts without an
+# init script on the sysvinit ISO.
+#
+# Build AFTER Gcr3 and BEFORE SessionSettings.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gnome-keyring/48/gnome-keyring-48.0.tar.xz"
+file_size=767428
+file_md5=d19a99eadeb5d92774b7960c51d1c5dc
+dir='gnome-keyring-48.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemd=disabled
+    -Dselinux=disabled
+    -Dssh-agent=false
+    -Dpam=false
+    -Dmanpage=false
+    -Ddebug-mode=false
+)

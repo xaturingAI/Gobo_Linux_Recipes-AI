@@ -1,0 +1,67 @@
+# Custom recipe for GStreamer libav 1.26.1 (meson)
+#
+# Part of the Pantheon stack port (media tier). The FFmpeg-based plugin set:
+# brings H.264/AAC (avdec_h264/avdec_aac), MPEG/MP3, VP8/VP9 (avdec_vp8/9,
+# so WebM plays without libvpx), Matroska/WebM demuxing and many more codecs.
+#
+# Links against the ISO's own FFmpeg 4.2.2 program (libavcodec 58.54.100,
+# libavformat 58.29.100, libavutil 56.31.100, libavfilter 7.58.100 — all above
+# gst-libav's declared minimums of 58.18/58.12/56.14/7.16). The meson fallback
+# subproject 'FFmpeg' is never fetched because the system pcs resolve. No
+# swscale/swresample/orc/gnutls deps in this release.
+#
+# do_patch: upstream bug — gst-libav 1.26.1 references AV_CODEC_ID_VVC
+# (H.266) unguarded, but that only exists in FFmpeg >= 6.0 (libavcodec
+# 59.33.100); QOI is already guarded the same way. The ISO's FFmpeg 4.2.2
+# (libavcodec 58) lacks it, so guard all 4 references.
+#
+# file_md5 + file_size verified against gstreamer.freedesktop.org tarball.
+
+compile_version=017-GIT
+url="https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.26.1.tar.xz"
+file_size=193856
+file_md5=7631902cf31830b34c56e219c9b5da31
+dir='gst-libav-1.26.1'
+recipe_type=meson
+
+do_patch() {
+    # Note: run in a subshell -- the meson recipe type invokes `meson setup`
+    # from the build dir, so do_patch must not leave cwd inside the source dir.
+    ( cd "$sourcedir" &&
+      python3 - <<'PY'
+def replace_all(path, old, new, want=None):
+    with open(path) as f:
+        src = f.read()
+    n = src.count(old)
+    if want is not None and n != want:
+        raise SystemExit('%s: count %d != %d for %r' % (path, n, want, old))
+    with open(path, 'w') as f:
+        f.write(src.replace(old, new))
+    print('patched %s (%d occurrence(s))' % (path, n))
+
+G = '#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 33, 100)\n'
+E = '#endif\n'
+replace_all('ext/libav/gstavcodecmap.c', '    case AV_CODEC_ID_VVC:\n',
+            G + '    case AV_CODEC_ID_VVC:\n' + E, want=2)
+replace_all('ext/libav/gstavviddec.c', '      case AV_CODEC_ID_VVC:\n',
+            G + '      case AV_CODEC_ID_VVC:\n' + E, want=1)
+replace_all('ext/libav/gstavcodecmap.c',
+            '  } else if (!strcmp (mimetype, "video/x-h266")) {\n'
+            '    id = AV_CODEC_ID_VVC;\n    video = TRUE;\n'
+            '  } else if (!strcmp (mimetype, "video/x-flash-video")) {\n',
+            '  } else if (!strcmp (mimetype, "video/x-h265")) {\n'
+            '    id = AV_CODEC_ID_HEVC;\n    video = TRUE;\n' + G +
+            '  } else if (!strcmp (mimetype, "video/x-h266")) {\n'
+            '    id = AV_CODEC_ID_VVC;\n    video = TRUE;\n  }\n' + E +
+            '  } else if (!strcmp (mimetype, "video/x-flash-video")) {\n',
+            want=1)
+PY
+    )
+}
+
+meson_variables=(
+    --buildtype=release
+    "-Dtests=disabled"
+    "-Ddoc=disabled"
+    "-Ddefault_library=shared"
+)

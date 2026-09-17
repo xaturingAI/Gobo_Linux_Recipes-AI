@@ -1,0 +1,44 @@
+# Custom recipe for Gnome-Desktop 44.5 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. The GNOME desktop library used by
+# Mutter and GNOME Shell. Build AFTER GLib 2.84 + gsettings-desktop-schemas
+# 48 + JSON-GLib 1.10 + GdkPixbuf 2.42 and BEFORE Mutter.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gnome-desktop/44/gnome-desktop-44.5.tar.xz"
+file_size=765220
+file_md5=d99550c41db721f4a7f302bd95eef5c2
+dir='gnome-desktop-44.5'
+recipe_type=meson
+
+# - gtk-doc / docs: not shipped on the ISO.
+# - introspection OFF until the full gobject-introspection recipe chain lands.
+# - gtk/gtk4: build WITH gtk4 (this is the *gnome-desktop-4* ABI), not gtk3.
+#   libgtk-4-dev will be installed by the GTK 4.18 recipe.
+# - desktop_docs: ISO doesn't ship gnome-user-docs.
+#
+# do_patch: upstream bug -- with introspection disabled, gnome-rr/meson.build
+# sets libgnome_rr_gir='' (empty string) instead of [] and passes it into a
+# declare_dependency(sources:), which newer meson (>=1.5) rejects with
+# "File  does not exist." during setup. Empty list is the correct upstream form.
+do_patch() {
+    # Note: run in a subshell -- the meson recipe type invokes `meson setup`
+    # from the build dir, so do_patch must not leave cwd inside the source dir.
+    ( cd "$sourcedir" &&
+      sed -i "s/libgnome_rr_gir = ''/libgnome_rr_gir = []/" libgnome-desktop/gnome-rr/meson.build )
+}
+
+meson_variables=(
+    --buildtype=release
+    "-Dgtk_doc=false"
+    "-Dintrospection=false"
+    "-Dinstalled_tests=false"
+    "-Ddesktop_docs=false"
+    # legacy_library=true also builds libgnome-desktop-3 (gnome-desktop-3.0.pc):
+    # gnome-settings-daemon 48.1 still links the GTK3-era API (meson requires
+    # gnome-desktop-3.0 >= 3.37.1). GTK3 (gtk+-3.0) is on the ISO; all other
+    # deps are shared with the 4.x build. The 3.x and 4.x ABIs coexist.
+    "-Dlegacy_library=true"
+)

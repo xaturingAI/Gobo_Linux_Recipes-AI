@@ -1,0 +1,41 @@
+# Custom recipe for Clutter 1.26.4 (autotools)
+#
+# Part of the Pantheon stack port. Scene-graph toolkit used by the elementary
+# Calendar + Tasks map views (LibChamplain renders inside a ClutterActor).
+# Also pulled by ClutterGtk (clutter-gtk-1.0.pc).
+#
+# Builds on Cogl 1.22.8 (clutter-1.0 pc requires cogl-1.0 >= 1.26), glib,
+# gdk-pixbuf, cairo, json-glib (JSON scene graph, on the ISO index), EGL,
+# glesv2, X11 + Wayland (XKBcommon, libdrm), and gtk+3 via the gdk backend.
+#
+# Backends enabled: x11, wayland (evdev input), egl, gdk + gdk-pixbuf.
+# Disabled: mir/cex100/tslib/win32/quartz, examples, tests, gtk-doc/docs.
+# introspection ON (clutter GIR feeds champlain's introspection).
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/clutter/1.26/clutter-1.26.4.tar.xz"
+file_size=5403168
+file_md5=624dd776a5159de0267587b1df6b97b2
+dir='clutter-1.26.4'
+recipe_type=configure
+
+configure_options=(
+    --enable-x11-backend=yes
+    --enable-wayland-backend=yes
+    --enable-egl-backend=yes
+    --enable-evdev-input=yes
+    --enable-gdk-backend=yes
+    --enable-gdk-pixbuf=yes
+    --disable-mir-backend
+    --disable-cex100-backend
+    --disable-tslib-input
+    --disable-examples
+    --disable-gtk-doc
+    --disable-docs
+    --disable-installed-tests
+    --disable-always-build-tests
+    --disable-maintainer-flags
+    --enable-introspection=yes
+)

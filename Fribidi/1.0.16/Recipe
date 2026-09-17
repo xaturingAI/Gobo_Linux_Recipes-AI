@@ -1,0 +1,22 @@
+# Custom recipe for Fribidi 1.0.16 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Not shipped on the 017.01 ISO. Build
+# BEFORE HarfBuzz + Pango.
+#
+# Era: GNOME 49 (Sept 2025 Q3). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz"
+file_size=1098260
+file_md5=333ad150991097a627755b752b87f9ff
+dir='fribidi-1.0.16'
+recipe_type=meson
+
+# - docs: not shipped on the ISO.
+# - bin/cli: the fribidi CLI is a debug tool, not needed on the ISO.
+meson_variables=(
+    --buildtype=release
+    "-Ddocs=false"
+    "-Dbin=false"
+    "-Dtests=false"
+)

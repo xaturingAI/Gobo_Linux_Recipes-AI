@@ -1,0 +1,15 @@
+# Custom recipe for ElementaryWallpapers 8.0.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/wallpapers/archive/refs/tags/8.0.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/wallpapers/archive/refs/tags/8.0.0.tar.gz"
+file_size=69646327
+file_md5=806eee275cf0eed3dc2ea638698b5695
+dir='wallpapers-8.0.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

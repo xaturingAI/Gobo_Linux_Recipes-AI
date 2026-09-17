@@ -1,0 +1,29 @@
+# Custom recipe for FreeType 2.13.3 (meson)
+#
+# Part of the Pantheon stack port. Bumped from the ISO's 2.10.1 so that
+# Cairo 1.18.4 gets FT_LOAD_NO_SVG (FreeType >= 2.13.0 define checked by
+# cairo's meson.build) and Fontconfig 2.15.0 gets freetype2 >= 21.0.15.
+#
+# Build BEFORE Cairo (and Pango, which pulls the cairo wrap otherwise).
+# zlib=system uses the ISO zlib; png=enabled uses libpng 1.6.37;
+# harfbuzz/brotli/bzip2 disabled to keep the dependency graph simple.
+#
+# file_md5 verified against the savannah freetype-2.13.3.tar.xz release.
+
+compile_version=017-GIT
+url="https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.xz"
+file_size=2617564
+file_md5=f3b4432c4212064c00500e1ad63fbc64
+dir='freetype-2.13.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dzlib=system"
+    "-Dbzip2=disabled"
+    "-Dpng=enabled"
+    "-Dharfbuzz=disabled"
+    "-Dbrotli=disabled"
+    "-Dtests=disabled"
+    "-Ddefault_library=shared"
+)

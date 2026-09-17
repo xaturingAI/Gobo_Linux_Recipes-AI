@@ -1,0 +1,31 @@
+# Custom recipe for Accountsservice 23.13.9 (meson)
+#
+# Part of the Pantheon stack port. Provides org.freedesktop.Accounts +
+# libaccountsservice for WingpanelIndicatorSession, SwitchboardPlugLocale.
+#
+# NO systemd on this ISO: pass systemdsystemunitdir=no (meson treats 'no'
+# specially -> install_systemd_unit_dir=false) and enable elogind session
+# tracking instead (Elogind 257.16 is on the index).
+compile_version=017-GIT
+url="https://www.freedesktop.org/software/accountsservice/accountsservice-23.13.9.tar.xz"
+file_size=636064
+file_md5=03dccfe1b306b7ca19743e86d118e64d
+dir='accountsservice-23.13.9'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dsystemdsystemunitdir=no"
+    "-Delogind=true"
+    "-Dintrospection=true"
+    "-Dvapi=true"
+    "-Ddocbook=false"
+)
+
+# tests/ is unconditional (no meson toggle): with introspection on it runs
+# unittest_inspector.py over the python test files, which fails under the
+# ISO's python stack and aborts configure. We don't need the test suite.
+pre_build() {
+    sed -i "s|^subdir('tests')$|# subdir('tests') -- disabled: inspector needs a full python test stack|" \
+        "$sourcedir/meson.build"
+}

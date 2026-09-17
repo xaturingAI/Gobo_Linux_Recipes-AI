@@ -1,0 +1,5 @@
+[Name] Colord
+[Summary] System daemon for color profile management
+[Description] Colord is the system color-profile manager; Mutter 48+ requires >= 1.4.5. Build AFTER GLib 2.84 + lcms2 2.17 + libudev (Eudev) + Polkit (optional) and BEFORE Mutter. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU GPL v2.0+
+[Homepage] https://github.com/hughsie/colord

@@ -1,0 +1,40 @@
+# Custom recipe for Colord 1.4.8 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. System color-profile manager. Mutter 48+
+# requires >= 1.4.5. Build AFTER GLib 2.84 + lcms2 2.17 + libudev (Eudev)
+# and BEFORE Mutter.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://github.com/hughsie/colord/archive/refs/tags/1.4.8.tar.gz"
+file_size=2707855
+file_md5=d7b6596c7ce517da867e56d9d2f59b09
+dir='colord-1.4.8'
+recipe_type=meson
+
+# - daemon/systemd: the ISO has no systemd; colord can be run on-demand by
+#   gnome-settings-daemon without a system daemon unit. The daemon binary
+#   still builds so the .so can be dlopened.
+# - introspection OFF until the full gobject-introspection recipe chain lands.
+# - tests/gtk-doc: not shipped on the ISO.
+# - man: needs docbook-xsl-ns which the ISO doesn't ship; man pages not
+#   needed on the Live CD.
+# - Polkit: REQUIRED for the daemon -- polkit-gobject-1 >= 0.103 is an
+#   unconditional dependency (meson.build has no disable option). Polkit 126
+#   (libs-only) is built BEFORE Colord so polkit-gobject-1.pc is on the index.
+# - libcolordcompat: optional, not needed.
+# - bash_completion: the ISO doesn't ship the bash-completion pc, and the
+#   completion script isn't needed on the Live CD.
+# - udev rules: install to the ISO's udev dir (udev.pc from Eudev). No
+#   separate udevrulesdir option exists.
+meson_variables=(
+    --buildtype=release
+    "-Ddocs=false"
+    "-Dintrospection=false"
+    "-Dtests=false"
+    "-Dinstalled_tests=false"
+    "-Dsystemd=false"
+    "-Dbash_completion=false"
+    "-Dman=false"
+)

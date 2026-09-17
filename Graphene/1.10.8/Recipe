@@ -1,0 +1,27 @@
+# Custom recipe for Graphene 1.10.8 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Not shipped on the 017.01 ISO. Required
+# by GTK4 and Mutter (their EGL backend uses graphene's point/size/rect
+# types). Build AFTER GLib 2.84 and BEFORE GTK 4.18 + Mutter.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/graphene/1.10/graphene-1.10.8.tar.xz"
+file_size=333924
+file_md5=169e3c507b5a5c26e9af492412070b81
+dir='graphene-1.10.8'
+recipe_type=meson
+
+# introspection ON: GTK4 4.20.0's Gsk GIR does includes: ['Gdk-4.0',
+# 'Graphene-1.0'] unconditionally when introspection is enabled, so
+# Graphene-1.0.gir must exist.
+meson_variables=(
+    --buildtype=release
+    "-Dgtk_doc=false"
+    "-Dintrospection=enabled"
+    "-Dtests=false"
+    "-Dinstalled_tests=false"
+    "-Dsse2=false"
+    "-Darm_neon=false"
+)

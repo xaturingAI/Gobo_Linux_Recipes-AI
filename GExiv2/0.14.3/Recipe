@@ -1,0 +1,29 @@
+# Custom recipe for GExiv2 0.14.3 (meson)
+#
+# Part of the Pantheon stack port. GObject bindings for Exiv2. PantheonPhotos
+# 8.0.2 does dependency('gexiv2-0.16', 'gexiv2', version: '>=0.12.2') — it
+# tries gexiv2-0.16.pc first, then falls back to gexiv2.pc. gexiv2 0.14.3
+# installs gexiv2.pc (version 0.14.3 >= 0.12.2), so the fallback satisfies it.
+#
+# Builds on exiv2 (0.28.5; the meson build has explicit 0.28-compat checks),
+# glib/gio/gobject, gdk-pixbuf and libxml-2.0. introspection + vapi ON (vala
+# code binds via gir/vapi); tools/tests/python3/gtk-doc off.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gexiv2/0.14/gexiv2-0.14.3.tar.xz"
+file_size=389976
+file_md5=d4ca9614baa0bc30d142bcad65f09910
+dir='gexiv2-0.14.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dintrospection=true"
+    "-Dvapi=true"
+    "-Dtools=false"
+    "-Dtests=false"
+    "-Dpython3=false"
+    "-Dgtk_doc=false"
+)

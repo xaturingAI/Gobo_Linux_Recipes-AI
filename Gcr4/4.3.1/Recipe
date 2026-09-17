@@ -1,0 +1,37 @@
+# Custom recipe for Gcr4 4.3.1 (meson)
+#
+# Part of the Pantheon stack port. GNOME crypto UI library on GTK4. Provides
+# gcr-4.pc, needed by PantheonPolkitAgent 8.1.0 (dependency('gcr-4')). The ISO
+# ships no gcr4; the rebuilt Gcr3 3.41.2 only provides gcr-base-3.pc (GTK3-era).
+#
+# Builds with gtk4, glib/gio, p11-kit (ISO), libsecret (ISO, ssh_agent). The
+# two gcr packages (3 and 4) coexist on the index without pc conflicts.
+# introspection + vapi ON (the agent's vala binds via the vapi). Note:
+# gcr-4's introspection/vapi/gtk4/gtk_doc/ssh_agent options are BOOLEANS
+# (true/false), but `systemd` is a FEATURE (enabled/disabled/auto). Crypto
+# backend defaults to libgcrypt (ISO has libgcrypt.pc).
+#
+# gpg_path: gcr's meson.build runs an unconditional find_program('gpg2',
+# 'gpg'); the ISO ships no GnuPG binary. GPG_EXECUTABLE is only set_quoted
+# into the config header and never referenced by any gcr source, so pointing
+# gpg_path at /bin/true (existing) satisfies meson with zero runtime impact.
+#
+# file_md5 + file_size verified against download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gcr/4.3/gcr-4.3.1.tar.xz"
+file_size=729260
+file_md5=d8a71f8cb0390bc353f52ded3f9a6733
+dir='gcr-4.3.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dintrospection=true"
+    "-Dvapi=true"
+    "-Dssh_agent=true"
+    "-Dsystemd=disabled"
+    "-Dgpg_path=/bin/true"
+    "-Dgtk_doc=false"
+    "-Ddefault_library=shared"
+)

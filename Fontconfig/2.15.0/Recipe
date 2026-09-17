@@ -1,0 +1,31 @@
+# Custom recipe for Fontconfig 2.15.0 (meson)
+#
+# Part of the Pantheon stack port. Bumped from the ISO's 2.13.1 because
+# Pango 1.56.1 requires fontconfig >= 2.15.0 (meson.build line 215).
+#
+# Dependencies verified against the source: only freetype2 (>= 21.0.15,
+# satisfied by FreeType 2.13.3) and expat (ISO 2.2.9). No libxml2.
+#
+# Build AFTER FreeType 2.13.3, BEFORE Cairo 1.18.4 / Pango 1.56.1.
+# docs/tests/tools disabled; cache-build disabled so no fc-cache runs at
+# build time. The ISO /etc/fonts (fonts.conf -> /Programs/Fontconfig/
+# Settings/fonts/) is left untouched at runtime.
+#
+# file_md5 verified against the freedesktop.org fontconfig-2.15.0.tar.xz.
+
+compile_version=017-GIT
+url="https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz"
+file_size=1447820
+file_md5=5bb3a2829aecb22ae553c39099bd0d6a
+dir='fontconfig-2.15.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Ddoc=disabled"
+    "-Dnls=disabled"
+    "-Dtests=disabled"
+    "-Dtools=disabled"
+    "-Dcache-build=disabled"
+    "-Ddefault_library=shared"
+)

@@ -1,0 +1,3 @@
+Build type: meson
+Source: https://deb.debian.org/debian/pool/main/g/geocode-glib/geocode-glib_3.26.4.orig.tar.xz
+Build order: part of the Pantheon session stack (see Recipes/pantheon-recipes.md).

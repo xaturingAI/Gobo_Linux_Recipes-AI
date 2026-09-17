@@ -1,0 +1,37 @@
+compile_version=017-GIT
+url="https://download.gnome.org/sources/cogl/1.22/cogl-1.22.8.tar.xz"
+file_size=1742632
+file_md5=7dd8b2e24171ef7399f851cea144b569
+dir='cogl-1.22.8'
+recipe_type=configure
+
+configure_options=(
+    --disable-gtk-doc
+    --disable-examples-install
+    --disable-profile
+    --disable-unit-tests
+    --disable-cogl-gst
+    --disable-emscripten
+    --disable-sdl
+    --disable-sdl2
+    --disable-wgl
+    --disable-quartz-image
+    --disable-gdl-egl-platform
+    --disable-kms-egl-platform
+    --disable-mir-egl-platform
+    --disable-android-egl-platform
+    --enable-wayland-egl-platform=yes
+    --disable-maintainer-flags
+    --enable-introspection=yes
+)
+
+configure_do_build() {
+    sed -i 's/ tests examples doc po build/ doc po build/' Makefile
+    sed -i 's/cogl-gst tests examples doc po build/cogl-gst doc po build/' Makefile
+    sed -i 's/ tests examples doc$/ doc/' Makefile
+    sed -i 's/\$(am__append_4) tests examples doc po build/\$(am__append_4) doc po build/' Makefile
+    if Array_Contains config "--disable-static"; then
+        export LIBTOOLFLAGS="--tag=disable-static"
+    fi
+    makefile_do_build
+}

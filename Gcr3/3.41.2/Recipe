@@ -1,0 +1,35 @@
+# Custom recipe for Gcr3 3.41.2 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. The GTK3-era gcr that provides the
+# gck-1.pc and gcr-base-3.pc libraries used by gnome-keyring 48.0. Built with
+# -Dgtk=false so only the non-GTK crypto layers are produced (no gtk3 UI
+# library, no ssh-agent, no gtk-doc). gcr 4.x/GTK4 UI is NOT needed by this
+# stack (gsd is built with -Dsmartcard=false, and gnome-keyring only links
+# gck-1/gcr-base-3).
+#
+# Needs libgcrypt and p11-kit (both on the ISO). No systemd: -Dsystemd=disabled.
+#
+# Build BEFORE GnomeKeyring.
+#
+# Era: GNOME 48 (May 2025). file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gcr/3.41/gcr-3.41.2.tar.xz"
+file_size=1034532
+file_md5=40a754ba44d5e95e4d07656d6302900c
+dir='gcr-3.41.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dintrospection=false
+    -Dgtk=false
+    -Dgtk_doc=false
+    -Dssh_agent=false
+    -Dsystemd=disabled
+    # gpg_path is autodetected via find_program('gpg2', 'gpg') when left empty,
+    # and the ISO ships no GPG. It is only embedded as the GPG_EXECUTABLE
+    # runtime string (meson.build:83); gpg is never invoked at build time
+    # (tests are disabled). /bin/true satisfies meson setup.
+    -Dgpg_path=/bin/true
+)

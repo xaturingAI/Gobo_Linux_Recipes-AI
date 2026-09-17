@@ -1,0 +1,37 @@
+# Custom recipe for GStreamer 1.26.1 (meson)
+#
+# Part of the Pantheon stack port (media tier). GStreamer core (libgstreamer,
+# gstreamer-1.0 / gstreamer-base-1.0 / gstreamer-tag-1.0 / gstreamer-video-1.0
+# pcs). Needed by PantheonMusic 8.1.0, PantheonCamera 8.0.2, PantheonVideos
+# 8.0.2 (dependency('gstreamer-1.0') + pbutils/tag/video). The pbutils + plugin
+# libs come from Gst-Plugins-Base, built right after.
+#
+# The ISO has no gstreamer at all. Builds on GLib 2.84 + gobject-introspection
+# 1.84 (both on the index).
+#
+# - introspection ON: kept default-enabled so downstream GIR consumers work.
+# - tools ON: ships gst-launch-1.0 / gst-inspect-1.0 (useful on the ISO).
+# - libdw/libunwind: off (no debuginfod; avoids pulling elfutils).
+# - bash-completion/tests/benchmarks/examples: not shipped on the ISO.
+#
+# file_md5 + file_size verified against gstreamer.freedesktop.org tarball.
+
+compile_version=017-GIT
+url="https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.26.1.tar.xz"
+file_size=1874400
+file_md5=54fc87230534f3bbe7d8f7c05448d38a
+dir='gstreamer-1.26.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dintrospection=enabled"
+    "-Dtools=enabled"
+    "-Dexamples=disabled"
+    "-Dtests=disabled"
+    "-Dbenchmarks=disabled"
+    "-Dlibdw=disabled"
+    "-Dlibunwind=disabled"
+    "-Dbash-completion=disabled"
+    "-Ddefault_library=shared"
+)

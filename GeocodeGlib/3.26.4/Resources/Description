@@ -1,0 +1,5 @@
+[Name] GeocodeGlib
+[Summary] Geocoding library
+[License] LGPL-2.1-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/geocode-glib
+[Description] geocode-glib-2.0.pc (soup3 ABI) required by libgweather 4.6.0 and gnome-settings-daemon 48.1.

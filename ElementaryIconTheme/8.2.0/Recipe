@@ -1,0 +1,15 @@
+# Custom recipe for ElementaryIconTheme 8.2.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/icons/archive/refs/tags/8.2.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/icons/archive/refs/tags/8.2.0.tar.gz"
+file_size=4418799
+file_md5=073dc4d1e992781e29453c3e173aae52
+dir='icons-8.2.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

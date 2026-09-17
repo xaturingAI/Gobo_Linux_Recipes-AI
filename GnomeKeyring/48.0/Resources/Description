@@ -1,0 +1,5 @@
+[Name] GnomeKeyring
+[Summary] Keyring daemon and library
+[License] LGPL-2.1-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/gnome-keyring
+[Description] gnome-keyring-daemon + D-Bus service and autostart entries, re-tagged for Pantheon by session-settings. Links gck-1/gcr-base-3.

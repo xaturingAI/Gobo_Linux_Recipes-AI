@@ -1,0 +1,37 @@
+# Custom recipe for Cairo 1.18.4 (meson)
+#
+# Part of the Pantheon stack port. The ISO ships the 1.17.2 development
+# series; Pango 1.56.1 and GTK4 require cairo >= 1.18.0. 1.18.4 is the
+# latest release (2.18.x does not exist). Installing a real 1.18.x stops
+# pango from pulling the cairo subproject wrap.
+#
+# Deps verified against the source: freetype >= 2.10 (23.0.17) with
+# COLRv1 support needing 2.13 (25.0.19), fontconfig >= 2.13.0,
+# pixman-1 >= 0.40.0, libpng >= 1.4.0, glib >= 2.14 (cairo-gobject for
+# GTK4), meson >= 1.3.0. All satisfied by the new FreeType/Fontconfig/
+# Pixman chain plus ISO libpng/glib.
+#
+# Build AFTER FreeType 2.13.3, Fontconfig 2.15.0, Pixman 0.44.2, BEFORE
+# Pango 1.56.1. fontconfig/freetype/png/zlib/glib forced on; xlib/xcb stay
+# 'auto' (X11/xcb present on the ISO so they resolve enabled).
+#
+# file_md5 verified against the cairographics.org cairo-1.18.4.tar.xz.
+
+compile_version=017-GIT
+url="https://www.cairographics.org/releases/cairo-1.18.4.tar.xz"
+file_size=32578804
+file_md5=db575fb41bbda127e0147e401f36f8ac
+dir='cairo-1.18.4'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dfontconfig=enabled"
+    "-Dfreetype=enabled"
+    "-Dpng=enabled"
+    "-Dzlib=enabled"
+    "-Dglib=enabled"
+    "-Dtests=disabled"
+    "-Dgtk_doc=false"
+    "-Ddefault_library=shared"
+)

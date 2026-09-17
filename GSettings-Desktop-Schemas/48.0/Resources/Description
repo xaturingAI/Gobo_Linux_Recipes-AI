@@ -1,0 +1,5 @@
+[Name] GSettings-Desktop-Schemas
+[Summary] GSettings schemas for desktop apps (GNOME standard)
+[Description] GSettings-Desktop-Schemas is the canonical set of GSettings schemas for the GNOME desktop (interface, sound, peripherals, etc.). Mutter 48+ requires >= 40.alpha. Build AFTER GLib 2.84 + JSON-GLib and BEFORE gnome-desktop-4 + Mutter. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU LGPL v2.1+
+[Homepage] https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas

@@ -1,0 +1,32 @@
+compile_version=017-GIT
+url="https://download.gnome.org/sources/evolution-data-server/3.54/evolution-data-server-3.54.3.tar.xz"
+file_size=5099688
+file_md5=1803a1127df96258a6c8b1d8d27edd25
+dir='evolution-data-server-3.54.3'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DENABLE_INTROSPECTION=ON
+    -DENABLE_VALA_BINDINGS=ON
+    -DENABLE_GTK=ON
+    -DENABLE_GTK4=OFF
+    -DENABLE_OAUTH2_WEBKITGTK=OFF
+    -DENABLE_OAUTH2_WEBKITGTK4=OFF
+    -DENABLE_EXAMPLES=OFF
+    -DENABLE_GOA=OFF
+    -DENABLE_WEATHER=OFF
+    -DENABLE_CANBERRA=OFF
+    -DENABLE_TESTS=OFF
+    -DWITH_NSPR_INCLUDES=/Programs/NSPR/4.25/include/nspr
+    -DWITH_NSPR_LIBS=/Programs/NSPR/4.25/lib
+    -DWITH_NSS_INCLUDES=/Programs/NSS/3.50/include/nss
+    -DWITH_NSS_LIBS=/Programs/NSS/3.50/lib
+)
+
+do_patch() {
+    pushd "$basedir"
+    sed -i '/#include <cert.h>/a #include <blapit.h>' src/libedataserverui/e-certificate-widget.c
+    sed -i '/#include <blapit.h>/a #include <hasht.h>' src/libedataserverui/e-certificate-widget.c
+    popd
+}

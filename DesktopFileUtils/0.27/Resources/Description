@@ -1,0 +1,5 @@
+[Name] DesktopFileUtils
+[Summary] desktop-file-install + update-desktop-database
+[License] GPL-2.0-or-later
+[Homepage] https://gitlab.freedesktop.org/xdg/desktop-file-utils
+[Description] Provides desktop-file-install used by session-settings to re-tag autostart entries with OnlyShowIn=Pantheon.

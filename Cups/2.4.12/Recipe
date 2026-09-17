@@ -1,0 +1,40 @@
+# Custom recipe for Cups 2.4.12 (autotools)
+#
+# Part of the Pantheon stack port. libcups client library + headers for
+# SwitchboardPlugPrinters (find_library('cups')).
+#
+# Gaming LiveCD: no printing daemon wanted at boot, we only need the client
+# lib. Everything server-ish stays inside the program tree (etc/var under
+# $target), no PAM/GSSAPI/DNS-SD, no systemd.
+compile_version=017-GIT
+url="https://github.com/OpenPrinting/cups/releases/download/v2.4.12/cups-2.4.12-source.tar.gz"
+file="cups-2.4.12-source.tar.gz"
+file_size=8157433
+file_md5=1f9281c661b95acc7925a220919210e2
+dir='cups-2.4.12'
+recipe_type=configure
+
+do_configuration() {
+    ./configure --prefix="$target" \
+        --sysconfdir="$target/etc" \
+        --localstatedir="$target/var" \
+        --with-docdir="$target/share/doc/cups" \
+        --with-cups-user=lp \
+        --with-cups-group=lp \
+        --disable-systemd \
+        --disable-pam \
+        --disable-gssapi \
+        --disable-avahi \
+        --disable-dnssd \
+        --without-java \
+        --without-perl \
+        --without-php
+}
+
+# gcc-14 rejects implicit ioctl() declarations; tools/ipptool.c calls it
+# without ever including sys/ioctl.h (its SIOCOUTQ expands to TIOCOUTQ,
+# declared only there).
+pre_build() {
+    sed -i 's|^#include <cups/cups-private.h>$|&\n#include <sys/ioctl.h>|' \
+        "$sourcedir/tools/ipptool.c"
+}
