@@ -1,0 +1,8 @@
+Meson recipe. Requires gobject-introspection tooling (g-ir-scanner,
+g-ir-compiler, gobject-introspection-1.0.pc) and GLib >= 2.56 -- the ISO
+ships GObject-Introspection and GLib 2.63.5, so no extra recipes are needed.
+-Dpycairo=true needs PyCairo installed for python3.11; -Dtests=false skips
+the test build. The generated PyGObject-3.44.1-py3.11.egg-info makes Lutris'
+install_requires check succeed without touching PyPI.
+Build AFTER Python 3.11.12 + PyCairo.
+sha256 3c6805d1321be90cc32e648215a562430e0d3d6edcda8f4c5e7a9daffcad5710.
