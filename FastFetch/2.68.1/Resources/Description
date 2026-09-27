@@ -1,0 +1,5 @@
+[Name] FastFetch
+[Summary] Fast, feature-rich system information fetcher
+[License] MIT
+[Description] FastFetch is a system information fetching tool written in C, designed as a faster, more configurable neofetch replacement. Built-in presets emulate neofetch, screenfetch, archey and paleofetch output. This package ships the official prebuilt x86_64 binary (glibc-only, fully self-contained) plus flashfetch (the binary for the most used CLI flags) and the full preset, completion (bash/zsh/fish) and man page set.
+[Homepage] https://github.com/fastfetch-cli/fastfetch

@@ -1,0 +1,7 @@
+Packaged from the official prebuilt binary tarball
+(fastfetch-linux-amd64.tar.gz) published on the 2.68.1 GitHub release, NOT built
+from source: the release ships no source tarball, and the binary links only
+libm/libc so it needs no toolchain or runtime dependencies on the ISO.
+
+Layout mirrors the tarball's FHS tree: usr/bin -> bin, usr/share -> share
+(completions for bash/zsh/fish, man page, fastfetch presets, licenses).
