@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Node.js 24.21.0 (Krypton LTS) for GoboLinux, packaged from the official
+# prebuilt linux-x64 tarball. Self-contained: ships the node interpreter plus
+# the bundled npm/npx/corepack CLIs (symlinked into bin/ onto the bundled
+# node_modules, so the whole tree must be copied with those links intact -- we
+# map the tarball's bin/include/lib/share verbatim, siblings stay in place and
+# ../lib/node_modules still resolves). Runtime needs only the ISO base libc.
+# Install "global" packages into the live system via `npm install -g` (writes
+# into this program tree); per-project installs work as usual.
+#
+# npm 11.19.0 (bundled in the node tarball) is overlaid with the standalone
+# npm 12.1.0 tgz (engines: node ^22.22.2 || ^24.15.0 || >=26.0.0; 24.21.0
+# qualifies): its package/ dir replaces lib/node_modules/npm so the existing
+# bin/npm -> ../lib/node_modules/npm/bin/npm-cli.js symlinks keep resolving.
+
+compile_version=017-GIT
+urls=(
+    "https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.xz"
+    "https://registry.npmjs.org/npm/-/npm-12.1.0.tgz"
+)
+files=(
+    "node-v24.21.0-linux-x64.tar.xz"
+    "npm-12.1.0.tgz"
+)
+file_sizes=(
+    31890184
+    3053355
+)
+file_md5s=(
+    74ae2c344f513204fc1191be93007c61
+    878ca482d7edd991cecb11970a9afa7d
+)
+dir='node-v24.21.0-linux-x64'
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "bin:bin"
+    "include:include"
+    "lib:lib"
+    "share:share"
+    "LICENSE:share/licenses/nodejs/LICENSE"
+    "README.md:share/licenses/nodejs/README.md"
+)
+
+pre_install() {
+    local node_archive="$compileArchivesDir/node-v24.21.0-linux-x64.tar.xz"
+    local npm_archive="$compileArchivesDir/npm-12.1.0.tgz"
+    Log_Normal "Unpacking ${node_archive}"
+    tar xJf "$node_archive" --strip-components=1
+    Log_Normal "Overlaying npm 12.1.0 onto the bundled npm (11.19.0)"
+    tar xzf "$npm_archive"
+    rm -rf lib/node_modules/npm
+    mv package lib/node_modules/npm
+}
