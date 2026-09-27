@@ -1,0 +1,5 @@
+[Name] Pango
+[Summary] International text layout and rendering library
+[Description] Pango is the text layout/rendering library used by GTK and the GNOME stack. Bumped from the ISO's 1.44.7 to 1.56.1 for the GNOME 48 stack. Needs GLib 2.84, HarfBuzz 11.4.0, Fribidi 1.0.16, Cairo 1.18 (already on ISO) all already installed. Build BEFORE graphene, GTK4, libadwaita, gdk-pixbuf, libgweather, etc. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU LGPL v2.1+
+[Homepage] https://gitlab.gnome.org/GNOME/pango

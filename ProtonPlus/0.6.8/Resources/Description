@@ -1,0 +1,5 @@
+[Name] ProtonPlus
+[Summary] Simple and powerful Proton/Wine management tool
+[License] GPL-3.0
+[Description] ProtonPlus is a user-friendly GUI to manage Wine and Proton (and DXVK/Vkd3d) compatibility tools for gaming. You can browse the available versions, download and install them, and select which one runs a given game. This package ships the official "anylinux" AppImage with its DwarFS payload pre-extracted (lib/protonplus) and a bin wrapper, so it runs from its bundled GTK4/libadwaita/SDL3 libraries without FUSE or the AppImage runtime.
+[Homepage] https://vysp3r.github.io/ProtonPlus/

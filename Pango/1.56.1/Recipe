@@ -1,0 +1,33 @@
+# Custom recipe for Pango 1.56.1 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Bumped from 1.44.7 to 1.56.4 for the
+# GNOME 49 stack. Needs GLib 2.86, HarfBuzz 12.2.0, Fribidi 1.0.16 already
+# installed. Build BEFORE graphene, GTK4, libadwaita, gdk-pixbuf,
+# libgweather, etc.
+#
+# Era: GNOME 49 (Sept 2025 Q3). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/pango/1.56/pango-1.56.1.tar.xz"
+file_size=1882616
+file_md5=57656aefa189a5b24f3b1e67df7216b6
+dir='pango-1.56.1'
+recipe_type=meson
+
+# - docs/gtk_doc: not shipped on the ISO.
+# - introspection ENABLED: GTK4's Gdk GIR needs Pango-1.0.gir/PangoCairo-1.0.gir.
+#   The index Pango-1.0.gir -> Pango/1.44.7 (2020-era) tree intermittently became
+#   unreachable during rebuilds (07:53 GTK4 gir failure: "Couldn't find include
+#   'Pango-1.0.gir'"). Shipping Pango 1.56.1's own girs (built by g-ir-scanner
+#   1.84, matching the GLib 2.82.4 stack) removes that stale-tree dependency.
+# - WSI/font backends: keep defaults (Cairo yes, FreeType yes, X11 no
+#   because we're Wayland-first; can be flipped back if XFCE is needed).
+meson_variables=(
+    --buildtype=release
+    "-Ddocumentation=false"
+    "-Dman-pages=false"
+    "-Dintrospection=enabled"
+    "-Dbuild-testsuite=false"
+    "-Dbuild-examples=false"
+    "-Ddefault_library=shared"
+)

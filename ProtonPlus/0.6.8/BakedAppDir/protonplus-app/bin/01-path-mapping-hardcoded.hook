@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# this script makes symnlinks to hardcoded random dirs that
+# were patched away by quick-sharun when hardcoded paths are
+# detected or when 'PATH_MAPPING_HARDCODED' is used
+
+_tmp_bin=""
+_tmp_lib=8Xk
+_tmp_share=QVKll
+
+if [ -n "$_tmp_bin" ]; then
+        LC_ALL=C ln -sfn "$APPDIR"/bin /tmp/"$_tmp_bin" || :
+fi
+if [ -n "$_tmp_lib" ]; then
+        LC_ALL=C ln -sfn "$APPDIR"/lib /tmp/"$_tmp_lib" || :
+fi
+if [ -n "$_tmp_share" ]; then
+        LC_ALL=C ln -sfn "$APPDIR"/share /tmp/"$_tmp_share" || :
+fi

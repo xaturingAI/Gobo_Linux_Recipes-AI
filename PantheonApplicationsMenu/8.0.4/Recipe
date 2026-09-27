@@ -1,0 +1,15 @@
+# Custom recipe for PantheonApplicationsMenu 8.0.4 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/applications-menu/archive/refs/tags/8.0.4.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/applications-menu/archive/refs/tags/8.0.4.tar.gz"
+file_size=549151
+file_md5=be2f36a6036781b120d18a02874244cf
+dir='applications-menu-8.0.4'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dwith-zeitgeist=false
+)

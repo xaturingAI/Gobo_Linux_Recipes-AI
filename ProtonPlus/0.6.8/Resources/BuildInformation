@@ -1,0 +1,11 @@
+Packaged from the official GitHub release asset
+(ProtonPlus-0.6.8-anylinux-x86_64.AppImage), not built from source. The
+"anylinux" AppImage bundles a sharun runtime with a DwarFS payload holding the
+whole app plus its GTK4/libadwaita/SDL3 libraries; the recipe self-extracts it
+at install time (--appimage-extract, no /dev/fuse needed) into
+lib/protonplus, and bin/protonplus is a tiny wrapper that exports APPDIR and
+execs the extracted AppRun. The desktop entry and icon are copied out of the
+AppDir into share/applications + share/pixmaps so the menu entry is indexed.
+
+Runtime is self-contained; the manager still downloads Proton/GE-Proton builds
+on demand (network required once per install).

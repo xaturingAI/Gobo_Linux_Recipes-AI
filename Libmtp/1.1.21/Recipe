@@ -1,0 +1,21 @@
+# Custom recipe for Libmtp 1.1.21 (autotools)
+#
+# Part of the Flatpak-Core stack port (phone/MTP tier). Libmtp -- Media
+# Transfer Protocol client library. Needs libusb-1.0 (built right before)
+# for USB transport. Gives flatpak/ostree-adjacent stacks and the pistol
+# (MTP) GUI the ability to talk to Android phones over the MTP gadget.
+#
+# file_md5 + file_size verified from the actual tarball fetched off
+# SourceForge's project mirror (libmtp/libmtp/1.1.21).
+
+compile_version=017-GIT
+url="https://downloads.sourceforge.net/project/libmtp/libmtp/1.1.21/libmtp-1.1.21.tar.gz"
+file_size=862703
+file_md5=532b445b22d01cc5c4b0683dd5ed894e
+dir='libmtp-1.1.21'
+recipe_type=configure
+
+configure_options=(
+    --disable-mtpz
+    --with-udev=/usr/lib/udev
+)

@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# ProtonPlus 0.6.8 for GoboLinux, packaged from the official "anylinux"
+# AppImage. ProtonPlus manages Wine/Proton + DXVK/Vkd3d compatibility layers
+# (browse versions, install, toggle per game) for gaming.
+#
+# The AppImage uses the sharun "anylinux" runtime with a DwarFS payload, so
+# the recipe self-extracts it at install time (--appimage-extract needs no
+# FUSE) and bin/protonplus runs the extracted AppDir directly -- no AppImage
+# runtime on the Live CD. The AppDir bundles GTK4, libadwaita and SDL3, so
+# the ISO needs no desktop-version runtime deps for it.
+#
+# The bundled binaries need glibc >= 2.44 (GLIBC_2.44 in the bundled libgtk-4);
+# the ISO glibc is upgraded to 2.44-2 by the sibling Recipes/Glibc recipe
+# (built right before this one by the livefix/merge steps). On the old 2.30
+# build chroot the DwarFS runtime's self-extract silently produced an EMPTY
+# squashfs-root (the first package shipped an empty lib/protonplus and the
+# wrapper died with "AppRun: No such file or directory"). Under glibc 2.44 the
+# AppImage now self-extracts correctly; pre_install verifies the extraction and
+# falls back to the baked extracted AppDir at BakedAppDir/protonplus-app when
+# the chroot cannot run the runtime.
+#
+# The extracted AppDir is installed by post_install with a plain cp -aL into
+# the program tree -- NOT via the manifest (which would repackage a huge dir
+# source as a dangling build-dir symlink, i.e. an empty payload).
+
+compile_version=017-GIT
+url="https://github.com/Vysp3r/ProtonPlus/releases/download/v0.6.8/ProtonPlus-0.6.8-anylinux-x86_64.AppImage"
+file_size=43415908
+file_md5=58ec22bbba4a15360d4ba6f7b4998281
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "protonplus:bin/protonplus"
+    "usr/share/applications/com.vysp3r.ProtonPlus.desktop:share/applications/com.vysp3r.ProtonPlus.desktop"
+    "usr/share/pixmaps/com.vysp3r.ProtonPlus.png:share/pixmaps/com.vysp3r.ProtonPlus.png"
+)
+
+pre_install() {
+    local appimage="$compileArchivesDir/$(basename $url)"
+    # Baked AppDir lives NEXT to the Recipe (NOT in Resources/, which
+    # install_extras copies into the installed tree and would double the
+    # ~150MB payload). Staged path is the flat recipes/ProtonPlus/ copy the
+    # build steps make from the repo's Recipes/Gaming/ProtonPlus.
+    local baked="/Data/Compile/Recipes/ProtonPlus/0.6.8/BakedAppDir/protonplus-app"
+    Log_Normal "Self-extracting ${appimage}"
+    chmod +x "$appimage"
+    # "anylinux" AppImages are single-file archives: --appimage-extract dumps
+    # the payload into ./squashfs-root/ (the AppDir) without /dev/fuse. Some
+    # chroot environments cannot run the DwarFS runtime and produce an EMPTY
+    # dir with a 0 exit code, so check the result, not just the exit status.
+    if "$appimage" --appimage-extract >/dev/null 2>&1 \
+       && [ -d squashfs-root ] && [ -n "$(ls -A squashfs-root)" ]
+    then
+        Log_Normal "AppImage self-extracted OK (DwarFS runtime)"
+        mv squashfs-root protonplus-app
+    elif [ -d "$baked" ] && [ -n "$(ls -A "$baked")" ]
+    then
+        Log_Normal "AppImage self-extract unavailable in this chroot; using baked BakedAppDir AppDir"
+        cp -a "$baked" ./protonplus-app
+    else
+        Die "ProtonPlus payload unavailable: self-extract came up empty and no baked AppDir found at ${baked}."
+    fi
+
+    # bin wrapper: run the extracted AppDir directly. AppRun resolves the real
+    # binary from $APPDIR and sets up the bundled library paths.
+    cat > protonplus <<'EOF'
+#!/bin/bash
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+export APPDIR="$DIR/lib/protonplus"
+exec "$DIR/lib/protonplus/AppRun" "$@"
+EOF
+    chmod +x protonplus
+
+    # Menu entry + icon (GTK apps need a pixmap icon for the launcher).
+    mkdir -p usr/share/applications usr/share/pixmaps
+    cp -a protonplus-app/com.vysp3r.ProtonPlus.desktop usr/share/applications/
+    cp -a protonplus-app/com.vysp3r.ProtonPlus.png usr/share/pixmaps/
+}
+
+# The 152MB payload is installed HERE, NOT via a manifest entry: Gobo's
+# manifest handling turns a big directory source into a symlink to the build
+# dir (!), which packages as a dangling link (the broken 19KB tarball). A
+# plain cp -aL from the recipe hook is deterministic and lands real files.
+post_install() {
+    Log_Normal "Installing AppDir payload into ${target}/lib/protonplus"
+    local dir="${target:-${installprefix}/${programname}/${versionnumber}}"
+    local payload
+    for p in AppDir protonplus-app squashfs-root; do
+        [ -d "$p" ] && [ -n "$(ls -A "$p")" ] && { payload="$p"; break; }
+    done
+    [ -n "$payload" ] || Die "ProtonPlus AppDir payload missing (tried AppDir/protonplus-app/squashfs-root)."
+    rm -rf "$dir/lib/protonplus"
+    mkdir -p "$dir/lib"
+    cp -aL "$payload" "$dir/lib/protonplus" || Die "Failed copying AppDir payload into the program tree."
+    [ -x "$dir/lib/protonplus/AppRun" ] || Die "Installed AppDir has no runnable AppRun -- payload is broken."
+    Log_Normal "ProtonPlus AppDir installed ($(du -sh "$dir/lib/protonplus" | cut -f1))"
+}

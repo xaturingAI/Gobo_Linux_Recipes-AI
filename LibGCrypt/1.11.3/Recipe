@@ -1,0 +1,25 @@
+# Custom recipe for libgcrypt 1.11.3 (autotools)
+#
+# Part of the Flatpak-Core stack port (phone/PGP tier). GnuPG 2.4.9's
+# configure hard-requires libgcrypt >= 1.9.1 (AM_PATH_LIBGCRYPT); the base
+# ISO only ships 1.8.5, so `build.sh devices` aborts with "You need
+# libgcrypt to build this program". We build the 1.11.x line (1.11.0 won the
+# GCRYCTL_ENABLE_M_GUARD deprecation; 1.11.3 adds the T8211 ECDH-buffer
+# security fix) on top of libgpg-error 1.52 (already indexed).
+#
+# SONAME stays libgcrypt.so.20 (ABI-compatible with the 1.8.x-era consumers
+# on the ISO: p11-kit/Gcr3/GnomeKeyring), so flipping the LibGCrypt Current
+# symlink to 1.11.3 is safe for the merged tree.
+#
+# file_md5 + file_size verified against the gnupg.org tarball staged in $B.
+
+compile_version=017-GIT
+url="https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.3.tar.bz2"
+file_size=4243658
+file_md5=edbe6b87c99cc0b5fc5b9fdb78f6dd31
+dir='libgcrypt-1.11.3'
+recipe_type=configure
+
+configure_options=(
+    --disable-doc
+)
