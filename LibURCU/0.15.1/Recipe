@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# userspace-rcu (liburcu) 0.15.1 -- READ-COPY UPDATE library. Build-dependency
+# ONLY for XFSProgs 7.1.1 (its configure probes for urcu.h + rcu_init with
+# --disable-scrub too). The shipped XFS tools never link liburcu, so this is
+# configure-time only -- but the probe is unconditional in 7.1.1's configure.
+
+compile_version=017-GIT
+url="https://lttng.org/files/urcu/userspace-rcu-0.15.1.tar.bz2"
+file_size=682998
+file_md5=5a6a892f0eea86728b4eb6dea07ed190
+dir='userspace-rcu-0.15.1'
+recipe_type=configure
+
+configure_options=(
+    --disable-static
+)
