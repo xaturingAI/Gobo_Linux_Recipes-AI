@@ -1,0 +1,27 @@
+# Custom recipe for GeocodeGlib 3.26.4 (meson)
+#
+# Part of the Pantheon stack port. Provides geocode-glib-2.0.pc (soup3 ABI)
+# required by libgweather 4.6.0 and gnome-settings-daemon 48.1. Built with
+# -Dsoup2=false so it uses libsoup-3.0 and exports the modern 2.0 API name.
+#
+# Debian pool tarball (GNOME sources are Anubis-gated); the orig tarball is
+# the pristine upstream source.
+#
+# Build AFTER Libsoup3 and BEFORE Libgweather4/GnomeSettingsDaemon.
+#
+# file_md5 verified against the Debian pool copy.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/geocode-glib/geocode-glib_3.26.4.orig.tar.xz"
+file_size=75352
+file_md5=4c0dcdb7ee1222435b20acd3d7b68cd1
+dir='geocode-glib-3.26.4'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dsoup2=false
+    -Denable-introspection=false
+    -Denable-gtk-doc=false
+    -Denable-installed-tests=false
+)

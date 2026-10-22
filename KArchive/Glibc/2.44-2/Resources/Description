@@ -1,0 +1,14 @@
+glibc 2.44-2 (64-bit), swapped in from Debian's libc6_2.44-2_amd64.deb.
+
+The base GoboLinux 017.01 ISO ships glibc 2.30, which cannot load modern
+third-party binaries (FastFetch needs GLIBC_2.34, ProtonPlus's bundled
+GTK4/Adwaita need up to GLIBC_2.44). This recipe clones the installed glibc
+2.30 program tree (locale archive, headers, static libs, crt objects, getconf,
+bin, share, doc) and overlays the 2.44-2 runtime onto lib/ from the Debian
+package. glibc is backward symbol-compatible, so every base-ISO program keeps
+working; /System/Index/lib is re-pointed to 2.44 by SymlinkProgram with
+--conflict=overwrite, and /lib64 -> /System/Index/lib keeps the hard-coded
+PT_INTERP path /lib64/ld-linux-x86-64.so.2 resolving to the new loader.
+
+No source compilation occurs; the .deb's contents are installed as-is, so the
+build needs no toolchain beyond the base system.

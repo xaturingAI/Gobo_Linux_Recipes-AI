@@ -1,0 +1,5 @@
+[Name] KSvg
+[Summary] KDE Frameworks 6 SVG handling for Plasma
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/ksvg
+[Description] KDE Frameworks 6 Tier 1: SVG rendering and Plasma theme SVG engine.

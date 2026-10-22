@@ -1,0 +1,4 @@
+[Name] SwayIdle
+[Summary] Sway idle management daemon (swayidle, ext-idle-notify)
+[License] MIT
+[Homepage] https://github.com/swaywm/swayidle

@@ -1,0 +1,5 @@
+Packages are Debian i386 binaries of glibc 2.43-2 and gcc-14 (libgcc_s,
+libstdc++ 6.0.33) extracted with `ar p data.tar.xz | tar xJf -`. Only the
+primary libc6 package is downloaded through the Compile machinery; the two
+gcc-14 packages are fetched by the recipe (urls + md5s hard-coded at the top of
+the Recipe).

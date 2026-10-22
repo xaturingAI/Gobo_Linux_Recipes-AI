@@ -1,0 +1,6 @@
+Build type: cmake
+Source: https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-19.1.7.tar.gz
+Build order: foundation, before SPIRV-LLVM-Translator and Mesa 25.3.6.
+Source root: llvm-project-llvmorg-19.1.7 (monorepo); cmake entry point is the llvm/ subdir (dir='llvm-project-llvmorg-19.1.7/llvm', where LLVM_ENABLE_PROJECTS=clang resolves ../clang). Shared libLLVM.so dylib + libclang-cpp.so, X86+AMDGPU targets.
+Provides llvm-config (Mesa finds it via meson config-tool), libLLVM.so, libclang-cpp.so, clang/clang++ and clang's OpenCL resource headers (lib/clang/19/include/opencl-c.h).
+Clang is required because Mesa's iris driver turns on with_clc, which needs clang's C++ API.

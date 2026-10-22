@@ -1,0 +1,26 @@
+# Custom recipe for ethtool 6.11 (autotools)
+#
+# `ethtool` queries and tunes wired NICs (link speed/duplex, offloads, ring
+# buffers, WoL, driver info).  Complements `ifconfig`/`ip` in the GoboNet-based
+# networking stack.
+#
+# The modern netlink back end needs libmnl, which is NOT on the base ISO, so we
+# build with --enable-netlink=no to use the classic ioctl path (works for every
+# consumer NIC; only the newest kernel features are netlink-only).  Pretty
+# dumps (registers/EEPROM/SFP) also require libmnl and are disabled.
+#
+# Installs /System/Index/sbin/ethtool -> Programs/Ethtool/6.11/sbin/ethtool.
+
+compile_version=017-GIT
+url="https://mirrors.edge.kernel.org/pub/software/network/ethtool/ethtool-6.11.tar.xz"
+file_size=364148
+file_md5=0b901e0e7522082ccec13126c5ba3651
+dir='ethtool-6.11'
+recipe_type=configure
+
+configure_options=(
+    --disable-static
+    --disable-dependency-tracking
+    --enable-netlink=no
+    --enable-pretty-dump=no
+)

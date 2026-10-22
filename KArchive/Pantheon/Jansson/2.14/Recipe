@@ -1,0 +1,29 @@
+# Custom recipe for Jansson 2.14 (cmake)
+#
+# Part of the Pantheon stack port. C JSON library. PackageKit 1.3.6 hard-
+# requires jansson >= 2.8 (meson.build: dependency('jansson', required:
+# true)); the ISO ships no jansson.pc, so it must be built. The v2.14 github
+# tag tarball is a git archive (no generated configure script), so the cmake
+# build path is used (cmake is present in the chroot).
+#
+# Standalone build; no deps beyond glibc. Docs, man pages, examples and
+# tests off; shared lib on; installed via JANSSON_INSTALL.
+#
+# file_md5 + file_size verified against the github v2.14 tag tarball.
+
+compile_version=017-GIT
+url="https://github.com/akheron/jansson/archive/refs/tags/v2.14.tar.gz"
+file_size=141500
+file_md5=bc78f39c7cd7fab1dd5fc4a2c3be1661
+dir='jansson-2.14'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DJANSSON_BUILD_SHARED_LIBS=ON
+    -DJANSSON_INSTALL=ON
+    -DJANSSON_BUILD_DOCS=OFF
+    -DJANSSON_BUILD_MAN=OFF
+    -DJANSSON_EXAMPLES=OFF
+    -DJANSSON_WITHOUT_TESTS=ON
+)

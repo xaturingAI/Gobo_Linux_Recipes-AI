@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libj/libjpeg-turbo/libjpeg62-turbo_2.1.5-2_i386.deb"
+file_size=169380
+file_md5=96c5f7259caf53b6c665b02be184449e
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libjpeg.so.62* "$target"/lib32/ || Die "Failed copying 32-bit libjpeg."
+}

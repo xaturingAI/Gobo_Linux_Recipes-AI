@@ -1,0 +1,2 @@
+# None at build time -- GTK4/libadwaita/SDL3 are bundled inside lib/protonplus.
+# (Proton builds it manages are downloaded by the app on demand.)

@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# .NET SDK 6.0.428 -- .NET 6 (EOL) linux-x64 binary tarball.
+#
+# WHY: xivlauncher's AUR dotnet-sdk make-dep alternatives list names
+# dotnet-sdk-6.0; .NET 6 is EOL since Nov 2024 but some legacy FFXIV toolchains
+# still target it, and `dotnet add package`/builds select the installed SDK by
+# TFM so having 6.0 around costs nothing at runtime.
+#
+# INSTALL / LAYOUT: identical to dotnet-sdk -- muxer at the tree root with
+# host/ hostfxr/ shared/ sdk/ packs/ templates/ as siblings; the muxer's root is
+# derived from its own binary path so it must stay put. post_install also wires
+# /System/Index/bin/dotnet -> <prefix>/dotnet (step_dotnet builds this before
+# dotnet-sdk 10.0, which re-wires the symlink to the newer SDK's muxer).
+#
+# CHECKSUM: Microsoft publishes only SHA-512 (FetchArchive supports md5/sha256),
+# so file_size is pinned (CDN Content-Length) with the official SHA-512 recorded
+# here for manual verification:
+#   sha512 = 04395f991ab50e4755ce1ae53e23592a7420b71b82160883bae3194dd1dfd5d
+#            caed78743e4e0b4dd51ea43c49ec84b5643630707b3854f1471265dc98490d2f9
+#
+# SIZE: tarball 188 MB gzip; unpacks to ~550 MB.
+
+compile_version=017-GIT
+url="https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.428/dotnet-sdk-6.0.428-linux-x64.tar.gz"
+file_size=188484831
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "dotnet:dotnet"
+    "host:host"
+    "shared:shared"
+    "sdk:sdk"
+    "packs:packs"
+    "templates:templates"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${tarball}"
+    tar xzf "$tarball" || Die "cannot unpack the SDK tarball"
+}
+
+post_install() {
+    if [ -f LICENSE.txt ] || [ -f ThirdPartyNotices.txt ]
+    then
+        mkdir -p "$target/share/licenses/dotnet-sdk"
+        cp -a LICENSE.txt ThirdPartyNotices.txt "$target/share/licenses/dotnet-sdk/" 2>/dev/null
+    fi
+
+    local idx="${goboSystem:-/System}/Index/bin"
+    mkdir -p "$idx"
+    ln -sfn "$target/dotnet" "$idx/dotnet"
+}

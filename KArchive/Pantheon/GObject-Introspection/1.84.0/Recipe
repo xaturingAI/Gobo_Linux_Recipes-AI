@@ -1,0 +1,33 @@
+# Custom recipe for GObject-Introspection 1.84.0 (GNOME 49; meson)
+#
+# Part of the Pantheon stack port. Replaces the ISO's python3.8-built 1.62.0,
+# whose g-ir-scanner crashes under the new python3.11 (the _giscanner C module
+# was built for cpython-38) and predates GLib 2.84's scanner requirement of
+# >= 1.80.0.
+#
+# Builds against the FIRST PASS of GLib 2.84.4 (built with
+# -Dintrospection=disabled). Since glib >= 2.82 ships libgirepository itself,
+# this package only supplies the g-ir-scanner / g-ir-compiler / g-ir-generate
+# tooling (plus giscanner) that every GNOME library below links against.
+# GLib is then REBUILT (second pass, -Dintrospection=enabled) so it emits its
+# own .gir and .typelib files.
+#
+# cairo / cairo-gobject gir aren't needed on the ISO (nothing links them);
+# doctool requires the mako + markdown python modules the ISO python3.11 does
+# not ship; man pages are not shipped on the ISO.
+#
+# file_md5 verified against download.gnome.org release tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gobject-introspection/1.84/gobject-introspection-1.84.0.tar.xz"
+file_size=1080316
+file_md5=2a62fb1c584616a8ebcd9dd4d045f27e
+dir='gobject-introspection-1.84.0'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    -Dcairo=disabled
+    -Ddoctool=disabled
+    -Dgtk_doc=false
+    -Dtests=false
+)

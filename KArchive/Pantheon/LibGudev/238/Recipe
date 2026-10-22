@@ -1,0 +1,50 @@
+# Custom recipe for LibGudev 238 (GNOME 48 era; meson)
+#
+# Bump over the ISO's LibGudev 237: Mutter 48.7 does
+# `dependency('gudev-1.0', version: '>= 238')` unconditionally. The 237 recipe
+# avoided 238 because upstream pins libudev >= 251 while Eudev 3.2.9 (the ISO's
+# udev) ships libudev 243. That pin is NOT fully arbitrary: gudev's
+# fetch_current_tags calls udev_device_get_current_tags_list_entry, which only
+# exists in libudev >= 251. pre_build both relaxes the pin AND falls the call
+# back to udev_device_get_tags_list_entry (all other libudev APIs gudev uses
+# exist in 243). Eudev has no current-vs-persistent tag distinction, so the
+# fallback is behaviourally equivalent. libgudev-1.0.so.0 soname is unchanged.
+#
+# file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz"
+file_size=30548
+file_md5=46da30a1c69101c3a13fa660d9ab7b73
+dir='libgudev-238'
+recipe_type=meson
+
+pre_build() {
+    # Two patches for the ISO's Eudev 3.2.9 (libudev 243), which gudev 238's
+    # upstream pin (libudev >= 251) exists for:
+    #   1. Relax the meson version pin so the pkg-config lookup passes.
+    #   2. udev_device_get_current_tags_list_entry only exists in libudev >= 251.
+    #      Eudev has no current-vs-persistent tag distinction, so fall back to
+    #      udev_device_get_tags_list_entry (present since ~systemd 200) in the
+    #      single call site (gudevdevice.c:fetch_current_tags).
+    # Both are idempotent. NOTE: pre_build runs with cwd = $builddir (meson's
+    # _build/), so reference the source tree explicitly via $sourcedir.
+    if grep -q "libudev_req = '>= 251'" "$sourcedir/meson.build"
+    then
+        Log_Normal "Relaxing libudev_req >= 251 -> >= 243 (Eudev 3.2.9)"
+        sed -i "s/libudev_req = '>= 251'/libudev_req = '>= 243'/" "$sourcedir/meson.build"
+    fi
+    if grep -q "udev_device_get_current_tags_list_entry" "$sourcedir/gudev/gudevdevice.c"
+    then
+        Log_Normal "Patching current-tags API -> persistent-tags API (Eudev 3.2.9 lacks >= 251 API)"
+        sed -i "s/udev_device_get_current_tags_list_entry/udev_device_get_tags_list_entry/" "$sourcedir/gudev/gudevdevice.c"
+    fi
+}
+
+meson_variables=(
+    --buildtype=release
+    -Dtests=disabled
+    -Dintrospection=disabled
+    -Dvapi=disabled
+    -Dgtk_doc=false
+)

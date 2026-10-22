@@ -1,0 +1,42 @@
+# Custom recipe for UPower 1.90.9 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Provides upower-glib.pc and the
+# org.freedesktop.UPower D-Bus daemon, required by gnome-settings-daemon
+# 48.1's power plugin. The daemon is D-Bus activated, so no init script is
+# needed on the sysvinit ISO. Uses the ISO's Eudev (gudev-1.0 + udev pc);
+# no systemd units, no polkit auth for the daemon itself, no libimobiledevice.
+#
+# Debian pool tarball (GNOME sources are Anubis-gated); orig = pristine.
+# Extract dir is 'upower-v1.90.9'.
+#
+# Build AFTER LibGudev and BEFORE GnomeSettingsDaemon.
+#
+# file_md5 verified against the Debian pool copy.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/u/upower/upower_1.90.9.orig.tar.bz2"
+file_size=154756
+file_md5=22d4f58fb54c225de7e6a7047420bb3f
+dir='upower-v1.90.9'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemdsystemunitdir=no
+    -Dman=false
+    -Dgtk-doc=false
+    -Dintrospection=disabled
+    -Dpolkit=disabled
+    -Didevice=disabled
+    -Dos_backend=linux
+    -Dzshcompletiondir=no
+    -Dhistorydir=/var/lib/upower
+    -Dstatedir=/var/lib/upower
+    # UPower reads udev.pc's udev_dir variable to auto-locate the rules/hwdb
+    # dirs, but eudev's udev.pc only defines udevdir (no udev_dir), so meson
+    # dies with "Could not get pkg-config variable". Pin the dirs explicitly
+    # (/usr/lib/udev == /System/Index/lib/udev on Gobo via the index) so meson
+    # never queries the variable.
+    -Dudevrulesdir=/usr/lib/udev/rules.d
+    -Dudevhwdbdir=/usr/lib/udev/hwdb.d
+)

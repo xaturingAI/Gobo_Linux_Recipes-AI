@@ -1,0 +1,37 @@
+# Custom recipe for Pixman 0.46.4 (meson)
+#
+# Bumped from 0.44.2 because wlroots 0.20.2 needs pixman >= 0.46.0:
+# render/pixman/meson.build requires pixman-1 >= 0.46.0, and the pixman
+# renderer maps DRM_FORMAT_ABGR16161616 to PIXMAN_a16b16g16r16 - a
+# 16-bits-per-component format that only exists from pixman 0.46.0 on.
+#
+# The wlroots recipe also carries a version-guarded fallback for that one
+# constant, so wlroots still builds against pixman 0.44.x; installing this
+# version simply re-enables the 64bpp format.
+#
+# Everything else is unchanged: Cairo 1.18.4 requires pixman-1 >= 0.40.0 and
+# enables HAS_PIXMAN_r8g8b8_sRGB at >= 0.42.3, so 0.46.4 satisfies it too.
+# pixman keeps the libpixman-1.so.0 SONAME across the 0.4x series, so
+# already-installed consumers (Cairo, Qt, GTK) keep working.
+#
+# Build AFTER FreeType 2.13.3 / Fontconfig 2.15.0, BEFORE Cairo 1.18.4 and
+# BEFORE Wlroots 0.20.2.  No docs option exists; SIMD options stay 'auto'.
+# tests/demos/gtk/openmp disabled.
+#
+# file_md5/size verified against the cairographics.org pixman-0.46.4.tar.gz.
+
+compile_version=017-GIT
+url="https://www.cairographics.org/releases/pixman-0.46.4.tar.gz"
+file_size=827198
+file_md5=c08173c8e1d2cc79428d931c13ffda59
+dir='pixman-0.46.4'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dtests=disabled"
+    "-Ddemos=disabled"
+    "-Dgtk=disabled"
+    "-Dopenmp=disabled"
+    "-Ddefault_library=shared"
+)

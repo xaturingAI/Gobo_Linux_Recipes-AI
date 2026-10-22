@@ -1,0 +1,37 @@
+# Build source: egl-wayland2-1.0.2.tar.gz (GitHub tag v1.0.2 of NVIDIA/egl-wayland2)
+url="https://github.com/NVIDIA/egl-wayland2/archive/refs/tags/v1.0.2.tar.gz"
+file_size=81287
+file_md5=57846b94e753be76db67b3243520c3a2
+file_sha256=19262df1df00de75bdc419d31d544953a3589e6369e5dff1a4ebcee465c6d046
+
+# GitHub's archive tarball has no stable published checksum, so file_size and
+# both hashes were computed locally on 2026-10-19 from the downloaded tarball
+# (matches the server Content-Length). The archive unpacks to
+# egl-wayland2-1.0.2/ (tag v1.0.2 -> project version 1.0.2).
+
+# The version is asserted by meson.build:
+#   project('nvidia-egl-wayland2', 'c', version : '1.0.2', ...)
+
+# Payload facts this recipe depends on:
+#   meson.build            project; deps libdrm, threads, eglexternalplatform
+#                          (>=1.2 <2), egl (>=1.5 <2); subdir src/base + src/wayland
+#   src/base/meson.build   static 'platform_base' (install: false)
+#   src/wayland/meson.build
+#                          shared_library('nvidia-egl-wayland2', install: true)
+#                          -> libnvidia-egl-wayland2.so.1.0.2 (+ .so.1/.so sonames)
+#                          install_data('09_nvidia_wayland2.json',
+#                          install_dir: '<datadir>/egl/egl_external_platform.d')
+#   deps: libdrm, gbm, wayland-client, wayland-egl-backend (>=3),
+#         wayland-protocols (>=1.38), dl
+# All are satisfied in the build tree by LibDrm 2.4.121, Mesa (libgbm),
+# Wayland 1.23.1, Wayland-Protocols 1.44 (Current 1.49), LibGLVnd and
+# EGLExternalPlatform 1.2.1.
+
+# Why an independent build when the driver .run already bundles
+# libnvidia-egl-wayland2.so.1.0.2: Arch ships a separate egl-wayland2 package,
+# the versioned library is easiest to place/pin here (own program dir, own
+# JSON path), and the recipe keeps the JSON + soname registration in one place
+# rather than depending on the userspace split's copy in Nvidia-Utils.
+
+# Version history for this file:
+# - created for 1.0.2 (2026-10-19)

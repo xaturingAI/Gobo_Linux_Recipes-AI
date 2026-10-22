@@ -1,0 +1,14 @@
+This directory is where Proton is pre-baked for the Live CD.
+
+Run "bin/AddProton" from the BuildLiveCD repo root to download a prebuilt
+Proton redistributable (default: GE-Proton11-3 from GloriousEggroll's GitHub
+releases) and unpack it here. The Steam package then ships it under
+/Users/root/.local/share/Steam/compatibilitytools.d/, so Steam finds it on
+first launch without downloading anything.
+
+After running AddProton, rebuild the Steam package with:
+  CreatePackage Steam 1.0.0.87_bin
+
+Note: Valve's official Proton releases are source-only since Proton 11
+(prebuilt builds are delivered through the Steam client), which is why this
+recipe uses the prebuilt GE-Proton distribution instead.

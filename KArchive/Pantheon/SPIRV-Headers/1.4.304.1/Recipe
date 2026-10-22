@@ -1,0 +1,38 @@
+# Custom recipe for SPIRV-Headers (cmake) -- part of the Mesa 25.3.6 CLC
+# toolchain for the Pantheon desktop stack.
+#
+# WHY THIS EXISTS: Mesa 25.3.6 turns on with_clc because the iris (Intel)
+# gallium driver is listed in with_driver_using_cl. Mesa's CLC machinery then
+# hard-requires three external pieces: libclc, KhronosGroup/SPIRV-LLVM-
+# Translator (LLVMSPIRVLib) and SPIRV-Tools. SPIRV-Headers is the shared
+# SPIR-V registry headers that BOTH SPIRV-Tools and SPIRV-LLVM-Translator
+# compile against; Mesa itself does not consume it directly.
+#
+# VERSION CHOICE: pinned to the exact commit SPIRV-Tools v2024.4 selects in its
+# DEPS file (spirv_headers_revision =
+# 3f17b2af6784bfa2c5aa5dbb8e0e74a607dd8b3b). That commit is tagged
+# vulkan-sdk-1.4.304.0 and vulkan-sdk-1.4.304.1 upstream; following this
+# repo's Vulkan-Headers/Vulkan-Loader convention (which strips the
+# "vulkan-sdk-" prefix) the program version dir is 1.4.304.1. Note that the
+# project() VERSION declared in its own CMakeLists.txt is 1.5.5 (it lags the
+# Vulkan SDK tags), so the installed CMake package config / SPIRV-Headers.pc
+# report 1.5.5 while the Gobo program version stays 1.4.304.1.
+#
+# Header-only INTERFACE library: installs include/spirv/**, a CMake package
+# config findable by downstream find_package(SPIRV-Headers) and a
+# SPIRV-Headers.pc. CMAKE_INSTALL_DATADIR=lib drops both the CMake package
+# (lib/cmake/SPIRV-Headers) and the .pc (lib/pkgconfig) into the locations
+# Gobo's find_package/PKG_CONFIG_PATH (/System/Index/lib/pkgconfig) search.
+compile_version=017-GIT
+url="https://github.com/KhronosGroup/SPIRV-Headers/archive/3f17b2af6784bfa2c5aa5dbb8e0e74a607dd8b3b.tar.gz"
+file="SPIRV-Headers-3f17b2af6784bfa2c5aa5dbb8e0e74a607dd8b3b.tar.gz"
+file_size=532355
+file_md5=86171db63700571d719befd90bcb3fb9
+dir='SPIRV-Headers-3f17b2af6784bfa2c5aa5dbb8e0e74a607dd8b3b'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DCMAKE_INSTALL_DATADIR=lib
+    -DSPIRV_HEADERS_ENABLE_TESTS=OFF
+)

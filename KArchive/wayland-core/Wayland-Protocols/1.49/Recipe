@@ -1,0 +1,16 @@
+# Custom recipe for Wayland-Protocols 1.49 (meson)
+# Version bump from 1.44: KF6 6.26.0 KWindowSystem requires wayland-protocols
+# >= 1.46 (find_package(WaylandProtocols 1.46 REQUIRED)) and PlasmaWayland
+# consumers need recent bundled protocol definitions. Pure data package.
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.49/downloads/wayland-protocols-1.49.tar.xz"
+file_size=150612
+file_md5=5685f769a227f2d4143d983ad07edaba
+dir='wayland-protocols-1.49'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    # tests=ON demands wayland-scanner >= 1.25.0; the ISO stagees 1.23.1
+    # (the 1.22.90 floor, so the scan/build path is a no-op).
+    -Dtests=false
+)

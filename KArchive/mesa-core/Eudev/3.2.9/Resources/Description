@@ -1,0 +1,5 @@
+[Name] Eudev
+[Summary] udev fork with isolation from the init system; provides libudev
+[Description] eudev is a fork of systemd's udev with the goal of obtaining better compatibility with existing software such as OpenRC, Upstart, older kernels, various toolchains, and anything else required by (but not well supported by) udev. Provides libudev.so + libudev.pc (probed by Mesa 25.3.6 for HAVE_LIBUDEV) and the udevd/udevadm device-manager programs. Pinned to the ISO's own version 3.2.9 so making the dependency explicit does not upgrade the base system.
+[License] GNU General Public License version 2
+[Homepage] https://wiki.gentoo.org/wiki/Project:Eudev

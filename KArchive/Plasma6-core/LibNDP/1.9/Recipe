@@ -1,0 +1,17 @@
+# Custom recipe for libndp 1.9 (autotools)
+# IPv6 Neighbor Discovery Protocol library required by NetworkManager
+# 1.51.4 (src/meson.build: dependency('libndp') is unconditional). The v1.9
+# github tag tarball lacks a generated configure script and Makefile.in, so
+# bootstrap via autogen.sh first (Qrencode pattern). Installs into its own
+# prefix; the Index import makes libndp.pc visible to pkg-config.
+compile_version=017-GIT
+url="https://github.com/jpirko/libndp/archive/refs/tags/v1.9.tar.gz"
+file_size=30025
+file_md5=5a0ead3cc1dea3b8fec6feb7ed0abaf2
+dir='libndp-1.9'
+recipe_type=configure
+do_configuration() {
+   ./autogen.sh &&
+   ./configure \
+       --prefix=/Programs/LibNDP/1.9
+}

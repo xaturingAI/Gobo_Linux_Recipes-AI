@@ -1,0 +1,26 @@
+# Custom recipe for Libgweather4 4.6.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Provides libgweather-4.0.pc, the weather
+# library used by gnome-settings-daemon 48.1's datetime plugin (and
+# SwitchboardPlugDatetime). Needs libsoup3, geocode-glib-2.0, gudev-1.0 and
+# the gweather-locations data package.
+#
+# Build AFTER Libsoup3 + GeocodeGlib + GweatherLocations + LibGudev and
+# BEFORE GnomeSettingsDaemon.
+#
+# Era: GNOME 48 (Jun 2025). file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libgweather/4.6/libgweather-4.6.0.tar.xz"
+file_size=347592
+file_md5=c52f40f2e6d6708763f15eb17ce45b97
+dir='libgweather-4.6.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dgtk_doc=false
+    -Dintrospection=false
+    -Denable_vala=false
+    -Dtests=false
+)

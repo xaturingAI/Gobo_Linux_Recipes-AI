@@ -1,0 +1,5 @@
+[Name] Lutris
+[Summary] Video game preservation platform and game manager (Python/GTK)
+[License] GPL-3
+[Homepage] https://lutris.net
+[Description] Lutris is an open source gaming platform for Linux. It helps you install and play video games from all eras and from most gaming systems, by leveraging and combining existing emulators, engine re-implementations and compatibility layers. On this Live CD it is the primary gaming frontend: it manages Wine prefixes (with Wine 11.14 / Wine-Lutris-GE), configures DXVK/Vkd3d-Proton per game, and integrates Steam, Heroic and the flatpak-free installers. Requires Python 3.10+; the CD provides Python 3.11.12.

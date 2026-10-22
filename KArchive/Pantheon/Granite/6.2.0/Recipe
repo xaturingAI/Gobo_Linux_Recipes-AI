@@ -1,0 +1,16 @@
+# Custom recipe for Granite 6.2.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/granite/archive/refs/tags/6.2.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/granite/archive/refs/tags/6.2.0.tar.gz"
+file_size=462780
+file_md5=b5cb2159d784020667c87d21f82157c1
+dir='granite-6.2.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Ddocumentation=false
+    -Dintrospection=false
+)

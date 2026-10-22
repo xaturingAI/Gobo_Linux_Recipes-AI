@@ -1,0 +1,21 @@
+# Custom recipe for LibDrm 2.4.121 (meson)
+# DRM userspace libraries + libdrm.pc. Bumped from the ISO's 2.4.100 because
+# XWayland 24.1.2 needs libdrm >= 2.4.116. Era-matched (June 2024); soname
+# libdrm.so.2 is stable so the prebuilt ISO binaries (Xorg, Mesa) keep working,
+# and headers are compile-time only. intel driver needs pciaccess >= 0.10
+# (ISO has LibPCIAccess 0.16 -> auto-enabled); tests/man-pages/valgrind are
+# disabled so no cairo/cunit/rst2man/valgrind tools are pulled in.
+compile_version=017-GIT
+url="https://dri.freedesktop.org/libdrm/libdrm-2.4.121.tar.xz"
+file_size=480840
+file_md5=9eaa82b7b7a79972c6b11dd25a4356b1
+dir='libdrm-2.4.121'
+recipe_type=meson
+
+meson_variables=(
+    "-Dman-pages=disabled"
+    "-Dvalgrind=disabled"
+    "-Dcairo-tests=disabled"
+    "-Dtests=false"
+    "-Dinstall-test-programs=false"
+)

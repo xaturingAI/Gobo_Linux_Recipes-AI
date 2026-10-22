@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# clinfo - OpenCL device/ICD query tool. Compiled from the single-file C
+# source against the Khronos OpenCL-Headers and linked against the NVIDIA
+# ICD loader (libOpenCL.so.1) that the Nvidia recipe ships.
+#
+# The upstream Makefile appends `-I../OpenCL-Headers` and forces -Werror; we
+# pass CPPFLAGS/CFLAGS explicitly so the headers resolve via the index and
+# -Werror is dropped (GCC 14 warnings would otherwise abort the build). The
+# Nvidia package provides libOpenCL.so.1 but no unversioned libOpenCL.so dev
+# symlink, so one is created in the build dir (link-time only, never packaged).
+compile_version=017-GIT
+url="https://github.com/Oblomov/clinfo/archive/refs/tags/3.0.25.02.14.tar.gz"
+file_size=60699
+file_md5=85db33b0583a42c3002210f768137ff1
+dir='clinfo-3.0.25.02.14'
+recipe_type=manifest
+manifest=(
+    "clinfo:bin/clinfo"
+    "man1/clinfo.1:man/man1/clinfo.1"
+)
+
+pre_install() {
+    ln -sf "$goboLibraries/libOpenCL.so.1" libOpenCL.so
+    make CFLAGS="-g -std=c99" \
+         CPPFLAGS="-I$goboIndex/include" \
+         LDFLAGS="-L." \
+        || Die "clinfo build failed"
+}

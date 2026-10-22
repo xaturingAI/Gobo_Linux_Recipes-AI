@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Steam launcher for GoboLinux, packaged from Valve's official steam_latest.deb.
+# The 32-bit client bootstrap is bundled as-is; the scout runtime is downloaded
+# by Steam on first run (see the build-order README for offline baking).
+#
+# A prebuilt Proton is baked into the package as an unmanaged file under
+# Users/root/.local/share/Steam/compatibilitytools.d/ so Steam finds it on the
+# Live CD without a download. Run "bin/AddProton" to fetch it (default:
+# GE-Proton11-3), then rebuild this package with CreatePackage.
+
+compile_version=017-GIT
+url="https://repo.steampowered.com/steam/archive/precise/steam_latest.deb"
+file_size=20379390
+file_md5=380048701b195262f5c9f888a45dfc49
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+# Files installed straight into the system root at package install time.
+unmanaged_files=(
+    etc/udev/rules.d/60-steam-input.rules
+    etc/udev/rules.d/60-steam-vr.rules
+    usr/share/applications/steam.desktop
+    usr/share/icons/hicolor/
+    Users/root/.local/share/Steam/compatibilitytools.d/
+)
+
+manifest=(
+    "usr/bin/steam:bin/steam"
+    "usr/lib/steam/bin_steam.sh:lib/steam/bin_steam.sh"
+    "usr/lib/steam/bin_steamdeps.py:lib/steam/bin_steamdeps.py"
+    "usr/lib/steam/bootstraplinux_ubuntu12_32.tar.xz:lib/steam/bootstraplinux_ubuntu12_32.tar.xz"
+    "usr/lib/steam/steam_launcher:lib/steam/steam_launcher"
+    "usr/lib/steam/steam.desktop:lib/steam/steam.desktop"
+)
+
+pre_install() {
+    # Unpack the data payload from the .deb into the build directory.
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}

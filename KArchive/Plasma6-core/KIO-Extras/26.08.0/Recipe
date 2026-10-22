@@ -1,0 +1,33 @@
+# Custom recipe for KIO-Extras 26.08.0 (cmake, Gear)
+# Extra KIO ioslaves + KCMs so Dolphin/Konsole can handle archive(s), ftp,
+# sftp, nfs, smb, trash + the file-system KCMs. REQUIRED (CMakeLists.txt):
+# Qt6 Gui/Network/Widgets/Svg + KF6 Archive/Config/CoreAddons/I18n/KIO/Solid/
+# SyntaxHighlighting + KCMUtils (all built earlier in the KF6/Phase D chain).
+# Optional stacks are absent on the ISO and skipped automatically: libproxy
+# (WPAD, DTIMES REQUIRED we pass -DWITH_LIBPROXY=OFF), libssh (sftp), libmtp +
+# IMobileDevice (mtp/afc), Samba (smb is still built via libsmbclient-less
+# find), bump, libudisks2, TIRPC (nfs). BUILD_ACTIVITIES left ON but requires
+# Plasma-Activities(-Stats) which are already built when this lands in
+# step_plasma right after KSystemStats; BUILD_DOC off (KF6DocTools not needed).
+compile_version=017-GIT
+url="https://download.kde.org/stable/release-service/26.08.0/src/kio-extras-26.08.0.tar.xz"
+file_size=5627616
+file_md5=8a8836b044698c2e998dcc1f41838079
+dir='kio-extras-26.08.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_DOC=OFF
+    -DWITH_LIBPROXY=OFF
+    # The ISO's TagLib is a static lib (Programs/TagLib/1.11.1, no .so), and its
+    # taglib.pc lists only -ltag. The audiothumbnail thumbnailer links libtag.a
+    # directly, so its tzlib.cpp references to inflate*/deflate* stay undefined;
+    # append -lz at the END of every C++ link so it holds regardless of
+    # --as-needed (libz.so is shared, so the dynamic symbols then resolve).
+    -DCMAKE_CXX_STANDARD_LIBRARIES=-lz
+)

@@ -1,0 +1,8 @@
+Build type: cmake (LLVM external project, built against the installed LLVM 19.1.7)
+Source: https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/refs/tags/v19.1.7.tar.gz
+Provides pkg-config name LLVMSPIRVLib with Version 19.1.0.0 (LLVM_SPIRV_VERSION = BASE_LLVM_VERSION 19.1.0 + ".0"), satisfying Mesa's range [>=15.0.0.0, >=19.1, <19.2].
+Installs lib/libLLVMSPIRVLib.so, include/*.h (LLVMSPIRVLib.h, LLVMSPIRVOpts.h, ...), bin/llvm-spirv and lib/pkgconfig/LLVMSPIRVLib.pc (there is no LLVMSPIRVLib CMake package config; Meson resolves via pkg-config).
+LLVM_DIR=/Programs/LLVM/19.1.7/lib/cmake/llvm finds the shared LLVM 19.1.7 (LLVM_TOOLS_BINARY_DIR becomes /System/Index/bin).
+LLVM_EXTERNAL_SPIRV_HEADERS_SOURCE_DIR=/System/Index uses the installed SPIRV-Headers and avoids an offline-breaking FetchContent download.
+No upstream option exists to skip tools/llvm-spirv (added unconditionally); the llvm-spirv binary is required by LibCLc anyway.
+Build order: after LLVM 19.1.7 and SPIRV-Headers, before LibCLc and Mesa 25.3.6.

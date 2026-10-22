@@ -1,0 +1,4 @@
+[Name] EGL-Wayland2
+[Summary] NVIDIA second-generation EGL external platform for Wayland (libnvidia-egl-wayland2)
+[License] Apache-2.0
+[Homepage] https://github.com/NVIDIA/egl-wayland2

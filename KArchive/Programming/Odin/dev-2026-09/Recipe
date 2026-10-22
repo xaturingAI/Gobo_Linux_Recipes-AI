@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Odin compiler dev-2026-09 (2026-09-01 nightly release) for GoboLinux,
+# packaged from the official linux-amd64 release tarball. The single odin
+# binary is fully static (links libc only); runtime needs nothing beyond the
+# ISO base + a C linker (`cc`/`ld` on the ISO are GCC 14.2.0 / BinUtils 2.33.1).
+# Odin locates its stdlib by resolving /proc/self/exe and taking the dirname,
+# so the real binary lives at the program root with base/core/shared/vendor as
+# siblings; bin/odin is a relative symlink so System/Index/bin picks it up and
+# ODIN_ROOT still resolves to the program root.
+
+compile_version=017-GIT
+url="https://github.com/odin-lang/Odin/releases/download/dev-2026-09/odin-linux-amd64-dev-2026-09.tar.gz"
+file_size=70000274
+file_md5=c60c73e730302e20b6c1de1b164af089
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "odin-linux-amd64-nightly+2026-09-01/odin:odin"
+    "odin-linux-amd64-nightly+2026-09-01/base:base"
+    "odin-linux-amd64-nightly+2026-09-01/core:core"
+    "odin-linux-amd64-nightly+2026-09-01/shared:shared"
+    "odin-linux-amd64-nightly+2026-09-01/vendor:vendor"
+    "odin-linux-amd64-nightly+2026-09-01/examples:examples"
+    "odin-linux-amd64-nightly+2026-09-01/LICENSE:doc/LICENSE"
+    "bin:bin"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    tar xzf "$tarball"
+    mkdir -p bin
+    ln -sfn ../odin bin/odin
+}

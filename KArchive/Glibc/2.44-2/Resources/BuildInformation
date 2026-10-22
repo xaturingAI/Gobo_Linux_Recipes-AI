@@ -1,0 +1,6 @@
+# Nothing is compiled: the 64-bit glibc 2.44-2 runtime is installed from
+# Debian's libc6_2.44-2_amd64.deb (real ELFs shipped at their SONAME names)
+# overlaid on a clone of the installed glibc 2.30 program tree. The base ISO's
+# own toolchain would be used for any build; none is needed here.
+
+MAKE_OPTIONS=""

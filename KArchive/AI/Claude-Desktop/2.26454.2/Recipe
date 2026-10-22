@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Claude Desktop 2.26454.2 for GoboLinux, packaged from Anthropic's official
+# apt-repository .deb (data payload only -- the dpkg maintainer scripts are
+# intentionally skipped: the Ubuntu AppArmor userns profile, apt
+# self-registration, GNOME Shell search provider and MIME hooks are
+# Ubuntu/GNOME-specific and irrelevant on this Live CD).
+#
+# The Electron dist installs usr/lib/claude-desktop -> lib/claude-desktop;
+# pre_install generates bin/claude-desktop in the Heroic style: it resolves
+# the program tree from its own location and passes --no-sandbox, because
+# the chrome-sandbox helper cannot be setuid on an ephemeral Live CD (same
+# rationale as Gaming/Heroic). post_install then removes the setuid helper
+# from the tree so no setuid-root binary ships on the image.
+#
+# unmanaged_files (Steam precedent) installs the .desktop entry + hicolor
+# icons straight into the system root, so Icon=claude-desktop resolves and
+# the menu entry appears on any rebuilt ISO. Runtime deps (GTK+3, NSS,
+# libnotify, libdrm/gbm, libpipewire...) all ship on the base ISO.
+
+compile_version=017-GIT
+url="https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_2.26454.2_amd64.deb"
+file_size=180943856
+file_md5=4f8baf7d6d5c38fadc06d14d012f6693
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+unmanaged_files=(
+    usr/share/applications/com.anthropic.Claude.desktop
+    usr/share/icons/hicolor/
+)
+
+manifest=(
+    "usr/lib/claude-desktop:lib/claude-desktop"
+    "usr/share/doc/claude-desktop/copyright:share/licenses/claude-desktop/copyright"
+    "claude-desktop:bin/claude-desktop"
+)
+
+pre_install() {
+    # Unpack the data payload from the .deb into the build directory
+    # (Steam precedent; dpkg is not available in the build chroot).
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf - || Die "cannot unpack the Claude Desktop .deb"
+
+    # The .deb's usr/bin/claude-desktop is a relative symlink into lib/;
+    # this wrapper replaces it with a tree-resolving, sandbox-disabled one.
+    cat > claude-desktop <<'EOF'
+#!/bin/bash
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+exec "$DIR/lib/claude-desktop/claude-desktop" --no-sandbox "$@"
+EOF
+    chmod +x claude-desktop
+}
+
+post_install() {
+    # chrome-sandbox only serves the setuid/userns sandbox path that the
+    # --no-sandbox wrapper bypasses; never ship a setuid-root binary.
+    rm -f "$target/lib/claude-desktop/chrome-sandbox"
+}

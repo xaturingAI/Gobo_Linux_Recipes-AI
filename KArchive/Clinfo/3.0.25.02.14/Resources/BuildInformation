@@ -1,0 +1,15 @@
+manifest recipe: pre_install compiles the single-file clinfo.c (via the
+upstream Makefile, VPATH=src) against the Khronos headers, then manifest
+copies bin/clinfo + man1/clinfo.1 into the package tree.
+
+Build details:
+- CPPFLAGS=-I$goboIndex/include so <CL/cl.h> resolves (OpenCL-Headers
+  recipe must be installed first; build.sh chains OpenCL-Headers -> Clinfo).
+- CFLAGS is passed explicitly to override the Makefile's `-Werror` (GCC 14
+  -Wall/Wextra warnings would abort otherwise); the Makefile's `+=` still
+  appends -std=c99 -Wall -Wextra.
+- The Nvidia recipe ships libOpenCL.so.1 (ICD loader) but no unversioned
+  libOpenCL.so dev symlink; pre_install creates one in the build dir and
+  passes -L. so -lOpenCL links (link-time only, never packaged).
+- Runtime: ICD loader dlopens libnvidia-opencl.so.1 via nvidia.icd; both
+  live in /System/Index/lib on the ISO.

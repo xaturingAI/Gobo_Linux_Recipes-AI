@@ -1,0 +1,28 @@
+# Custom recipe for Pixman 0.44.2 (meson)
+#
+# Part of the Pantheon stack port. Bumped from the ISO's 0.38.4 because
+# Cairo 1.18.4 requires pixman-1 >= 0.40.0 (meson.build line 633) and
+# enables HAS_PIXMAN_r8g8b8_sRGB at >= 0.42.3. Without this, cairo falls
+# back to its internal pixman subproject wrap.
+#
+# Build AFTER FreeType 2.13.3 / Fontconfig 2.15.0, BEFORE Cairo 1.18.4.
+# No docs option exists in 0.44.2; SIMD options stay 'auto'. tests/demos/
+# gtk/openmp disabled.
+#
+# file_md5 verified against the cairographics.org pixman-0.44.2.tar.gz.
+
+compile_version=017-GIT
+url="https://www.cairographics.org/releases/pixman-0.44.2.tar.gz"
+file_size=813915
+file_md5=0825cd6bfc488d5177f2f013a06ef240
+dir='pixman-0.44.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dtests=disabled"
+    "-Ddemos=disabled"
+    "-Dgtk=disabled"
+    "-Dopenmp=disabled"
+    "-Ddefault_library=shared"
+)

@@ -1,0 +1,5 @@
+[Name] kscreenlocker
+[Summary] Plasma 6 screen locker
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/kscreenlocker
+[Description] Plasma 6 screen locker (KSld D-Bus daemon, lock screen UI).

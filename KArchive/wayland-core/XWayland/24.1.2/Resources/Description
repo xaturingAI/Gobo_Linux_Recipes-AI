@@ -1,0 +1,4 @@
+[Name] XWayland
+[Summary] X server that runs under Wayland (Xwayland binary)
+[License] MIT/X11
+[Homepage] https://gitlab.freedesktop.org/xorg/xserver

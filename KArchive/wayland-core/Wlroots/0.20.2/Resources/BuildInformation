@@ -1,0 +1,34 @@
+url="https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/0.20.2/wlroots-0.20.2.tar.bz2"
+file_size=525240
+file_md5=03634ea5be3d116490c955355610c
+file_sha256=20c37b521dc3054b6e9627b79bdd45fc716db9ebc58bdf97e57e84d04b04610f
+
+# Wlroots 0.20.2 upstream requirements vs. what this system actually has:
+#
+#   dependency            upstream asks for   installed here      state
+#   wayland-server        >= 1.24.0           1.26.0              OK
+#   wayland-protocols     >= 1.47             1.49                OK
+#   libdrm                >= 2.4.129          2.4.129             OK
+#   xkbcommon             >= 1.8.0            1.8.0 (real)        OK
+#   pixman-1              >= 0.46.0           0.46.4              OK
+#   libinput              >= 1.19.0           1.31.3              OK
+#
+# The build system installs the real XKBcommon 1.8.0 (Recipes/XKBcommon/
+# 1.8.0) and Pixman 0.46.4 (Recipes/Pantheon/Pixman/0.46.4) BEFORE Wlroots,
+# so upstream's gates are satisfied.  wlroots-0.20.2-deps.patch additionally
+# relaxes the gates and makes the two features that need the new libraries
+# optional, so a failed dependency upgrade costs one niche feature instead
+# of the whole build:
+#   * pixman: PIXMAN_a16b16g16r16 (16 bits per component, used for
+#     DRM_FORMAT_ABGR16161616) only exists from pixman 0.46.0 on.  The patch
+#     guards that one format entry with the pixman version.
+#   * xkbcommon: XKB_LED_NAME_COMPOSE and XKB_LED_NAME_KANA only exist from
+#     xkbcommon 1.8.0 on.  The patch spells those two stable LED names out.
+#
+# Other optional-but-present dependencies that are enabled automatically:
+# libdisplay-info 0.3.0, libliftoff 0.5.0, libseat 0.6.4, libudev 243,
+# hwdata 0.410, xcb 1.13.1 + xcb-* (X11 backend), xwayland 24.1.2,
+# gbm 25.3.6, glesv2 3.2, egl 1.5, vulkan 1.4.357, lcms2 2.9.
+#
+# The build system's step_sync loop copies the wayland-core recipes into
+# /Data/Compile/Recipes; step_sway compiles "Wlroots 0.20.2".

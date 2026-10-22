@@ -1,0 +1,20 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/o/openssl/libssl3_3.0.17-1~deb12u2_i386.deb"
+file_size=2032104
+file_md5=0b5d5a04d4c3ece1e7285e67e68efca2
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libssl.so.3* "$target"/lib32/ || Die "Failed copying 32-bit libssl."
+    cp -a usr/lib/i386-linux-gnu/libcrypto.so.3* "$target"/lib32/ || Die "Failed copying 32-bit libcrypto."
+}

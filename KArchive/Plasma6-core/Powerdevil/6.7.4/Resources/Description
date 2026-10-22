@@ -1,0 +1,5 @@
+[Name] powerdevil
+[Summary] Plasma 6 power management daemon
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/powerdevil
+[Description] Plasma 6 power management: suspend, hibernate, screen dimming, power profiles.

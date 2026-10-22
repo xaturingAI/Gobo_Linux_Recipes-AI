@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# .NET SDK 9.0.318 -- .NET 9 (STS) linux-x64 binary tarball.
+#
+# WHY: FFXIVQuickLauncher 7.0.20 is a self-contained .NET 9 Windows build, so
+# .NET 9 is the version actually used (under Wine it bundles its own runtime,
+# but the AUR xivlauncher native build pins dotnet-sdk 9 era and it is useful
+# as the default SDK for current tooling too). Built before dotnet-sdk (10.0)
+# in step_dotnet, which wins the /System/Index/bin/dotnet symlink.
+#
+# INSTALL / LAYOUT: standard /usr/share/dotnet tree -- muxer at the tree root
+# with host/ hostfxr/ shared/ sdk/ packs/ templates/ as siblings (root derived
+# from the muxer's own binary path, so it stays put).
+#
+# CHECKSUM: Microsoft publishes only SHA-512 (FetchArchive supports md5/sha256),
+# so file_size is pinned (CDN Content-Length) with the official SHA-512 recorded
+# here for manual verification:
+#   sha512 = e8685293a3512178e0de1bb3c1663e31fdf9d761af705094bf833cc1ff6b9a18
+#            c543aa4141f0216503c98039c719585a6d32905b0bbb3279e93b7e7616e047c3
+#
+# SIZE: tarball 218 MB gzip; unpacks to ~650 MB.
+
+compile_version=017-GIT
+url="https://builds.dotnet.microsoft.com/dotnet/Sdk/9.0.318/dotnet-sdk-9.0.318-linux-x64.tar.gz"
+file_size=218211690
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "dotnet:dotnet"
+    "host:host"
+    "shared:shared"
+    "sdk:sdk"
+    "packs:packs"
+    "templates:templates"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${tarball}"
+    tar xzf "$tarball" || Die "cannot unpack the SDK tarball"
+}
+
+post_install() {
+    if [ -f LICENSE.txt ] || [ -f ThirdPartyNotices.txt ]
+    then
+        mkdir -p "$target/share/licenses/dotnet-sdk"
+        cp -a LICENSE.txt ThirdPartyNotices.txt "$target/share/licenses/dotnet-sdk/" 2>/dev/null
+    fi
+
+    local idx="${goboSystem:-/System}/Index/bin"
+    mkdir -p "$idx"
+    ln -sfn "$target/dotnet" "$idx/dotnet"
+}

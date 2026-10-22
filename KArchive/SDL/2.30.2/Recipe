@@ -1,0 +1,49 @@
+#!/bin/bash
+# Custom recipe for SDL 2.30.2 (autotools), replacing the base ISO's prebuilt
+# SDL 2.0.12 (which carries no recipe in this tree).
+#
+# Version bump required by the Plasma 6.7 desktop: plasma-desktop's
+# kcms/CMakeLists.txt only builds the Game Controller KCM when
+# `find_package(SDL2 2.0.16)` succeeds, but /System/Index/lib/cmake/SDL2 reports
+# 2.0.12, so the KCM is silently skipped on the base ISO. libSDL2-2.0.so.0 is
+# ABI-stable, so replacing 2.0.12 with 2.30.2 is transparent to every consumer
+# already on the ISO. Built BEFORE Plasma-Desktop 6.7.4 in step_plasma so the
+# configure-time gate sees SDL >= 2.0.16.
+#
+# file_size/file_md5 verified against the libsdl-org/SDL 2.30.2 release tarball.
+#
+# Force the four *lcp(y) functions OFF: the merged glibc 2.44-2 exports
+# strlcpy/strlcat/wcslcpy/wcslcat symbols (GLIBC_2.38) but its headers never
+# declare them, so SDL's configure LINT test sets HAVE_STRLCPY and the build
+# dies on GCC14's hard implicit-declaration errors (SDL_string.c). Overriding
+# the autoconf cache vars makes SDL use its own bundled implementations
+# (identical semantics), which is what it does on every other Unix without
+# those declarations.
+
+compile_version=017-GIT
+url="https://github.com/libsdl-org/SDL/releases/download/release-2.30.2/SDL2-2.30.2.tar.gz"
+file_size=7426565
+file_md5=08667937c83fada423dacc7cd90f3ec8
+dir='SDL2-2.30.2'
+recipe_type=configure
+
+configure_options=(
+    --disable-static
+    --disable-dependency-tracking
+    # The chroot's PipeWire 1.4.0 changed its node API to take `struct pw_node *`
+    # instead of the `struct pw_proxy *` that SDL 2.30.2's backend passes, so
+    # SDL_pipewire.c no longer compiles against the installed headers. The ISO
+    # uses PulseAudio; SDL's PipeWire backend isn't needed (the Game Controller
+    # KCM has no audio requirement).
+    --disable-pipewire
+)
+
+# Exported into the configure subshell by Compile before ./configure runs, so
+# autoconf's AC_CHECK_FUNCS honours the preseeded cache vars and leaves
+# HAVE_STRlCPY/HAVE_WCSlCPY unset -> SDL uses its bundled implementations.
+configure_variables=(
+    ac_cv_func_strlcpy=no
+    ac_cv_func_strlcat=no
+    ac_cv_func_wcslcpy=no
+    ac_cv_func_wcslcat=no
+)

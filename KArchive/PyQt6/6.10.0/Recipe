@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# PyQt6 6.10.0 for GoboLinux -- the modern binding the installer GUI is ported
+# to. qtwizard.py / GraphicalTail.py reach Qt through qtcompat.py, which
+# prefers PyQt6 and falls back to PyQt5, so this package is an upgrade path
+# rather than a hard requirement: the installer still works with PyQt5 alone.
+#
+# Version choice: 6.10.0, not the newest 6.11.x. PyQt6 minor versions track Qt
+# minor versions, and the CD already ships Qt 6.10.3 at /Programs/QtBase, so
+# 6.10.x is the release whose ABI matches the Qt already on the ISO. Verified
+# that QtBase 6.10.3 provides every library and plugin PyQt6 needs:
+#   libQt6Core.so.6, libQt6Gui.so.6, libQt6Widgets.so.6, libQt6DBus.so.6 and
+#   plugins/platforms/libqxcb.so, all reachable via /System/Index/lib.
+#
+# Why wheels, not a source build: same reasoning as the PyQt5 recipe -- the
+# abi3 wheel is a better artifact than an hour of sip + moc + uic work, and it
+# ships exactly the same API a source build would.
+#
+# Qt libraries: deliberately does NOT install the PyQt6-Qt6 wheel (84 MB of
+# bundled Qt 6.10.0). The CD's QtBase 6.10.3 already provides and exports them,
+# and a second private Qt6 would risk mixing with the KF6/Plasma apps that
+# link the system one.
+compile_version=017-GIT
+
+# Note on the -1- wheel: PyPI still lists an earlier
+# pyqt6-6.10.0-1-cp39-abi3 wheel. That suffix marks a rebuilt/replaced upload,
+# and the plain pyqt6-6.10.0 wheel is the final one. Use the plain one.
+urls=(
+   "https://files.pythonhosted.org/packages/00/31/e55f7b718df92423b5af3f0fe11e770e56d7576c03adc6b6866b0e8beb46/pyqt6-6.10.0-cp39-abi3-manylinux_2_34_x86_64.whl"
+   "https://files.pythonhosted.org/packages/16/5c/5a40e8015acfbe3437b93551cd6b3df2bcb0664e13b65d141395be828c36/pyqt6_sip-13.12.0-cp311-cp311-manylinux1_x86_64.manylinux_2_5_x86_64.whl"
+)
+file_sizes=(
+   39028922
+   290069
+)
+file_md5s=(
+   3b94ea04b3d6b7669acd8151ec839827
+   b1c43089646c4d849211be6f69841db6
+)
+
+# Zip, but nothing to unpack or patch -- pip installs from the archives.
+# uncompress=no stages both wheels verbatim in $sourcedir and defaults to
+# unpack_files=files_in_root so the two archives coexist.
+uncompress=no
+
+# recipe_type=python supplies the create_dirs_first flow (so $target exists
+# before the hook runs) plus python_sane_check. No setup.py in a wheel, so
+# pre_install drives pip and the framework's build/install bodies are disabled.
+recipe_type=python
+python_major=3.11
+do_build=no
+do_install=no
+
+# See the PyQt5 recipe for why these are spelled out: Compile runs each hook in
+# a separate generated script that exports only marked variables ($python and
+# $sitepackages are not among them) and does not define wrap_fail.
+pre_install() {
+    local py=python3.11
+    local sp="$target/lib/python3.11/site-packages"
+
+    # See the PyQt5 recipe: FetchArchive does file_sums=${file_md5s}, which
+    # collapses the array to element 0, so the 2nd wheel of a multi-URL recipe
+    # is size-checked only. Do the MD5 verification here instead, where the
+    # array indices are intact. Get_MD5 is available via ScriptFunctions/File.
+    local i got
+    for i in "${!urls[@]}"
+    do
+        local want="${file_md5s[$i]}"
+        [ -n "$want" ] || continue
+        local f="$sourcedir/$(basename "${urls[$i]}")"
+        [ -f "$f" ] || Exit_With 1 "Staged wheel missing: $f"
+        got="$(Get_MD5 "$f")"
+        [ "$got" = "$want" ] \
+            || Exit_With 1 "MD5 mismatch for $(basename "$f"): got $got, want $want"
+        Log_Verbose "MD5 OK: $(basename "$f")"
+    done
+
+    mkdir -p "$sp" || Exit_With 1 "Cannot create $sp"
+
+    # BOTH wheels in ONE pip call: with a shared --target, a second call makes
+    # pip uninstall the first distribution, deleting the shared PyQt6/ bindings
+    # and leaving only sip.*.so. Resolving the set together keeps both.
+    # --no-deps: skips PyQt6-Qt6 (see header) and keeps the pairing under our
+    # control.
+    local wheels=()
+    local wheel
+    for wheel in "$sourcedir"/*.whl
+    do
+        [ -f "$wheel" ] || continue
+        wheels+=("$wheel")
+    done
+    [ "${#wheels[@]}" -eq 2 ] \
+        || Exit_With 1 "Expected 2 wheels in $sourcedir, found ${#wheels[@]}"
+
+    Log_Normal "Installing ${#wheels[@]} wheels into $sp"
+    $py -m pip install --no-deps --no-compile --upgrade \
+        --target "$sp" "${wheels[@]}" \
+        || Exit_With 1 "pip install failed for: ${wheels[*]}"
+
+    [ -e "$sp/PyQt6/QtCore.abi3.so" ] \
+        || Exit_With 1 "PyQt6/QtCore.abi3.so missing after install"
+    [ -e "$sp/PyQt6/sip.cpython-311-x86_64-linux-gnu.so" ] \
+        || Exit_With 1 "cp311 sip runtime missing after install"
+
+    # Import verification with no DISPLAY: this proves the bindings load and
+    # bind to the CD's Qt 6.10.3. Opening a window is not needed (and cannot be
+    # checked from a build console anyway) -- the xcb plugin check below plus
+    # the VM test covers that half.
+    PYTHONPATH="$sp${PYTHONPATH:+:$PYTHONPATH}" $py -c \
+        'from PyQt6 import QtCore, QtGui, QtWidgets; print("PyQt6 OK", QtCore.PYQT_VERSION_STR, "on Qt", QtCore.QT_VERSION_STR)' \
+        || Exit_With 1 "PyQt6 import verification failed (are the Qt 6 libs reachable via /System/Index/lib?)"
+    [ -e /Programs/QtBase/6.10.3/plugins/platforms/libqxcb.so ] \
+        || Log_Normal "WARNING: libqxcb.so not found under /Programs/QtBase -- the GUI may fail to start on a live session"
+}
+
+# No post_install: Python 3.11 reads .pth only from its own
+# /Programs/Python/3.11.12/lib/python3.11/site-packages, so a .pth shipped in
+# this program's tree would never be seen (same reasoning as the PyQt5 recipe).
+# zfs48.sh writes the wiring .pth into the interpreter's tree on the ISO.

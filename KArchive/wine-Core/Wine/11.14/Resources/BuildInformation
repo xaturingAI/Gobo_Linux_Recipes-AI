@@ -1,0 +1,5 @@
+Kron4ek prebuilt vanilla Wine 11.14, monolithic bin/lib/share tree. The
+x86_64-windows/unix dirs hold the 32-bit Windows side (new WoW64), so no
+32-bit Unix libraries are needed. Glibc-32 is listed only defensively for
+third-party Windows apps that drop 32-bit PE bits outside Wine's dirs.
+Verify download against Kron4ek's sha256sums.txt (sha256 0c1082b9...).

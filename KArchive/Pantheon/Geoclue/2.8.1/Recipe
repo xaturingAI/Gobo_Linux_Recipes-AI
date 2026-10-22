@@ -1,0 +1,37 @@
+# Custom recipe for Geoclue 2.8.1 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Provides libgeoclue-2.0.pc and the
+# org.freedesktop.GeoClue2 D-Bus daemon, required by gnome-settings-daemon
+# 48.1 (and PantheonGeoclue2Agent). Only the base daemon + convenience
+# library are built: no ModemManager (3g/cdma/modem-gps), no Avahi (nmea),
+# no systemd units, no demo agent. Daemon runs as root (dbus-srv-user
+# default) so no dedicated user is needed on the ephemeral CD.
+#
+# Debian pool tarball (GNOME sources are Anubis-gated); orig = pristine.
+#
+# Build AFTER Libsoup3 + LibGudev and BEFORE GnomeSettingsDaemon.
+#
+# file_md5 verified against the Debian pool copy.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/geoclue-2.0/geoclue-2.0_2.8.1.orig.tar.bz2"
+file_size=113472
+file_md5=a195d5300540209afb728d057fb1dea7
+dir='geoclue-2.8.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dintrospection=false
+    -Dvapi=false
+    -Dgtk-doc=false
+    -D3g-source=false
+    -Dcdma-source=false
+    -Dmodem-gps-source=false
+    -Dnmea-source=false
+    -Dcompass=false
+    -Ddemo-agent=false
+    -Dsystemd-system-unit-dir=no
+    -Dlibgeoclue=true
+    -Denable-backend=true
+)

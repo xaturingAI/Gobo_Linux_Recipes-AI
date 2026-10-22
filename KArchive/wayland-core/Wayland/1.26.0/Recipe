@@ -1,0 +1,13 @@
+# Custom recipe for Wayland 1.26.0 (meson; docs disabled)
+# Sibling of 1.23.1: wayland-protocols 1.49's enum-header generation requires
+# a scanner whose DTD knows the 'frozen' attribute (wayland >= 1.24). ABI is
+# stable across this bump, so flipping Current is safe for the plasma stack.
+compile_version=2.0
+url="https://gitlab.freedesktop.org/wayland/wayland/-/releases/1.26.0/downloads/wayland-1.26.0.tar.xz"
+file_size=612384
+file_md5=64c593ccf6820635765a952ec5f34fbb
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    -Ddocumentation=false
+)

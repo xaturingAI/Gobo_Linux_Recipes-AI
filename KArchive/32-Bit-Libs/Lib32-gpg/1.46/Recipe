@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# 32-bit GnuPG/libgcrypt/GMP extracted from Debian i386 packages for Steam/Proton crypto.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libg/libgpg-error/libgpg-error0_1.46-1_i386.deb"
+url2="https://deb.debian.org/debian/pool/main/libg/libgcrypt20/libgcrypt20_1.10.1-3+deb12u1_i386.deb"
+url3="https://deb.debian.org/debian/pool/main/g/gmp/libgmp10_6.2.1+dfsg1-1.1_i386.deb"
+file_size=81736
+file_md5=4ed4b3f1ebfc84bfec419240c8ba3aba
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    for u in "$url" "$url2" "$url3"; do
+        local deb="$compileArchivesDir/$(basename $u)"
+        [ -f "$deb" ] || wget -q "$u" -O "$deb"
+        Log_Normal "Unpacking ${deb}"
+        ar p "$deb" data.tar.xz | tar xJf -
+    done
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a lib/i386-linux-gnu/libgpg-error.so.0* "$target"/lib32/ || Die "Failed copying libgpg-error."
+    cp -a usr/lib/i386-linux-gnu/libgcrypt.so.20* "$target"/lib32/ || Die "Failed copying libgcrypt."
+    cp -a usr/lib/i386-linux-gnu/libgmp.so.10* "$target"/lib32/ || Die "Failed copying libgmp."
+}

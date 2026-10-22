@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Intel Vulkan driver (Arch-style "vulkan-intel") - extracted from the official
+# Arch Linux package, mesa 25.3.5.
+#
+# WHY EXTRACTED, NOT BUILT: in this Gobo tree Mesa 25.3.6 is a single recipe
+# built with `-Dvulkan-drivers=[]` (Recipes/mesa-core/Mesa/25.3.6/Recipe), so it
+# produces the Intel *GL/gallium* driver (iris) but NO Intel Vulkan ICD at all.
+# On a real Intel laptop Vulkan then silently falls back to llvmpipe. Arch ships
+# the Intel Vulkan driver as a SPLIT package of its mesa build ("vulkan-intel"),
+# exactly the two files we need, so we reuse those bytes rather than rebuild all
+# of Mesa a second time just to split it. Version is pinned to 25.3.5 to match
+# our Mesa 25.3.x line (Arch's current 26.2.5 is a newer mesa series than the
+# tree ships).
+#
+# The package payload (verified 2026-10-19):
+#   usr/lib/libvulkan_intel.so                (22 MB, Gen9+ / plain "intel")
+#   usr/lib/libvulkan_intel_hasvk.so          (18 MB, Gen7/Gen8 "hasvk")
+#   usr/share/vulkan/icd.d/intel_icd.x86_64.json        -> api_version 1.4.328
+#   usr/share/vulkan/icd.d/intel_hasvk_icd.x86_64.json  -> api_version 1.3.328
+#   usr/share/licenses/vulkan-intel/license.rst
+#
+# The two ICD JSONs carry an ABSOLUTE library_path ("/usr/lib/libvulkan_intel.so"),
+# so they only resolve once /usr/lib/libvulkan_intel.so is reachable. As with the
+# NVIDIA ICDs, we rewrite them to the program-absolute path
+# /Programs/Vulkan-Intel/Current/lib/libvulkan_intel.so{,hasvk} so the loader
+# (and Proton's bwrap sandbox) always finds THIS program's copy.
+#
+# Dependency closure of libvulkan_intel.so (readelf NEEDED), all already present
+# in the build tree: libdrm.so.2, libz.so.1, libzstd.so.1, libxcb.so.1,
+# libX11-xcb.so.1, libxcb-{dri3,present,xfixes,sync,randr,shm,keysyms},
+# libxshmfence.so.1, libwayland-client.so.0, libdisplay-info.so.3, libudev.so.1,
+# libexpat.so.1, libSPIRV-Tools.so, libstdc++.so.6, libm/libgcc_s/libc.
+
+compile_version=017-GIT
+url="https://archive.archlinux.org/packages/v/vulkan-intel/vulkan-intel-1:25.3.5-1-x86_64.pkg.tar.zst"
+file_size=4649334
+file_md5=bdf1c5f5595d968e45e05004d733eda5
+file="vulkan-intel-25.3.5-1-x86_64.pkg.tar.zst"
+recipe_type=manifest
+uncompress=no
+
+# Registration data that lands under /usr/share/vulkan via unmanaged_files.
+unmanaged_files=(
+    "usr/share/vulkan/icd.d/intel_icd.x86_64.json"
+    "usr/share/vulkan/icd.d/intel_hasvk_icd.x86_64.json"
+)
+
+pre_install() {
+    # The .pkg.tar.zst is fetched into compileArchivesDir (uncompress=no); unpack
+    # it here into CWD. The downloaded archive is stored under the epoch-stripped
+    # $file name (the URL basename carries the Arch epoch "1:"), so read $file
+    # directly rather than re-deriving it from $url. GNU tar 1.32 on the base ISO
+    # is not guaranteed to be libzstd-aware, so pipe explicitly through the zstd
+    # CLI (Zstd 1.4.4 ships as /usr/bin/zstd in the tree).
+    local pkg="$compileArchivesDir/$file"
+    Log_Normal "Unpacking ${pkg}"
+    zstd -d -c "$pkg" | tar xf - || Die "Failed to unpack the vulkan-intel package."
+}
+
+do_install() {
+    # The Intel Vulkan ICD libraries.
+    mkdir -p "$target"/lib
+    cp -a usr/lib/libvulkan_intel.so usr/lib/libvulkan_intel_hasvk.so \
+          "$target"/lib/ || Die "Failed copying Intel Vulkan ICD libraries."
+
+    # ICD JSON registration, rewritten to the program-absolute library path so
+    # the loader resolves THIS program's libs (mirrors the Nvidia-Utils ICD
+    # handling; also makes the JSON valid inside Proton's bwrap sandbox).
+    local share="$target/Resources/Unmanaged/usr/share/vulkan/icd.d"
+    mkdir -p "$share"
+    sed 's|"/usr/lib/libvulkan_intel.so"|"/Programs/Vulkan-Intel/Current/lib/libvulkan_intel.so"|' \
+        usr/share/vulkan/icd.d/intel_icd.x86_64.json > "$share"/intel_icd.x86_64.json
+    sed 's|"/usr/lib/libvulkan_intel_hasvk.so"|"/Programs/Vulkan-Intel/Current/lib/libvulkan_intel_hasvk.so"|' \
+        usr/share/vulkan/icd.d/intel_hasvk_icd.x86_64.json > "$share"/intel_hasvk_icd.x86_64.json
+
+    # License.
+    mkdir -p "$target"/Resources/Unmanaged/usr/share/licenses/vulkan-intel
+    cp -a usr/share/licenses/vulkan-intel/license.rst \
+          "$target"/Resources/Unmanaged/usr/share/licenses/vulkan-intel/ 2>/dev/null || true
+}
+
+post_install() {
+    # The ICDs are dlopen()ed by soname, so make the unversioned names point at
+    # the versioned files (they ship as bare .so already, but pin defensively).
+    local d
+    for d in lib; do
+        [ -e "$target/$d/libvulkan_intel.so" ] || continue
+    done
+    return 0
+}
+
+post_install_message="
+Intel Vulkan driver (vulkan-intel, mesa 25.3.5) installed to /Programs/Vulkan-Intel.
+- /Programs/Vulkan-Intel/Current/lib/libvulkan_intel.so        (Gen9+ iGPU)
+- /Programs/Vulkan-Intel/Current/lib/libvulkan_intel_hasvk.so  (Gen7/Gen8 iGPU)
+- ICDs registered in /usr/share/vulkan/icd.d/ with program-absolute paths:
+    intel_icd.x86_64.json, intel_hasvk_icd.x86_64.json
+Verify with:  vulkaninfo --summary   (ICD should be 'Intel open-source Mesa driver').
+"

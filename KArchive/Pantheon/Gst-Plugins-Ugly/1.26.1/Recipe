@@ -1,0 +1,56 @@
+# Custom recipe for GStreamer Plugins Ugly 1.26.1 (meson)
+#
+# Part of the Pantheon stack port (media tier). Sits on top of gst-plugins-base
+# and gst-plugins-good (both 1.26.1) and provides the legacy/patent encumbered
+# demuxers that kdialog's file chooser and Qt's QFileDialog preview probe for
+# when building/invoking SDDM's KCM (theme preview thumbnails).
+#
+# Enabled here (all in-tree / gst-plugins-base only, no external libs):
+#   - asfdemux      Windows Media ASF demuxer
+#   - dvdlpcmdec    DVD audio (LPCM) decoder
+#   - dvdsub        DVD subtitle decoder (needed by QtMultimedia/ffmpeg prober)
+#   - realmedia     RealMedia/RealAudio demuxer
+#
+# Explicitly disabled because the dependency is absent from this ISO:
+#   - x264, x264_libraries, gpl  -> no libx264 in the chroot, and the whole
+#     point of these is GPL/x264-linked encoders we must not ship.
+#   - cdio, dvdread              -> need libcdio / libdvdread (absent).
+#   - sidplay                     -> needs libsidplay2 (absent).
+#   - a52dec                      -> needs liba52 (absent, and GPL).
+#   - mpeg2dec                    -> ext/mpeg2dec/meson.build does
+#     dependency('libmpeg2', version: '>= 0.4.0') against the SYSTEM libmpeg2;
+#     the plugin ships no bundled decoder and the ISO has no libmpeg2, so
+#     enabling it aborts the whole meson setup. (MPEG-2 video still decodes
+#     through gst-libav, which is built from the ISO's FFmpeg.)
+#
+# Tests/examples/doc/nls off, shared libs only.
+#
+# file_md5 + file_size verified against the gstreamer.freedesktop.org tarball.
+
+compile_version=017-GIT
+url="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.26.1.tar.xz"
+file_size=219112
+file_md5=323190595d918a5a26729e89848af1ea
+dir='gst-plugins-ugly-1.26.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dorc=enabled"
+    "-Dasfdemux=enabled"
+    "-Ddvdlpcmdec=enabled"
+    "-Ddvdsub=enabled"
+    "-Drealmedia=enabled"
+    "-Dmpeg2dec=disabled"
+    "-Dx264=disabled"
+    "-Dx264_libraries=disabled"
+    "-Dgpl=disabled"
+    "-Dcdio=disabled"
+    "-Ddvdread=disabled"
+    "-Dsidplay=disabled"
+    "-Da52dec=disabled"
+    "-Dtests=disabled"
+    "-Ddoc=disabled"
+    "-Dnls=disabled"
+    "-Ddefault_library=shared"
+)

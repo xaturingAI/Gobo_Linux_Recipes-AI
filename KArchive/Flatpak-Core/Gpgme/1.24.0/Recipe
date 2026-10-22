@@ -1,0 +1,46 @@
+# Custom recipe for Gpgme 1.24.0 (autotools)
+#
+# Part of the Pantheon stack port (flatpak tier). GnuPG Made Easy -- crypto
+# wrapper API used by libostree/flatpak for signed commits. Needs
+# libgpg-error (built right before, >= 1.47) + libassuan (ISO).
+#
+# GPGRT_ENABLE_ES_MACROS: libgpg-error 1.52's merged gpg-error.h/gpgrt.h
+# typedefs `estream_t` ONLY under this macro, yet gpg-error.h:1727+
+# (gpgrt_nvc_parse/nvc_write) use estream_t unconditionally. The ISO's
+# assuan.h 2.5.3 does `#include <gpg-error.h>` without defining it, so
+# gpgme-tool.o dies with "unknown type name 'estream_t'". Defining the
+# macro restores the typedef; gpgme bundles no conflicting estream_t
+# (only gpgme-json.c references it). Env CPPFLAGS propagates into every
+# automake compile command.
+#
+# Tests need real gpg binaries and are disabled.
+#
+# --enable-languages= (empty): build ONLY the C core libgpgme. The C++
+# bindings' install-time libtool relink (libgpgmepp) dies because the ISO's
+# GCC 14.2.0 tree is missing crti.o/crtn.o in /Programs/GCC/14.2.0/lib/
+# (base-ISO defect; only the gcc/ subdir shipped). No consumer in the
+# pantheon stack uses gpgmepp/gpgme-qt -- libostree/flatpak use the C API.
+# The C library's own relink/install succeeded (src/ installs before lang/).
+# --without-python and --disable-doc are unrecognized by gpgme 1.24
+# (harmless: python binding auto-disabled, docs build with ISO makeinfo).
+#
+# file_md5 + file_size verified against gnupg.org tarball.
+
+compile_version=017-GIT
+url="https://www.gnupg.org/ftp/gcrypt/gpgme/gpgme-1.24.0.tar.bz2"
+file_size=1889410
+file_md5=b1089097da4cd0520e3fee850f5fcbff
+dir='gpgme-1.24.0'
+recipe_type=configure
+
+configure_options=(
+    --disable-doc
+    --disable-gpg-test
+    --disable-gpgsm-test
+    --disable-gpgconf-test
+    --disable-g13-test
+    --without-python
+    --enable-languages=
+)
+
+export CPPFLAGS="$CPPFLAGS -DGPGRT_ENABLE_ES_MACROS"

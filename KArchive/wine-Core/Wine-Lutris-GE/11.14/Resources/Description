@@ -1,0 +1,5 @@
+[Name] Wine-Lutris-GE
+[Summary] Kron4ek prebuilt Wine 11.14 staging, the lutris-GE-style build
+[License] LGPL-2.1
+[Description] Staging flavour of Wine 11.14 (Kron4ek's 'wine-11.14-staging-amd64' release) shipped as the Wine-Lutris-GE program so Lutris can run non-Steam games. Staging applies upstream performance patches not in vanilla. wine-mono 11.2.0 and wine-gecko 2.47.4 MSIs are baked into share/wine/{mono,gecko}. Merges after Wine (alphabetical) so its bin/ overwrites the vanilla symlinks. Glibc-32 is listed defensively; the binaries themselves need only glibc 2.14/2.17.
+[Homepage] https://www.winehq.org

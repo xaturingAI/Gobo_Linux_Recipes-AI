@@ -1,0 +1,4 @@
+[Name] EGLExternalPlatform
+[Summary] EGL_EXT_external_platform interface headers and pkg-config file (needed by EGL-Wayland)
+[License] MIT
+[Homepage] https://github.com/NVIDIA/eglexternalplatform

@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# elogind: logind daemon for the sysvinit-based LiveCD
+#
+# Started from the Gobo BootUp script via:  Elogind Start
+#
+# NOTE: the daemon binary lives in libexec/ (NOT bin/), so it is not on
+# PATH, and its process name is "elogind-daemon" -- never pgrep/killall
+# for plain "elogind".
+#
+source GoboPath
+
+op="$1"
+[ "$op" ] || op="start"
+
+ELG="$(readlink -f /Programs/Elogind/Current)/libexec/elogind"
+
+case "$op" in
+[Ss]tart)
+    mkdir -p /run/elogind
+    rm -f /run/elogind.pid
+    pgrep -f "$ELG" >/dev/null || "$ELG" --daemon
+    ;;
+[Ss]top)
+    pkill -f "$ELG" 2>/dev/null
+    ;;
+esac

@@ -1,0 +1,33 @@
+NVIDIA proprietary graphics driver 615.71.09 (R615 driver branch) for the
+Gaming Live CD.
+
+Scope after the true Arch-style split (this same .run is also unpacked by
+Nvidia-Utils, and later by Lib32-Nvidia-Utils / Nvidia-Settings):
+
+- Kernel modules built against the Linux 7.2.5 kernel that ships on the CD:
+  nvidia, nvidia-modeset, nvidia-drm, nvidia-uvm, nvidia-peermem, installed
+  into /Programs/Linux/Current/lib/modules/<release>/kernel/drivers/video so
+  they appear under /lib/modules on the CD.
+- The Xorg DDX: nvidia_drv.so and libglxserver_nvidia.so.615.71.09.
+- The GSP + ucode firmware blobs, installed to
+  /lib/firmware/nvidia/615.71.09/ (they ship here permanently: a separate
+  linux-firmware-nvidia package would do nothing but re-copy these four files
+  from this same .run).
+- Transitionally: the nvidia-settings binary + .desktop + icon. This moves to
+  its own recipe (Nvidia-Settings) as the split is completed.
+
+The userspace libraries, command-line tools, Vulkan ICDs, glvnd EGL vendor
+JSONs, OpenCL ICD, udev rule, modprobe blacklist and Xorg OutputClass are
+shipped by Recipes/Nvidia/Nvidia-Utils.
+
+Install notes:
+- The kernel modules are compiled during the recipe build against
+  /Programs/Linux/Current/lib/modules/<release>/build, so the Linux package
+  must be installed on the build system first (step order: linux, then nvidia).
+- 615.71.09 needs NO source patches on Linux 7.2.5: NVIDIA's own conftest
+  detects the drm_atomic_state -> drm_atomic_commit rename (Linux v7.2) and
+  the CRTC/plane atomic_check argument change, and the strscpy conversion is
+  already done upstream. (580.159.04 needed three sed patches; do not copy
+  them here.)
+- depmod must run inside the chroot; running `depmod -b <rootfs>` from the
+  host destroys the chroot-absolute symlinks under /System/Index/lib/modules.

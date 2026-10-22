@@ -1,0 +1,17 @@
+# Custom recipe for SwayBg 1.2.2 (meson)
+# Sway's wallpaper daemon: layers the background image behind the compositor
+# via the wlr layer-shell protocol (XML vendored in-tree). Needs only
+# wayland-client + wayland-protocols + cairo (+ gdk-pixbuf for image formats,
+# scdoc for the man page). -Dwerror=false: strict warnings break old
+# sway-ecosystem code on GCC 14 (same as the Sway 1.7 recipe).
+compile_version=017-GIT
+url="https://github.com/swaywm/swaybg/releases/download/v1.2.2/swaybg-1.2.2.tar.gz"
+file_size=17164
+file_md5=ac79822e449597d8d87aba36c6006de7
+dir='swaybg-1.2.2'
+recipe_type=meson
+meson_variables=(
+    -Dwerror=false
+    -Dgdk-pixbuf=enabled
+    -Dman-pages=enabled
+)

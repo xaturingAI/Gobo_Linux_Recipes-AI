@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# PyGObject 3.44.1 for GoboLinux, built against Python 3.11 (the CD's new main
+# interpreter). Provides the gi module (GObject/GTK introspection bindings)
+# that Lutris requires. -Dpycairo=enabled builds the gi.cairo integration
+# ('pycairo' is a meson FEATURE option: enabled/disabled/auto, NOT a boolean --
+# -Dpycairo=true fails meson setup with "Value 'true' is not one of the
+# choices"); -Dtests=false skips the test suite (not needed at runtime).
+#
+# Build needs gobject-introspection (g-ir-scanner/g-ir-compiler +
+# gobject-introspection-1.0.pc, present on the ISO), GLib >= 2.56 (ISO ships
+# 2.63.5), cairo dev and python3.11. Install emits
+# PyGObject-3.44.1-py3.11.egg-info so Lutris's install_requires finds it
+# satisfied (no PyPI fetch during its setup.py install).
+compile_version=017-GIT
+url="https://download.gnome.org/sources/pygobject/3.44/pygobject-3.44.1.tar.xz"
+file_size=559432
+file_md5=def9418983594c6a3330717bb640ca4d
+dir='pygobject-3.44.1'
+recipe_type=meson
+meson_variables=(
+    --buildtype=release
+    -Dpython=python3.11
+    -Dpycairo=enabled
+    -Dtests=false
+)

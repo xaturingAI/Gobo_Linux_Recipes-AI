@@ -1,0 +1,23 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/gst-plugins-base1.0/libgstreamer-plugins-base1.0-0_1.22.0-3+deb12u6_i386.deb"
+file_size=968596
+file_md5=1acbffcddf640ff4f808084c22568892
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libgstvideo-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gst-plugins-base video."
+    cp -a usr/lib/i386-linux-gnu/libgstaudio-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gst-plugins-base audio."
+    cp -a usr/lib/i386-linux-gnu/libgstpbutils-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gst-plugins-base pbutils."
+    cp -a usr/lib/i386-linux-gnu/libgsttag-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gst-plugins-base tag."
+    cp -a usr/lib/i386-linux-gnu/libgstapp-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gst-plugins-base app."
+}

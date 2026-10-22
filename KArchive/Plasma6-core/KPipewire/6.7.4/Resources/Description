@@ -1,0 +1,5 @@
+[Name] kpipewire
+[Summary] Plasma 6 PipeWire screen capture
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/kpipewire
+[Description] Plasma 6 PipeWire-based screen capture and sharing (screen recording, screencast portal).

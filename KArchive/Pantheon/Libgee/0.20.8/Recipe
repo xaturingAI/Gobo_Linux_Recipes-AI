@@ -1,0 +1,40 @@
+# Custom recipe for Libgee 0.20.8 (elementary OS 8 era; autotools)
+#
+# Part of the Pantheon desktop stack port. Source: https://download.gnome.org/sources/libgee/0.20/libgee-0.20.8.tar.xz
+# NOTE: 0.20.8 ships NO meson.build -- it is a classic autotools project, so
+# this is recipe_type=configure with configure_options (not meson).
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libgee/0.20/libgee-0.20.8.tar.xz"
+file_size=692112
+file_md5=e8e37df1c7a93aa5ba08be12ae7e7cad
+dir='libgee-0.20.8'
+recipe_type=configure
+
+# The ISO ships an index directory-symlink /usr/include/gee-0.8 ->
+# /Programs/Libgee/0.20.8/include/gee-0.8. During install Gobo's
+# Pre_Installation_Preparation empties the old program (keeping only a
+# -safelinking copy), so inside the union sandbox this index symlink DANGLES
+# (the sandbox sees the original ISO link, not the re-pointed one) exactly
+# while install-geeincludeHEADERS runs 'mkdir -p $(DESTDIR)$(geeincludedir)'
+# through it -- coreutils 8.31 errors with "File exists" on a dangling symlink
+# leaf even with -p, failing the install. (A pre_install rm -f on the real
+# filesystem does NOT help: the sandbox's overlay ro-layer still shows the
+# dangling link.)
+#
+# We neutralize the generated install target itself (same approach as the
+# LibCanberra 0.30 recipe): prepend 'rm -rf $(DESTDIR)$(geeincludedir)' so the
+# sandboxed make drops the link (SymlinkProgram regenerates the index links
+# after install) and the mkdir creates a fresh directory. The Makefile is
+# re-unpacked fresh each compile, so the guard is just belt-and-suspenders.
+pre_install() {
+    if ! grep -qF 'rm -rf "$(DESTDIR)$(geeincludedir)"' gee/Makefile
+    then
+        perl -i -pe 'if (/^\s*\$\(MKDIR_P\) "\$\(DESTDIR\)\$\(geeincludedir\)"/) { print "\t  rm -rf \"\$(DESTDIR)\$(geeincludedir)\" || exit 1; \\\n"; }' gee/Makefile
+    fi
+}
+
+configure_options=(
+    --disable-doc
+    --enable-introspection
+)

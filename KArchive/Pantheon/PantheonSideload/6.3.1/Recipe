@@ -1,0 +1,15 @@
+# Custom recipe for PantheonSideload 6.3.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/sideload/archive/refs/tags/6.3.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/sideload/archive/refs/tags/6.3.1.tar.gz"
+file_size=305797
+file_md5=abe9fdb143432910aeaf06eda341085a
+dir='sideload-6.3.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

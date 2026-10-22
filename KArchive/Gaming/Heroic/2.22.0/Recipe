@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Heroic Games Launcher 2.22.0 for GoboLinux, packaged from the official
+# Linux x64 tarball (portable Electron build). The entire dist tree goes to
+# lib/heroic/ and a small wrapper in bin/ starts the bundled Electron binary
+# with --no-sandbox (the chrome-sandbox helper cannot be setuid on a Live CD;
+# the CD is ephemeral, so the reduced sandbox is acceptable).
+#
+# Runtime deps: all shared objects shipped by the ISO's Electron runtime
+# except libXss.so.1 (see LibXScrnSaver). The bundled libvulkan.so.1 is used
+# when no system Vulkan loader is available; on this CD the ISO's own
+# Vulkan-Loader is preferred via rpath/ld.so.
+#
+# Windows games launched through Heroic are run by Wine/Wine-Lutris-GE with
+# DXVK/Vkd3d-Proton set per-prefix from /Programs/.../lib/{dxvk,vkd3d}.
+compile_version=017-GIT
+url="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.22.0/Heroic-2.22.0-linux-x64.tar.xz"
+file_size=128256032
+file_md5=e42a1af29e5ca2d65e2b3387f357456d
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+unmanaged_files=(
+    usr/share/applications/heroic.desktop
+    usr/share/pixmaps/heroic.png
+)
+
+manifest=(
+    "Heroic-2.22.0-linux-x64:lib/heroic"
+    "heroic:bin/heroic"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    tar xJf "$tarball"
+
+    # Keep the real Electron binary under its own name; 'heroic' becomes the wrapper.
+    mv "Heroic-2.22.0-linux-x64/heroic" "Heroic-2.22.0-linux-x64/heroic-bin"
+
+    cat > heroic <<'EOF'
+#!/bin/bash
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+exec "$DIR/lib/heroic/heroic-bin" --no-sandbox "$@"
+EOF
+    chmod +x heroic
+
+    # Desktop entry + icon (Electron apps need a pixmap icon for the launcher).
+    mkdir -p usr/share/applications usr/share/pixmaps
+    cp -a "Heroic-2.22.0-linux-x64/resources/app.asar.unpacked/build/icon.png" usr/share/pixmaps/heroic.png
+    cat > usr/share/applications/heroic.desktop <<'EOF'
+[Desktop Entry]
+Name=Heroic Games Launcher
+Comment=Games launcher for GOG, Epic Games and Amazon Games
+Exec=heroic
+Icon=heroic
+Terminal=false
+Type=Application
+Categories=Game;Network;
+EOF
+}

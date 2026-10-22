@@ -1,0 +1,5 @@
+[Name] plasma-integration
+[Summary] Plasma 6 Qt platform integration
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/plasma-integration
+[Description] Plasma 6 Qt platform integration: file dialogs, color scheme, cursor, XDG portal theming.

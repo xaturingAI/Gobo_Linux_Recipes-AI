@@ -1,0 +1,65 @@
+# Custom recipe for EGL-Wayland 1.1.9 (meson)
+# NVIDIA's EGL stream/wayland platform extension. The 10_nvidia_wayland.json
+# platform file (in this recipe dir) is installed by pre_link so that the
+# Nvidia EGL loader picks up libnvidia-egl-wayland.so.1.
+# Based on the upstream gobo-recipes recipe (pre_link cleaned up).
+compile_version=017-GIT
+url="https://github.com/NVIDIA/egl-wayland/archive/refs/tags/1.1.9.tar.gz"
+file="egl-wayland-1.1.9.tar.gz"
+file_size=57069
+file_md5=a875c06a39891297d26ff5eea82cf0a7
+dir='egl-wayland-1.1.9'
+recipe_type=meson
+
+pre_build() {
+    # The ISO's EGL headers (libglvnd 1.2.0 eglext.h + Mesa 19.3.3 eglmesaext.h,
+    # both 2020-era) predate several extensions egl-wayland's code uses:
+    #   EGL_NV_stream_consumer_eglimage   (Mesa 21.3+/Khronos) - typedefs + tokens
+    #   EGL_EXT_device_drm_render_node    (registry 2022)      - EGL_DRM_RENDER_NODE_FILE_EXT
+    # so patch the build-chroot's eglext.h idempotently, one guard per extension
+    # (the header may already hold a subset from an earlier run). Build-time only:
+    # the compiled libnvidia-egl-wayland.so.1 carries nothing from the headers, and
+    # the ISO's rootfs is rebuilt from the reference ISO + packages, so this never ships.
+    local eglext=/System/Index/include/EGL/eglext.h
+    if grep -q "EGL_NV_stream_consumer_eglimage" "$eglext"
+    then Log_Normal "eglext.h already has EGL_NV_stream_consumer_eglimage"
+    else
+        Log_Normal "Patching $eglext: adding EGL_NV_stream_consumer_eglimage"
+        cat >> "$eglext" <<'EOF'
+
+#ifndef EGL_NV_stream_consumer_eglimage
+#define EGL_NV_stream_consumer_eglimage 1
+#define EGL_STREAM_CONSUMER_IMAGE_NV       0x3373
+#define EGL_STREAM_IMAGE_ADD_NV            0x3374
+#define EGL_STREAM_IMAGE_REMOVE_NV         0x3375
+#define EGL_STREAM_IMAGE_AVAILABLE_NV      0x3376
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMIMAGECONSUMERCONNECTNVPROC) (EGLDisplay dpy, EGLStreamKHR stream, EGLint num_modifiers, const EGLuint64KHR *modifiers, const EGLAttrib *attrib_list);
+typedef EGLint (EGLAPIENTRYP PFNEGLQUERYSTREAMCONSUMEREVENTNVPROC) (EGLDisplay dpy, EGLStreamKHR stream, EGLTime timeout, EGLenum *event, EGLAttrib *aux);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMACQUIREIMAGENVPROC) (EGLDisplay dpy, EGLStreamKHR stream, EGLImage *pImage, EGLSync sync);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMRELEASEIMAGENVPROC) (EGLDisplay dpy, EGLStreamKHR stream, EGLImage image, EGLSync sync);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglStreamImageConsumerConnectNV (EGLDisplay dpy, EGLStreamKHR stream, EGLint num_modifiers, const EGLuint64KHR *modifiers, const EGLAttrib *attrib_list);
+EGLAPI EGLint EGLAPIENTRY eglQueryStreamConsumerEventNV (EGLDisplay dpy, EGLStreamKHR stream, EGLTime timeout, EGLenum *event, EGLAttrib *aux);
+EGLAPI EGLBoolean EGLAPIENTRY eglStreamAcquireImageNV (EGLDisplay dpy, EGLStreamKHR stream, EGLImage *pImage, EGLSync sync);
+EGLAPI EGLBoolean EGLAPIENTRY eglStreamReleaseImageNV (EGLDisplay dpy, EGLStreamKHR stream, EGLImage image, EGLSync sync);
+#endif
+#endif /* EGL_NV_stream_consumer_eglimage */
+EOF
+    fi
+    if grep -q "EGL_EXT_device_drm_render_node" "$eglext"
+    then Log_Normal "eglext.h already has EGL_EXT_device_drm_render_node"
+    else
+        Log_Normal "Patching $eglext: adding EGL_EXT_device_drm_render_node"
+        cat >> "$eglext" <<'EOF'
+
+#ifndef EGL_EXT_device_drm_render_node
+#define EGL_EXT_device_drm_render_node 1
+#define EGL_DRM_RENDER_NODE_FILE_EXT       0x3377
+#endif /* EGL_EXT_device_drm_render_node */
+EOF
+    fi
+}
+
+pre_link() {
+    install -Dt "$target/share/egl/egl_external_platform.d" -m644 "$recipedir/10_nvidia_wayland.json"
+}

@@ -1,0 +1,5 @@
+[Name] KXmlGui
+[Summary] KDE Frameworks 6 XML GUI framework
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kxmlgui
+[Description] KDE Frameworks 6 Tier 2: XML-based GUI framework (toolbars, menus, shortcuts). Core of KDE apps.

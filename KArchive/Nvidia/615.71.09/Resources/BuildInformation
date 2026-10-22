@@ -1,0 +1,50 @@
+# Build source: NVIDIA-Linux-x86_64-615.71.09.run
+url="https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/NVIDIA-Linux-x86_64-615.71.09.run"
+file_size=529618784
+file_md5=82ed972f937bf7324542a163272b6d11
+branch=R615
+last_modified=2026-09-09
+
+# How file_size/file_md5 were obtained (verified 2026-10-19):
+# - file_size: HTTP Content-Length of the .run from download.nvidia.com, then
+#   re-checked against the local download (stat -c %s == 529618784).
+# - file_md5: computed locally, because NVIDIA publishes NO checksum for the
+#   .run (NVIDIA-Linux-x86_64-615.71.09.run.md5 / .sha256 / sha256sums.txt
+#   all return 404 on download.nvidia.com).
+# - the archive header's own MD5= field (44835e31fec39b9ffbe44603d936fc00) is
+#   the CRC of the PAYLOAD only, not of the .run, so it must not be used as
+#   file_md5.
+
+# Payload facts this recipe depends on (from a full -x extraction):
+#   firmware/gsp_ga10x.bin          gsp_tu10x.bin
+#   firmware/ucodes_ga10x.bin       ucodes_tu10x.bin      (new in 615)
+#   libnvidia-egl-wayland.so.1.1.20    libnvidia-egl-wayland2.so.1.0.2
+#   libnvidia-egl-gbm.so.1.1.3         libnvidia-egl-xcb.so.1.0.6
+#   libnvidia-egl-xlib.so.1.0.6        libnvidia-wayland-client.so.615.71.09
+#   09_nvidia_wayland2.json  10_nvidia.json  10_nvidia_wayland.json
+#   15_nvidia_gbm.json  20_nvidia_xcb.json  20_nvidia_xlib.json
+#   nvidia_icd.json  nvidia_icd_vksc.json  nvidia_layers.json  nvidia.icd
+#   nvidia_drv.so  libglxserver_nvidia.so.615.71.09
+#   nvidia-application-profiles-615.71.09-{rc,key-documentation}
+#   kernel/  (proprietary module sources) + kernel-open/ (open sources)
+#   kernel/Makefile: `module: modules` compatibility target + SYSSRC support
+#   36 files under 32/ (32-bit counterparts, incl. the EGL platforms)
+
+# Kernel-API compatibility with Linux 7.2.5 (verified against the installed
+# kernel headers + the 615 sources, 2026-10-19):
+#   - kernel 7.2.5 include/drm/drm_atomic.h defines ONLY struct drm_atomic_commit
+#     (struct drm_atomic_state is gone from the tree);
+#   - 615 conftest.sh:5490-5503 probe `drm_atomic_commit_struct_present`
+#     (comment cites Linux commit 5164f7e7ff8e, expected in v7.2) and emit
+#     NV_DRM_ATOMIC_COMMIT_STRUCT_PRESENT;
+#   - kernel/nvidia-drm/nvidia-drm-helper.h:141-147 uses it to typedef
+#     nv_drm_atomic_state_base_t to the right struct;
+#   - conftest.sh:3249 / :3425 probe the CRTC/plane atomic_check argument;
+#   - zero strncpy() call sites remain anywhere in kernel/, so the 580-era
+#     strscpy rewrite has nothing to patch.
+# => 615.71.09 builds unpatched; the three 580.159.04 sed patches are NOT
+#    carried over. Applying the drm_atomic_state rename mechanically would
+#    break the nv_drm_atomic_state_base_* helper family.
+
+# Version history for this file:
+# - created for 615.71.09 (replacing the 580.159.04 recipe's kernel patches)

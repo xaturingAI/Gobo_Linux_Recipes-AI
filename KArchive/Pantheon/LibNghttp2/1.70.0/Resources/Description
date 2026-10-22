@@ -1,0 +1,5 @@
+[Name] LibNghttp2
+[Summary] nghttp2 HTTP/2 library
+[License] MIT
+[Homepage] https://github.com/nghttp2/nghttp2
+[Description] Core libnghttp2 required by libsoup3 3.6.6.

@@ -1,0 +1,20 @@
+# Custom recipe for Extra-CMake-Modules 6.26.0 (cmake)
+# KF6 6.26.0 frameworks do find_package(ECM 6.26.0 REQUIRED) at configure time;
+# the ISO's 5.115.0 (Qt5/SDDM-era) is too old. Pure cmake modules, no Qt.
+# Sibling version inside the same Extra-CMake-Modules program, so the Current
+# symlink flips to 6.26.0 once packaged and CMake finds /System/Index/share/ECM.
+compile_version=017-GIT
+url="https://download.kde.org/stable/frameworks/6.26/extra-cmake-modules-6.26.0.tar.xz"
+file_size=338180
+file_md5=05432f3fcbc3ee0de5765413f5c8b436
+dir='extra-cmake-modules-6.26.0'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_PREFIX_PATH=/System/Index
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DCMAKE_SKIP_RPATH=True
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+)

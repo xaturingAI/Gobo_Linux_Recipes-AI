@@ -1,0 +1,19 @@
+# Custom recipe for dconf 0.40.0 (meson)
+#
+# Part of the Pantheon stack port. IBus 1.5.29 hard-requires dconf
+# (configure --enable-dconf); nothing else in the stack uses it yet.
+# GoboLinux runs sysvinit: meson only queries systemd (required:false) to
+# locate a user unit dir when systemduserunitdir='' and skips cleanly when
+# systemd is absent, so no override is needed here.
+compile_version=017-GIT
+url="https://download.gnome.org/sources/dconf/0.40/dconf-0.40.0.tar.xz"
+file_size=117764
+file_md5=ac8db20b0d6b996d4bbbeb96463d01f0
+dir='dconf-0.40.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dbash_completion=false"
+    "-Dman=false"
+)

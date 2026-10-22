@@ -1,0 +1,5 @@
+[Name] qtwayland
+[Summary] Qt 6 Wayland platform integration
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Qt 6 Wayland QPA plugin and client/server helper libraries. Essential for Wayland-first Plasma session.

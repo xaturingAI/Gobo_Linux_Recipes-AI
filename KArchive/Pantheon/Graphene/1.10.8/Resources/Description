@@ -1,0 +1,5 @@
+[Name] Graphene
+[Summary] Thin layer of graphic data types (libgraphene)
+[Description] Graphene is the lightweight graphic data-type library used by GTK4 and Mutter. Bumped to 1.10.x for the GNOME 48 stack. The ISO doesn't ship it. Build AFTER GLib 2.84 and BEFORE GTK 4.18 + Mutter. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] MIT
+[Homepage] https://gitlab.gnome.org/Projects/Graphene

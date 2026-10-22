@@ -1,0 +1,60 @@
+# Custom recipe for GNU BinUtils 2.43.1 (autotools)
+#
+# WHY THIS EXISTS
+# ---------------
+# glibc 2.44-2 (the Debian libc6 runtime overlaid by Recipes/Glibc) ships a
+# libc.so.6 whose dynamic relocations live in a .relr.dyn section -- SHF/SHT
+# type 0x13 (SHT_RELR), the compact relative-relocation format. Support for
+# SHT_RELR was only added to GNU BinUtils in 2.38 (2022). The base ISO ships
+# BinUtils 2.33.1, whose ld.bfd AND ld.gold (hard-linked: the same binary
+# object) both predate it, so after the glibc 2.44-2 upgrade EVERY link dies:
+#
+#   /Programs/BinUtils/2.33.1/bin/ld.bfd: /lib/libc.so.6:
+#       unknown type [0x13] section `.relr.dyn'
+#   /Programs/BinUtils/2.33.1/bin/ld.bfd: cannot find /lib/libc.so.6
+#   collect2: error: ld returned 1 exit status
+#
+# The first visible casualty is Mesa 25.3.6 (step_merge), whose meson sanity
+# link aborts with "Compiler cc cannot compile programs" -- but ANY package
+# linked after ensure_glibc244 repoints the index hits the same wall. The fix
+# is a RELR-aware linker; 2.43.1 matches the binutils-2.43.1.tar.xz already
+# staged in /Data/Compile/Archives.
+#
+# BOOTSTRAP (why it is built early, not in a normal step)
+# -------------------------------------------------------
+# The OLD ld 2.33.1 is what links this package, so it must be compiled while
+# /System/Index/lib still resolves to the base glibc 2.30 (whose libc has no
+# .relr.dyn). run-build.sh does exactly that in bootstrap_binutils(), run
+# BEFORE its repoint_glibc_runtime(), and restores the 2.44-2 index after. A
+# normal `run-build.sh <step>` therefore self-heals a missing 2.43.1 the first
+# time it runs; `run-build.sh pkg BinUtils 2.43.1` alone would fail once the
+# index is already on 2.44-2.
+#
+# ld.bfd is the default `ld` (--enable-ld=default); gold is disabled (see the
+# configure_options note below). Gobo's SymlinkProgram flips
+# Programs/BinUtils/Current to 2.43.1 and re-points
+# /System/Index/bin/{ld,ld.bfd,as,ar,...}.
+
+compile_version=017-GIT
+url="https://ftp.gnu.org/gnu/binutils/binutils-2.43.1.tar.xz"
+file_size=28174300
+file_md5=9202d02925c30969d1917e4bad5a2320
+dir='binutils-2.43.1'
+recipe_type=configure
+
+# gold is deliberately NOT built. gold is C++ and its main.cc uses mallinfo2()
+# / struct mallinfo2, a glibc >= 2.33 API. The bootstrap compiles this package
+# while the index still points at the base glibc 2.30 (whose runtime libc has
+# no mallinfo2 AND whose <malloc.h> does not declare struct mallinfo2), so
+# gold's configure link-test succeeds against the repointed runtime while the
+# header lacks the struct -> "mallinfo2 m has initializer but incomplete type"
+# and the whole build dies. ld.bfd is the default `ld` (--enable-ld=default)
+# and is written in C, so it is all this bootstrap needs.
+configure_options=(
+    --disable-werror
+    --disable-nls
+    --disable-multilib
+    --disable-gprofng
+    --disable-gold
+    --enable-ld=default
+)

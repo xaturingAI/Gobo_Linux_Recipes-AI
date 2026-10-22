@@ -1,0 +1,20 @@
+# Custom recipe for DesktopFileUtils 0.27 (meson)
+#
+# Part of the Pantheon stack port. Provides desktop-file-install (used by
+# session-settings 8.1.0 to re-tag the gsd autostart entries with
+# OnlyShowIn=Pantheon) and update-desktop-database. Only dependency is GLib.
+#
+# Build BEFORE SessionSettings.
+#
+# file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.27.tar.xz"
+file_size=80808
+file_md5=fdf9215aea91acb6aebc43f770537f2c
+dir='desktop-file-utils-0.27'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+)

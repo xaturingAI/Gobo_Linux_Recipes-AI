@@ -1,0 +1,16 @@
+# Custom recipe for plasma-wayland-protocols 1.21.0 (cmake)
+# Installs the Wayland protocol XML/headers libplasma compiles against
+# (find_package(PlasmaWaylandProtocols CONFIG)). Independent versioning.
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma-wayland-protocols/plasma-wayland-protocols-1.21.0.tar.xz"
+file_size=49704
+file_md5=9a2f58d154a6cb514f60c59311e14559
+dir='plasma-wayland-protocols-1.21.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+)

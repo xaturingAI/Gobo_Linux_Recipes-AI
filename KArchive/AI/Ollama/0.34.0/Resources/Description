@@ -1,0 +1,5 @@
+[Name] Ollama
+[Summary] Run large language models locally
+[License] MIT
+[Homepage] https://ollama.com
+[Description] Ollama serves local LLMs behind a small HTTP API (port 11434) with an `ollama run <model>` CLI. This is the official v0.34.0 linux-amd64 archive: bin/ollama plus lib/ollama backends bundling llama.cpp CPU kernels and the CUDA 12/13 runtimes for NVIDIA GPUs (CPU-only works too; GPU offload needs the ISO's NVIDIA driver). Costs ~1.34 GB compressed / 2.11 GB extracted, roughly 1.2 GB on the ISO squashfs. No systemd on the Live CD: start it with `ollama serve` or let `ollama run` spawn it on demand.

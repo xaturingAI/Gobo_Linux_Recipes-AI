@@ -1,0 +1,5 @@
+[Name] KCMUtils
+[Summary] KDE Frameworks 6 config module utilities
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kcmutils
+[Description] KDE Frameworks 6 Tier 3: KDE Config Module (KCM) loading and UI. Used by System Settings.

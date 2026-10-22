@@ -1,0 +1,53 @@
+# Custom recipe for PackageKit 1.3.6 (meson)
+#
+# Part of the Pantheon stack port. Package management abstraction daemon +
+# GLib client library. PantheonSettingsDaemon 8.5.0 links the client
+# (dependency('packagekit-glib2') -> packagekit-glib2.pc) for the OS update
+# plugin.
+#
+# Deps: glib/gio-unix/gmodule, sqlite3, polkit-gobject-1, jansson (>= 2.8;
+# built from the Jansson recipe — json handling) all present on the index.
+# plymouth (ply-boot-client) and libsystemd are absent -> auto-disabled
+# (systemd + elogind explicitly off). The default 'dummy' packaging backend
+# is kept (there is no GoboLinux backend; the daemon runs but performs no
+# real transactions, which is fine for the live CD).
+#
+# Features off: offline updates, legacy tools, bash completion /
+# command-not-found, the gstreamer/gtk-module integration, cron, python
+# backend, man pages, gtk-doc, maintainer mode.
+#
+# Introspection ON: PantheonSettingsDaemon 8.5.0 uses Pk.Task's
+# details_with_deps_size property (added in PackageKit 1.2.x); the stale
+# ISO-era packagekit-glib2.vapi lacks it, so build 1.3.6's own GIR + VAPI
+# (vapi needs gobject_introspection).
+#
+# file_md5 + file_size verified against the github v1.3.6 tag tarball
+# (tag v1.3.6; downloaded as PackageKit-1.3.6.tar.gz).
+
+compile_version=017-GIT
+url="https://github.com/PackageKit/PackageKit/archive/refs/tags/v1.3.6.tar.gz"
+file_size=4198917
+file_md5=f40b4c4c15778a46ac8da597362d7f03
+dir='PackageKit-1.3.6'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dpackaging_backend=dummy"
+    "-Dsystemd=false"
+    "-Delogind=false"
+    "-Doffline_update=false"
+    "-Dlegacy_tools=false"
+    "-Dgobject_introspection=true"
+    "-Dbash_completion=false"
+    "-Dbash_command_not_found=false"
+    "-Dgstreamer_plugin=false"
+    "-Dgtk_module=false"
+    "-Dcron=false"
+    "-Dpython_backend=false"
+    "-Dman_pages=false"
+    "-Dgtk_doc=false"
+    "-Dmaintainer=false"
+    "-Dsysconfdir=/Programs/PackageKit/1.3.6/etc"
+    "-Dlocalstatedir=/Programs/PackageKit/1.3.6/var"
+)

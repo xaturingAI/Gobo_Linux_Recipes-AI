@@ -1,0 +1,5 @@
+[Name] SessionSettings
+[Summary] Pantheon session definition (elementary/session-settings)
+[License] LGPL-2.1-or-later
+[Homepage] https://github.com/elementary/session-settings
+[Description] The 'pantheon-session' package: pantheon.session / pantheon-wayland.session, Classic/Secure Session desktop entries and pantheon-prefixed gsd + keyring autostart entries. No systemd units; onboard/Orca autostarts dropped.

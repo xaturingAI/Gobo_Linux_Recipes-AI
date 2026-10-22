@@ -1,0 +1,39 @@
+# Build source: nvidia-settings-610.57.04.tar.bz2 (upstream SOURCE tarball --
+# NOT the driver .run; nvidia-settings is released on its own version line).
+url="https://download.nvidia.com/XFree86/nvidia-settings/nvidia-settings-610.57.04.tar.bz2"
+file_size=1138157
+file_md5=802961c3128c6b37805db939979044d1
+file_sha256=a84a171b7e6cef3017141ad7600a1006519cbf4162bc44b9bcf255303c7e3dea
+last_modified=2026-07-29
+
+# NVIDIA publishes NO .md5/.sha256 sidecar for 610.57.04 (the old 96.x-era
+# files are the only ones that have them), so both checksums were computed
+# locally on 2026-10-19 from the downloaded tarball; file_size comes from the
+# server's Content-Length and matches the downloaded byte count exactly.
+
+# The version is asserted by the tarball's own version.mk:
+#   NVIDIA_VERSION      = 610.57.04
+#   NVIDIA_NVID_VERSION = 610.57.04
+# which the Makefile also turns into src/version.h.
+
+# Source payload facts this recipe depends on:
+#   utils.mk                 PREFIX ?= /usr/local; BINDIR/LIBDIR/MANDIR from it
+#   src/Makefile             NVIDIA_SETTINGS_install, NVIDIA_GTKLIB_install,
+#                            WAYLAND_LIB_install, optional gtk+-2.0 / gtk+-3.0 /
+#                            wayland-client detection via pkg-config
+#   doc/Makefile             MANPAGE_install only
+#   doc/nvidia-settings.desktop   (placeholders: __UTILS_PATH__,
+#                            __NVIDIA_SETTINGS_DESKTOP_CATEGORIES__; the Icon
+#                            key is a bare theme name "nvidia-settings" with
+#                            NO placeholder -- upstream expects the PNG in
+#                            <datadir>/pixmaps, so post_install must put it
+#                            in share/pixmaps/)
+#   doc/nvidia-settings.png       (128x128)
+#   jansson is bundled by default (NV_USE_BUNDLED_LIBJANSSON ?= 1), so the
+#   system Jansson is NOT a dependency.
+# NOT used here: the driver .run's kernel/, kernel-open/ and firmware/ (Nvidia)
+# or its libs/tools/JSONs (Nvidia-Utils).
+
+# Version history for this file:
+# - created for 610.57.04, replacing the 580.159.04 recipe (which had NO
+#   Resources/ dir at all -- a spec violation this version fixes)

@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# LMMS 1.3.0-alpha.2 -- free cross-platform DAW, wired as the 'music' component
+# (step_music in build.sh).  Qt5 GUI on the monolithic Qt 5.15.2 migration tree
+# (see QT5.15-MIGRATION.md), built with CMake.
+#
+# REQUIRED build deps (LMMS 1.3.0-alpha.2 CMakeLists.txt):
+#   Qt5 (Core Gui Widgets Xml Svg)  -> Programs/Qt/5.15.2
+#      The 5.15.2 migration made Programs/Qt/Current -> 5.15.2 (base ISO ships
+#      only 5.14.1; the Qt--5.15.2 tarball is merged over it by step_music).
+#   libsndfile                      -> base ISO LibSndfile/1.0.28
+#      FIND_PACKAGE(SndFile REQUIRED); FATAL_ERROR if missing.
+#   FFTW3F (fftw3f)                 -> base ISO FFTW3F/3.3.8
+#      FIND_PACKAGE(FFTW COMPONENTS fftw3f REQUIRED).
+#   Perl                            -> base ISO (docs/scripts only)
+# All are already on the base ISO, so step_music itself only compiles+packages
+# LMMS (and re-ensures the Qt 5.15.2 tarball exists for the merge step).
+#
+# Optional subsystems are switched OFF because the v1.3.0-alpha.2 GitHub tag
+# archive does NOT bundle the git-submodule plugin stubs: the LADSPA suites
+# (calf/caps/cmt/swh/tap) and the VST tooling (needs Wine/winegcc as a build
+# dependency) live in submodules absent from the tar.gz, so enabling them
+# breaks configure.  SF2 needs fluidsynth (not shipped).
+#
+# Source: upstream alpha tags drop NO release asset, so use the tag source
+# archive (same as SDDM 0.20.0 / Lutris 0.5.22).  size/md5 computed locally at
+# authoring time.  Extracts to lmms-1.3.0-alpha.2/ (matches dir below).
+compile_version=017-GIT
+url="https://github.com/LMMS/lmms/archive/refs/tags/v1.3.0-alpha.2.tar.gz"
+file_size=17023717
+file_md5=e3c6b28b2b5fc75c77462c0dc6210193
+dir='lmms-1.3.0-alpha.2'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_PREFIX_PATH=/System/Index
+    # Gobo keeps libraries in /lib (no /lib64); must match other recipes.
+    -DCMAKE_INSTALL_LIBDIR=lib
+    # Never let the build bake RPATHs pointing at the compile sandbox.
+    -DCMAKE_SKIP_RPATH=True
+    # ---- not buildable from the tag archive (submodules absent) ----
+    -DWANT_VST=OFF
+    -DWANT_VST_32=OFF
+    -DWANT_VST_64=OFF
+    -DWANT_LV2=OFF
+    -DWANT_SUIL=OFF
+    -DWANT_CARLA=OFF
+    -DWANT_CALF=OFF
+    -DWANT_CAPS=OFF
+    -DWANT_CMT=OFF
+    -DWANT_SWH=OFF
+    -DWANT_TAP=OFF
+    -DWANT_STK=OFF
+    -DWANT_GIG=OFF
+    -DWANT_SID=OFF
+    -DWANT_SF2=OFF
+    -DWANT_MP3LAME=OFF
+    -DWANT_PORTAUDIO=OFF
+    -DWANT_SNDIO=OFF
+    -DWANT_SOUNDIO=OFF
+    -DWANT_JACK=OFF
+    -DWANT_WEAKJACK=OFF
+    -DWANT_SDL=OFF
+    # ---- kept audio backends (auto-degrade to OFF if headers absent) ----
+    -DWANT_ALSA=ON
+    -DWANT_OSS=ON
+    -DWANT_PULSEAUDIO=ON
+    -DWANT_OGGVORBIS=ON
+)

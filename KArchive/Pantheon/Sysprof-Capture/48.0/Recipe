@@ -1,0 +1,33 @@
+# Custom recipe for Sysprof-Capture 48.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. The lightweight capture library used by
+# systprof and Mutter 48+. Build standalone (no deps) and BEFORE Mutter.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/sysprof/48/sysprof-48.0.tar.xz"
+file_size=1224264
+file_md5=be477e0464082668075f2bb49df9616f
+dir='sysprof-48.0'
+recipe_type=meson
+
+# Sysprof is the umbrella build; we only build the libsysprof-capture static
+# library (src/libsysprof-capture is built unconditionally; Mutter needs its
+# sysprof-capture-4.pc). -Dlibsysprof=false keeps src/libsysprof (which would
+# drag in libdex-1) and the gtk tools out; -Dinstall-static=true is REQUIRED
+# or the static capture lib + .pc are never installed and Mutter's
+# dependency('sysprof-capture-4') falls back to a broken wrap.
+meson_variables=(
+    --buildtype=release
+    "-Dlibsysprof=false"
+    "-Dgtk=false"
+    "-Dtools=false"
+    "-Dtests=false"
+    "-Dexamples=false"
+    "-Dsysprofd=none"
+    "-Dpolkit-agent=disabled"
+    "-Dinstall-static=true"
+    "-Dhelp=false"
+    "-Ddebuginfod=disabled"
+)

@@ -1,0 +1,96 @@
+# Custom recipe for elogind 257.16 (meson)
+#
+# Part of the Pantheon desktop stack port. elogind provides logind
+# (org.freedesktop.login1) for the sysvinit-based LiveCD, satisfying Mutter
+# 48.7's hard requirement for liblogind/libelogind. There is NO systemd on
+# this ISO, so everything is built without libsystemd.
+#
+# Source: https://github.com/elogind/elogind/releases/download/v257.16/... (git tag v257.16)
+# url/file_md5 verified against the tag tarball downloaded during recipe authoring.
+#
+# Build AFTER DBus (libdbus-1 + dbus .pc required; -Ddbus=enabled), Eudev
+# (udevrulesdir is relocated under /usr so the unionfs sandbox packages it)
+# and Linux-PAM (-Dpam=enabled installs pam_elogind.so; headers are linked
+# into the index by build.sh since the ISO's Linux-PAM never did). Runtime
+# daemon startup is wired via Resources/Tasks/Elogind (symlinked into
+# /System/Tasks by SymlinkProgram) and the BootUp line appended by build.sh
+# (a recipe PostInstall can't write outside the program tree: Run_PostInstall
+# runs in a UnionSandbox that discards those writes).
+#
+# Themes/docs/tests/etc. are all disabled; nss/userdb/varlink/polkit are not
+# needed on a gaming LiveCD.
+#
+# P_PIDFD (waitid idtype, glibc >= 2.36) is used unguarded in
+# src/basic/pidref.c:442 with no fallback define; the ISO's glibc 2.30 does
+# not provide it, so c_args defines it. Value 3 is the ABI-stable constant
+# from glibc's bits/waitflags.h and matches the kernel's waitid(P_PIDFD)
+# contract (kernel >= 5.4, ISO Linux 7.1.5).
+#
+# Kernel-UAPI gaps (VMADDR_CID_LOCAL in socket-util.c:1775/1853, x25_hdlc_proto
+# for the bundled src/basic/linux/if.h if_settings union) are resolved by the
+# Linux-Headers 7.1.5 package that now ships the matching kernel headers --
+# no c_args define or shadow header needed.
+#
+# Two glibc-2.30 link gaps remain (elogind assumes glibc >= 2.34):
+#  - mq_receive/mq_getattr: on glibc < 2.34 these live in librt; elogind
+#    hardcodes librt = [] and omits it from libshared/libelogind deps. The
+#    pre_build patches re-enable `cc.find_library('rt')` (harmless on >= 2.34,
+#    where librt is a compat stub) and add it to the two shared-lib links that
+#    pull in socket-util.c via libbasic.
+#  - userdb.c (compiled unconditionally in libshared) calls the nss_* helpers
+#    from user-record-nss.c, which upstream only builds when nss-elogind is
+#    enabled (and that requires varlink). Since both are disabled here, the
+#    pre_build makes user-record-nss.c build unconditionally.
+
+compile_version=017-GIT
+url="https://github.com/elogind/elogind/archive/refs/tags/v257.16.tar.gz"
+file="elogind-v257.16.tar.gz"
+file_size=2634151
+file_md5=d3b4ee9288ea4a3826706f2b1495000e
+dir='elogind-257.16'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dc_args=-DP_PIDFD=3
+    -Dman=disabled
+    -Dhtml=disabled
+    -Dtranslations=false
+    -Dvarlink=false
+    -Dutmp=false
+    -Dsmack=false
+    -Dnss-elogind=false
+    -Duserdb=false
+    -Dtests=false
+    -Dselinux=disabled
+    -Daudit=disabled
+    -Dacl=disabled
+    -Dpolkit=disabled
+    -Dxenctrl=disabled
+    -Ddbus=enabled
+    -Dpam=enabled
+    -Dudevrulesdir=/usr/lib/udev/rules.d
+    -Dsysvinit-path=/usr/etc/init.d
+    -Dsysvrcnd-path=/usr/etc/rc.d
+)
+
+pre_build() {
+    # Re-enable librt (glibc < 2.34 needs it for mq_*) and add it to the two
+    # shared-lib links that pull in socket-util.c via libbasic.
+    sed -i 's/^librt = \[\]$/librt = cc.find_library('\''rt'\'')/' "$sourcedir/meson.build" &&
+    sed -i 's/^        dependencies : \[threads,$/        dependencies : [librt, threads,/' "$sourcedir/meson.build" &&
+    sed -i 's/^                  libselinux]$/                  libselinux,\n                  librt]/' "$sourcedir/src/shared/meson.build" &&
+    # userdb.c (always compiled) needs the nss_* helpers; build the provider
+    # unconditionally instead of gating it on the (varlink-requiring) nss-elogind.
+    sed -i "/^if get_option('nss-elogind') != false$/,/^endif$/c\	shared_sources += files('user-record-nss.c')" "$sourcedir/src/shared/meson.build"
+}
+
+pre_link() {
+    # meson hardcodes rootlibexecdir (/usr/libexec) into the D-Bus activation
+    # file; on GoboLinux the daemon actually lives under /Programs/Elogind.
+    # Without this, dbus can never auto-start org.freedesktop.login1.
+    for svc in "$target"/share/dbus-1/system-services/org.freedesktop.login1.service; do
+        [ -f "$svc" ] || continue
+        sed -i "s|^Exec=/usr/libexec/elogind|Exec=$target/libexec/elogind|" "$svc"
+    done
+}

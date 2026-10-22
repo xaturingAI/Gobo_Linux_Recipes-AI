@@ -1,0 +1,5 @@
+[Name] Claude Desktop
+[Summary] Desktop application for Anthropic's Claude AI assistant
+[License] Proprietary
+[Homepage] https://claude.ai
+[Description] Official Claude.ai desktop client for Linux, packaged from Anthropic's apt-repository .deb payload (dpkg maintainer scripts skipped: Ubuntu AppArmor userns profile, apt self-registration, GNOME search provider, MIME hooks). Installs the Electron dist under lib/claude-desktop with a generated bin/claude-desktop launcher; because chrome-sandbox cannot be setuid on a Live CD the launcher passes --no-sandbox (same rationale as Heroic) and the setuid helper is removed from the tree. The menu entry and hicolor icons ship as unmanaged system files.

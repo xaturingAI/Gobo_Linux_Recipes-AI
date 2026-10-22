@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/gcc-12/libgcc-s1_12.2.0-14+deb12u1_i386.deb"
+file_size=59560
+file_md5=aef736d6e077b1dcbaf2740823735478
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a lib/i386-linux-gnu/libgcc_s.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libgcc_s."
+}

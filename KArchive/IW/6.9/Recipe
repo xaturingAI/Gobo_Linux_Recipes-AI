@@ -1,0 +1,24 @@
+# Custom recipe for iw 6.9 (makefile)
+#
+# `iw` is the modern nl80211 wireless configuration CLI.  It is the tool users
+# reach for to inspect/adjust a WiFi interface when GoboNet (the Gobo-native
+# wpa_supplicant+dhcpcd manager) is not enough: `iw dev`, `iw list`,
+# `iw <if> scan`, `iw <if> link`, regulatory-domain handling, ...
+#
+# iw is self-contained except for libnl: it builds its own nl80211.c but links
+# libnl-genl-3 for the generic-netlink transport (the base ISO already ships
+# LibNL 3.x with the libnl-3/libnl-genl-3 pkg-config files, so no extra recipe
+# is needed).
+#
+# Installs /System/Index/bin/iw -> Programs/IW/6.9/sbin/iw.  GoboNet's backend
+# shells out to /bin/iwlist (Wireless-Tools) for scanning, so iw is purely an
+# operator convenience here.
+
+compile_version=017-GIT
+url="https://mirrors.edge.kernel.org/pub/software/network/iw/iw-6.9.tar.gz"
+file_size=203974
+file_md5=dc476431ff37af3acf2e4deef47a6825
+dir='iw-6.9'
+recipe_type=makefile
+
+install_target="install"

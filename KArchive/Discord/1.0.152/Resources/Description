@@ -1,0 +1,5 @@
+[Name] Discord
+[Summary] All-in-one voice and text chat for gamers
+[License] Proprietary
+[Description] Official Discord client for Linux. Ships the self-updating bootstrap launcher; the real client is downloaded into ~/.config/discord/ on first run, so network access is required once before it can start.
+[Homepage] https://discord.com

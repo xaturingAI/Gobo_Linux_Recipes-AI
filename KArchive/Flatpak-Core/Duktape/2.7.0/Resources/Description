@@ -1,0 +1,4 @@
+[Name] Duktape
+[Summary] Embeddable Javascript engine (used by polkitd's rules backend)
+[License] MIT
+[Homepage] https://duktape.org

@@ -1,0 +1,26 @@
+# Custom recipe for KArchive 6.26.0 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh.
+compile_version=017-GIT
+url="https://download.kde.org/stable/frameworks/6.26/karchive-6.26.0.tar.xz"
+file_size=826372
+file_md5=8bab196cc1e168ab2d7d8e30d4dac3ce
+dir='karchive-6.26.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    # The base ISO's Bzip2 1.0.8 ships only soname libbz2.so.1 (no dev
+    # libbz2.so), so FindBZip2's find_library(bz2 bzip2 libbz2) misses it.
+    # Pre-set BZIP2_LIBRARY_RELEASE (find_library uses it verbatim) so
+    # SelectLibraryConfigurations assembles BZIP2_LIBRARIES and the
+    # BZip2::BZip2 imported target gets its IMPORTED_LOCATION_RELEASE.
+    "-DBZIP2_LIBRARY_RELEASE=/System/Index/lib/libbz2.so.1"
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

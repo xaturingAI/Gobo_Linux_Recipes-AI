@@ -1,0 +1,5 @@
+[Name] Zstd
+[Summary] Fast real-time compression library and CLI (libzstd + zstd)
+[Description] Zstandard is a fast lossless compression algorithm. Provides libzstd.so + libzstd.pc, which Mesa 25.3.6 probes as an optional feature (meson.options 'zstd', auto) and uses for compressed shader cache entries (HAVE_ZSTD). Pinned to the ISO's own version 1.4.4 so making the dependency explicit does not upgrade the base system.
+[License] BSD 3-Clause / GNU General Public License version 2
+[Homepage] https://facebook.github.io/zstd/

@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Opencode-bin 1.18.35 (the "main opencode terminal": open-source AI coding
+# agent CLI) for GoboLinux. This is a DOWNLOAD-AND-INSTALL recipe --
+# recipe_type=manifest means nothing is ever compiled.
+#
+# Mirrors the Arch AUR package 'opencode-bin' exactly:
+#   https://aur.archlinux.org/packages/opencode-bin
+#   https://github.com/anomalyco/opencode/releases/download/v1.18.35/
+#       opencode-linux-x64.tar.gz
+# The AUR PKGBUILD (1.18.35-1) declares options=('!debug' '!strip') and drops
+# the single `opencode` ELF into /usr/bin -- we do the same into
+# /Programs/Opencode-bin/1.18.35/bin. OpenCode 2.x is Bun-collected and the
+# 1.x line here is a prebuilt single-file binary too; NEVER strip it (Gobo
+# Compile's do_strip rips out the embedded payload leaving a bare-Bun binary
+# that prints "Bun is a fast JavaScript runtime..." help).
+#
+# WHAT THE USER WANTS (2026-10-08): their host install (installed via
+# https://opencode.ai/v2/install) reports `opencode -v` = 1.18.35 and launches
+# the branded opencode TUI. This recipe produces byte-for-byte the same binary
+# from the same GitHub release asset the AUR ships.
+#
+# x86_64 only (matches AUR arch). Depends on the ISO base glibc; AUR lists
+# ripgrep as a runtime dep - opencode still runs its chat/Core flows without
+# rg (file search is degraded), so it is NOT force-built for now.
+
+compile_version=017-GIT
+url="https://github.com/anomalyco/opencode/releases/download/v1.18.35/opencode-linux-x64.tar.gz"
+file_size=60669097
+file_md5=6658d99f55bbd40fec47523864967500
+# AUR sha256sums_x86_64: c8f888b451f5494a18f858fffb0e0b68f4e4baa9c241761c5f206884f0fa640d
+recipe_type=manifest
+uncompress=no
+# build.sh reads this and passes Compile --no-strip (AUR's '!strip'); without
+# it do_strip rips the embedded Bun app payload out of the single-file ELF.
+no_strip=1
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    rm -rf package
+    tar xzf "$tarball" || Die "cannot unpack the Opencode-bin tarball"
+    [ -x "opencode" ] || Die "opencode binary not found after unpack"
+}
+
+post_install() {
+    # Installer-agnostic guard so a wrong/corrupted archive can never ship:
+    # the binary must both be the real opencode 1.18.35 AND byte-match the
+    # published GitHub release asset (== the AUR opencode-bin checksum set).
+    local bin=""
+    [ -x "$PWD/opencode" ] && bin="$PWD/opencode"
+    [ -x "$PWD/bin/opencode" ] && bin="$PWD/bin/opencode"
+    [ -n "$bin" ] || Die "opencode binary not found after unpack"
+    local ver
+    ver="$("$bin" --version 2>&1 | tr -d '\r\n')"
+    Log_Normal "opencode --version = $ver"
+    case "$ver" in
+        1.18.35) : ;;
+        *) Die "NOT the real opencode 1.18.35 binary (--version='$ver'); refusing to package an impostor" ;;
+    esac
+    if [ "$(md5sum "$bin" | cut -d' ' -f1)" != "12ef0c433886ec9af852a265fd2682bc" ]; then
+        Die "opencode binary md5 mismatch vs the v1.18.35 release asset; refusing corrupted artifact"
+    fi
+}
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "opencode:bin/opencode"
+)

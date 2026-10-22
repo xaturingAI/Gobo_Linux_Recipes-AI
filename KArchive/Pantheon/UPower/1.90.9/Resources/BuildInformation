@@ -1,0 +1,3 @@
+Build type: meson
+Source: https://deb.debian.org/debian/pool/main/u/upower/upower_1.90.9.orig.tar.bz2
+Build order: part of the Pantheon session stack (see Recipes/pantheon-recipes.md).

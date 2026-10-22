@@ -1,0 +1,22 @@
+# Custom recipe for JSON-GLib 1.10.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Bumped from the ISO's 1.6.  Needs GLib
+# >= 2.84 installed first.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/json-glib/1.10/json-glib-1.10.0.tar.xz"
+file_size=252652
+file_md5=4cff0304873cdc4064da2c8881e72b1b
+dir='json-glib-1.10.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Ddocumentation=disabled"
+    "-Dintrospection=disabled"
+    "-Dtests=false"
+    "-Dinstalled_tests=false"
+    "-Dman=false"
+)

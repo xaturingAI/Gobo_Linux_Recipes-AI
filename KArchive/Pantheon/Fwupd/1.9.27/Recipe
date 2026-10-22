@@ -1,0 +1,55 @@
+# Custom recipe for Fwupd 1.9.27 (meson)
+#
+# Part of the Pantheon stack port. Firmware update daemon + client library.
+# PantheonSettingsDaemon 8.5.0 links the fwupd client library
+# (dependency('fwupd') -> libfwupd.pc) for the OS update plugin.
+#
+# Deps: glib >= 2.68, gmodule, gudev (238), gusb, sqlite3, libarchive, json-glib,
+# libcurl, polkit-gobject-1, zlib, gnutls, liblzma, xmlb (LibXmlb 0.3.29,
+# >= 0.3.6), jcat (LibJcat 0.2.3, >= 0.1.4). All present on the index.
+#
+# Aims at the daemon + client lib only: systemd/elogind/logind integration,
+# LVFS, passim, bluez, cbor, consolekit off; docs/man/tests/introspection/
+# metainfo/bash/fish completions/static analysis off; the signing efi binary
+# target off. Plugin options are feature(auto) so the many hardware plugins
+# (tpm, uefi-capsule, flashrom, modem-manager, amdgpu, ...) auto-disable on
+# the ISO because their deps are absent.
+#
+# file_md5 + file_size verified against the github 1.9.27 tag tarball.
+
+compile_version=017-GIT
+url="https://github.com/fwupd/fwupd/archive/refs/tags/1.9.27.tar.gz"
+file_size=5633546
+file_md5=579e49a6a9398c7710b44fa8ab939fe4
+dir='fwupd-1.9.27'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Ddocs=disabled"
+    "-Dman=false"
+    "-Dintrospection=enabled"
+    "-Dtests=false"
+    "-Dstatic_analysis=false"
+    "-Dconsolekit=false"
+    "-Dlvfs=false"
+    "-Dmetainfo=false"
+    "-Dbash_completion=false"
+    "-Dfish_completion=false"
+    "-Dpython=python3"
+    "-Dsystemd=disabled"
+    "-Delogind=disabled"
+    "-Dpassim=disabled"
+    "-Dcbor=disabled"
+    "-Dbluez=disabled"
+    "-Dpolkit=enabled"
+    "-Dgudev=enabled"
+    "-Dgusb=enabled"
+    "-Dcurl=enabled"
+    "-Dgnutls=enabled"
+    "-Dsqlite=enabled"
+    "-Dlibarchive=enabled"
+    "-Dlzma=enabled"
+    "-Defi_binary=false"
+)
+

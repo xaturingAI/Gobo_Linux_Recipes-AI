@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxxf86vm/libxxf86vm1_1.1.4-1+b2_i386.deb"
+file_size=21684
+file_md5=74ecd46ad93b17d1ea12ec97861d3b92
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXxf86vm.so.1* "$target"/lib32/ || Die "Failed copying 32-bit xxf86vm."
+}

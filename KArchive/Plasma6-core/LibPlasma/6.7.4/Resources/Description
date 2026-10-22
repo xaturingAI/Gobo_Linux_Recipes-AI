@@ -1,0 +1,5 @@
+[Name] libplasma
+[Summary] Plasma 6 QML/Qt6 core library
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/libplasma
+[Description] Plasma 6 core library: Applet, Containment, DataSource, Theme QML types. The foundation of Plasma shell.

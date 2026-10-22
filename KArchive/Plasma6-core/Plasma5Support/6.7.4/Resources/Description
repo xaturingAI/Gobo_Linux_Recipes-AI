@@ -1,0 +1,5 @@
+[Name] plasma5support
+[Summary] Plasma 5 compatibility shim for Plasma 6
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/plasma5support
+[Description] Plasma 5 backward-compat support library. Enables legacy Plasma 5 widgets to run under Plasma 6.

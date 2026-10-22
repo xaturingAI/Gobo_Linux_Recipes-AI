@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Wine 11.14 built from source with the new WoW64 mode
+# (--enable-archs=i386,x86_64): the 32-bit Windows side is thunked to 64-bit
+# code, so the running system needs NO 32-bit Unix libraries.
+#
+# Building still requires a compiler that can emit i386 code (gcc -m32), i.e.
+# a multilib or cross-capable toolchain on the build host. The chroot now ships
+# GCC 14.2.0 (new enough for Wine 11); verify -m32 works before relying on this
+# recipe. It is the source-build alternative to the prebuilt Proton shipped
+# with the CD. See the build-order README.
+
+compile_version=017-GIT
+url="https://dl.winehq.org/wine/source/11.x/wine-11.14.tar.xz"
+file_size=46575228
+file_md5=3e9bbfd89727fe7bd8648857f4059167
+recipe_type=configure
+
+configure_options=(
+   "--enable-archs=i386,x86_64"
+   "--with-x"
+   "--without-curses"
+   "--disable-tests"
+)
+
+install_variables=(
+   "UPDATE_DESKTOP_DATABASE=''"
+)

@@ -1,0 +1,5 @@
+[Name] KFileMetadata
+[Summary] KDE Frameworks 6 file metadata extraction
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kfilemetadata
+[Description] KDE Frameworks 6: extract metadata (tags, EXIF, etc) from files. Used by Dolphin info panel.

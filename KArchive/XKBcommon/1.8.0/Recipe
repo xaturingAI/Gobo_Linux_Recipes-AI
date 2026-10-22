@@ -1,0 +1,37 @@
+# Custom recipe for XKBcommon 1.8.0 (meson)
+#
+# REAL 1.8.0 - not the 1.7.0 tarball that used to be installed under this
+# name.  wlroots 0.20.2 needs it: types/wlr_keyboard.c uses
+# XKB_LED_NAME_COMPOSE and XKB_LED_NAME_KANA, which only exist from
+# xkbcommon 1.8.0 on (1.7.0 only has NUM/CAPS/SCROLL).
+#
+# xkbcommon 1.8.0 no longer publishes release tarballs on xkbcommon.org
+# ("we've decided to stop publishing tarballs"), so the GitHub tag archive is
+# used.  It is the same tarball the Fedora 42 source RPM ships
+# (md5 e0bdc3555b3530d729d6d01afda52579, 995648 bytes).
+#
+# The tag archive is a git snapshot, so the build REQUIRES bison (or byacc):
+# meson.build regenerates src/xkbcomp/parser.c from parser.yp and errors out
+# with "Could not find a compatible YACC program" otherwise.  Bison 3.5 is
+# part of the ISO.
+#
+# Build AFTER Wayland + Wayland-Protocols: -Denable-wayland (default true)
+# needs wayland-scanner and the wayland-protocols pkg-config files.
+# The feature set is kept identical to the 1.7.0 build (tools, x11, wayland
+# and xkbregistry enabled, docs disabled) so that the consumers of
+# xkbcommon-x11.pc / xkbregistry.pc keep working.
+#
+# xkbcommon 1.x keeps the libxkbcommon.so.0 SONAME, so this is ABI compatible
+# with the 1.7.0 it replaces.
+
+compile_version=2.0
+url="https://github.com/xkbcommon/libxkbcommon/archive/refs/tags/xkbcommon-1.8.0.tar.gz"
+file_size=995648
+file_md5=e0bdc3555b3530d729d6d01afda52579
+dir='libxkbcommon-xkbcommon-1.8.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Denable-docs=false"
+)

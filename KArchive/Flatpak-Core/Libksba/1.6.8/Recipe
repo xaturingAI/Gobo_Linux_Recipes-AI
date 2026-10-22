@@ -1,0 +1,20 @@
+# Custom recipe for libksba 1.6.8 (autotools)
+#
+# Part of the Flatpak-Core stack port (phone/PGP tier). X.509/CMS library
+# that GnuPG 2.4.9 needs for gpgsm/dirmngr (AM_PATH_KSBA >= 1.6.3); the base
+# ISO has NO ksba at all, so `build.sh devices` aborts with "You need
+# libksba to build this program". Builds on libgpg-error 1.52 (already
+# indexed via LibGpg-Error 1.52).
+#
+# file_md5 + file_size verified against the gnupg.org tarball staged in $B.
+
+compile_version=017-GIT
+url="https://www.gnupg.org/ftp/gcrypt/libksba/libksba-1.6.8.tar.bz2"
+file_size=716917
+file_md5=95ad490725cc8af7b8b345edbb4717c1
+dir='libksba-1.6.8'
+recipe_type=configure
+
+configure_options=(
+    --disable-doc
+)

@@ -1,0 +1,4 @@
+[Name] LibInput
+[Summary] Input device handling library (libinput, libinput-list-devs)
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/libinput/libinput

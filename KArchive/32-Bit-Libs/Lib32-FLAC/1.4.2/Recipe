@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# 32-bit libFLAC (Free Lossless Audio Codec), extracted from the Debian
+# bookworm i386 package. Provides libFLAC.so.12, which the Steam client
+# and Wine/Proton games dlopen/link against.
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/f/flac/libflac12_1.4.2+ds-2_i386.deb"
+file_size=166732
+file_md5=7ca8cfe537a258789c36ef3b7f2af3ae
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libFLAC.so.12* "$target"/lib32/ || Die "Failed copying 32-bit libFLAC."
+}

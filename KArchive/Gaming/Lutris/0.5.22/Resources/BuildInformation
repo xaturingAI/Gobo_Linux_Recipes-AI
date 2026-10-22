@@ -1,0 +1,23 @@
+python recipe (BuildType_python) with python_major=3.11. install runs
+`python3.11 setup.py install --root / --prefix /System/Index` under
+SandboxInstall: the lutris package, bin/lutris launcher (shebang
+/System/Index/bin/python3.11) and share/lutris data files all land in
+Programs/Lutris/0.5.22 and are linked into the index at package install.
+
+Dependency strategy:
+- PyGObject/PyCairo: Gobo recipes (meson) build against python3.11 and emit
+  egg-infos, satisfying install_requires without PyPI.
+- certifi/dbus-python/distro/evdev/lxml/pillow/pypresence/PyYAML/requests/
+  protobuf/moddb: pip-installed in pre_build, both into the chroot system
+  site-packages (so easy_install resolves them) and into the package tree
+  (--target) so they ship on the ISO and stay importable by python3.11.
+- evdev builds against the ISO's kernel UAPI headers (Linux-Headers 5.4.15,
+  reachable at /usr/include via the standard compiler search path); dbus-python
+  builds against DBus 1.12.16 via pkg-config. The kernel build tree's
+  Programs/Linux/Current/lib/modules/<kver>/build/include must NOT be put on
+  the include path: those are kernel-INTERNAL headers and break every package's
+  compile (glibc bits/local_lim.h -> <linux/limits.h> pulls in the internal
+  <linux/types.h>, which redefines fd_set/dev_t/loff_t/... against glibc).
+
+Build order: OpenSSL 1.1.1w -> Python 3.11.12 -> PyCairo -> PyGObject ->
+Lutris. GObject-Introspection is a build-time+GI runtime dep (present on ISO).

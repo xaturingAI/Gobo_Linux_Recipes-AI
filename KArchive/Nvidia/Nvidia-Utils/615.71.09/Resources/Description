@@ -1,0 +1,41 @@
+NVIDIA userspace utilities and libraries 615.71.09 (Arch-style
+"nvidia-utils") for the Gaming Live CD, split out of the main Nvidia driver
+package.
+
+Contents:
+- 64-bit libraries in /Programs/Nvidia-Utils/lib: the glvnd stubs (libGL.so.1,
+  libEGL.so.1, libGLESv1_CM.so.1, libGLESv2.so.2, libGLX.so.0, libGLdispatch,
+  libOpenGL.so.0, libOpenCL.so.1), libcuda + libcudadebugger, libnvcuvid,
+  libvdpau_nvidia, libnvoptix and the whole libnvidia-* family (89 files).
+- 32-bit libraries in /Programs/Nvidia-Utils/lib32 (61 files). TRANSITIONAL:
+  these belong to Lib32-Nvidia-Utils; they stay here for now so the 32-bit
+  Steam client and 32-bit games keep working until that recipe lands.
+- Tools in /Programs/Nvidia-Utils/bin: nvidia-smi, nvidia-xconfig,
+  nvidia-modprobe, nvidia-debugdump, nvidia-persistenced, nvidia-powerd,
+  nvidia-cuda-mps-control/-server, nvidia-pcc, nvidia-ngx-updater and
+  nvidia-bug-report.sh. (nvidia-settings is NOT here; it lives in the
+  Nvidia-Settings recipe.)
+- NVNGX/DLSS Wine DLLs (_nvngx.dll, nvngx.dll, nvngx_dlssg.dll) under
+  lib/nvidia/wine.
+- Vulkan ICD registration: /usr/share/vulkan/icd.d/nvidia_icd.json plus the
+  absolute-path nvidia_icd.x86_64.json / nvidia_icd.i686.json and
+  nvidia_icd_vksc.json; /usr/share/vulkan/implicit_layer.d/nvidia_layers.json.
+  The absolute paths point at /Programs/Nvidia-Utils/Current/lib{,32} so
+  Proton's bwrap sandbox loads this program's libGLX_nvidia.so.
+- glvnd EGL external platforms (bundled in the .run, so no separate
+  egl-wayland / egl-wayland2 / egl-x11 recipes): registered in
+  /usr/share/glvnd/egl_vendor.d/ as 09_nvidia_wayland2.json,
+  10_nvidia.json, 10_nvidia_wayland.json, 15_nvidia_gbm.json,
+  20_nvidia_xcb.json, 20_nvidia_xlib.json, with the .so.1 sonames pinned by
+  post_install for both architectures.
+- OpenCL ICD (etc/OpenCL/vendors/nvidia.icd), the udev load rule
+  (etc/udev/rules.d/60-nvidia.rules), the modprobe blacklist
+  (etc/modprobe.d/nvidia.conf), the Xorg OutputClass configs
+  (usr/share/X11/xorg.conf.d/10-nvidia.conf and nvidia-drm-outputclass.conf),
+  the nvidia-dbus policy and the application profiles.
+
+Ownership: kernel modules, the Xorg DDX (nvidia_drv.so +
+libglxserver_nvidia.so), nvidia-settings and the GSP/ucode firmware come from
+the Nvidia recipe. This recipe needs no kernel
+headers and compiles nothing - it unpacks the same .run as Nvidia and copies
+the userspace payload out.

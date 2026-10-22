@@ -1,0 +1,5 @@
+[Name] LibXxf86vm
+[Summary] X11 XFree86 video mode extension library (libXxf86vm + xxf86vm.pc)
+[Description] Client library for the XFree86-VidModeExtension used to read and change video modes (modelines, refresh rates, gamma). Required by Mesa 25.3.6 for this option set: with -Dglx=dri and glx-direct enabled, meson.build does dependency('xxf86vm') without required:false, so the build fails if xxf86vm.pc is missing. Pinned to the ISO's own version 1.1.4.
+[License] Modified MIT
+[Homepage] https://www.x.org/

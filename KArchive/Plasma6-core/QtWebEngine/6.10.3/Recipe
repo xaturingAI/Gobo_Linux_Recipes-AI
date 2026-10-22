@@ -1,0 +1,507 @@
+#!/bin/bash
+
+# QtWebEngine 6.10.3 for GoboLinux (Qt6).
+#
+# WHAT THIS IS FOR
+# ----------------
+# SDDM's "Appearance" KCM (sddm-kcm) previews a theme by loading it into a
+# QWebEngineView, and Plasma's own web content (plasmashell's web views, the
+# WebEngine-backed notification/OOO UI) needs QtWebEngineCore +
+# QtWebEngineProcess at runtime. Without this package the theme-preview pane in
+# systemsettings5 shows nothing and any WebEngine QML surface fails.
+#
+# *** READ THIS BEFORE RUNNING THE BUILD ***
+# This is by far the heaviest recipe in the ISO. The tarball is 881 MB and
+# contains the FULL Chromium source tree (Chromium 134.0.6998.208, patched
+# forward to 146.0.7680.164), which QtWebEngine compiles with GN+Ninja into
+# libQt6WebEngineCore.so. Expect:
+#   * a very long build (hours, not minutes) and ~15-25 GB of scratch space in
+#     /Data/Compile/Sources,
+#   * high RAM use during the Chromium link step.
+# It is therefore NOT wired into `all`/`livefix` by default -- see
+# `step_qtwebengine` in build.sh and the `qtwebengine` target in run-build.sh,
+# which you invoke explicitly. Everything else in the ISO (SDDM, Plasma,
+# Pantheon) builds fine without it; only the theme *preview* needs it.
+#
+# HOW IT IS BUILT
+# ---------------
+# QtWebEngine cannot be built with a plain `cmake` call: its CMakeLists.txt does
+# NOT run configure.cmake itself (I checked -- it only includes
+# cmake/QtConfigureHelpers.cmake, which *records* the results). The configure
+# step is driven by QtBase's `qt-configure-module` helper, which we call with
+# the module source dir as argv[1]. That helper:
+#   1. writes <builddir>/config.opt from the options we pass,
+#   2. runs the module's configure.cmake (resolving -webengine-* features),
+#   3. then execs real cmake with those options.
+# So: qt-configure-module <src> <qt options> -- <cmake args>
+# where the qt options are the -webengine-* features and the cmake args (after
+# --) carry -G "Unix Makefiles" and -DCMAKE_INSTALL_PREFIX. See the feature
+# section below for why -prefix/-G/-confirm-license cannot be used here.
+#
+# Ninja is NOT in this ISO's chroot (verified: no Programs/Ninja), so we ask for
+# the "Unix Makefiles" generator and build with make.
+#
+# FEATURE / DEPENDENCY DECISIONS
+# ------------------------------
+# CAREFUL: the tarball ships a pre-generated `config_help.txt` that is STALE.
+# It advertises options like `-webengine-icu`, `-webengine-ffmpeg=qt`,
+# `-webengine-webp` and `-webengine-alsa`; NONE of those are accepted by
+# QtBase 6.10.3's argument parser, and every one of them aborts the configure
+# with "Unknown command line option".
+#
+# The real grammar, derived from QtProcessConfigureArgs.cmake and
+# src/core/api/qt_cmdline.cmake (and verified by running this exact argument
+# list through the real /Programs/QtBase/6.10.3/bin/qt-configure-module):
+#
+#   * booleans: `-webengine-<name>` to enable, `-no-webengine-<name>` to
+#     disable. These work with a SINGLE dash.
+#
+#   * the system-library family, declared as
+#       qt_commandline_option(webengine-<lib> TYPE enum
+#                             NAME webengine-system-<lib> VALUES yes no system)
+#     needs THREE things to be got right:
+#       - the name is `-webengine-<lib>` -- `libwebp`, NOT `webp`;
+#       - the value MUST be attached with `=` and TWO dashes, i.e.
+#         `--webengine-ffmpeg=no`. The `=value` parser branch in
+#         QtProcessConfigureArgs.cmake is `^--([^=]+)=(.*)`; it requires two
+#         dashes, so the natural-looking `-webengine-ffmpeg=no` is mis-parsed
+#         as an unknown option name `webengine-ffmpeg=no`;
+#       - a BARE separate word does NOT work either: `qt_commandline_enum()`
+#         is declared as `function(arg val nextok)` but never calls
+#         `qtConfGetNextCommandlineArg`, so it cannot consume the following
+#         argument. `-webengine-ffmpeg no` therefore leaves `no` unhandled and
+#         dies with "Invalid command line parameter 'no'."
+#       Legal values are `yes`, `no` and `system`; anything else is rejected
+#       with "Invalid value ... supplied to command line option ...".
+#
+#   * `-prefix`, `-confirm-license` and `-G` are qtbase/top-level-build options
+#     only; for a module build they must go through CMake, i.e. after `--`:
+#     `-DCMAKE_INSTALL_PREFIX=...` and `-G "Unix Makefiles"`.
+#
+# What we pass, and why:
+#   --webengine-ffmpeg=no   FORCED. The ISO has FFmpeg 4.2.2 (+ 6.1.1 as
+#                            FFmpeg6), far too old for Chromium 134+. Left to
+#                            auto-detect this is a coin flip that fails at
+#                            gn/ninja time with missing codec symbols.
+#   --webengine-opus=no     no system libopus on the ISO.
+#   --webengine-libwebp=no  no system libwebp on the ISO.
+#   ICU is deliberately NOT forced: its feature is
+#     CONDITION UNIX AND ICU_FOUND, and the ISO's icu-uc satisfies that, so
+#     auto-detection already picks the system ICU. Passing `yes` would turn a
+#     soft preference into a hard requirement.
+#   Everything else (alsa, pulseaudio, freetype, harfbuzz, zlib, snappy, lcms2,
+#   minizip, libvpx, libopenjpeg2, re2, libxml, ...) is likewise left to its
+#   CONDITION clause rather than overridden.
+#   -no-webengine-embedded-build  desktop ISO, not an embedded device.
+#   -no-webengine-pepper-plugins  needs NSS + (for Widevine) proprietary CDM
+#                            blobs; neither is on the ISO and we will not ship
+#                            Widevine. Plain <video>/<audio> HTML5 still works.
+#   -no-webengine-proprietary-codecs  needs an FFmpeg carrying h264/aac
+#                            encoders under a licence we do not ship. Decoding
+#                            H.264/AAC works via the bundled FFmpeg.
+#   -no-webengine-native-spellchecker  the "native" path needs libenchant,
+#                            which is not on the ISO. Qt's own hunspell-based
+#                            dictionaries (shipped in the tarball) are used.
+#   -webengine-webrtc / -webengine-printing-and-pdf / -webengine-spellchecker
+#                            enabled explicitly: getUserMedia, print-to-PDF and
+#                            spellcheck are all useful and their deps
+#                            (bluez, alsa, libpulse, cups) are present.
+#
+# Missing optional Qt6 modules (WebChannel, WebChannelQuick, HttpServer,
+# JpegPrivate) are listed as OPTIONAL_COMPONENTS in QtWebEngine's own
+# find_package, so their absence just drops those integrations.
+#
+# PREFIX / RPATH
+# --------------
+# The install prefix is set with -DCMAKE_INSTALL_PREFIX="$target" (modules have
+# no -prefix option), i.e. /Programs/QtWebEngine/6.10.3, plus
+# -DCMAKE_INSTALL_RPATH so QtWebEngineProcess (libexec/) finds
+# libQt6WebEngineCore.so at runtime. This is safe because the ISO mounts the
+# Programs trees at those exact absolute paths -- the same trick the Qt5Wayland
+# recipe relies on. The System/Index symlink farm then exposes the libraries to
+# anything that links against Qt6WebEngineCore.
+#
+# file_md5 + file_size verified against download.qt.io.
+
+compile_version=017-GIT
+url="https://download.qt.io/official_releases/qt/6.10/6.10.3/submodules/qtwebengine-everywhere-src-6.10.3.tar.xz"
+file_size=881406300
+file_md5=d1f216c45171efe5894312a7b079d4e5
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+QTSRC='qtwebengine-everywhere-src-6.10.3'
+QTBASE='/Programs/QtBase/6.10.3'
+
+# Build the module with qt-configure-module + make, installing straight into
+# $target. Same shape as the Qt5Wayland recipe: no manifest array, do_install()
+# is a no-op because pre_install() already populated the program tree.
+do_install() {
+    [ -d "$target/lib" ] || Die "QtWebEngine install tree missing (pre_install failed?)"
+    return 0
+}
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    [ -f "$tarball" ] || Die "qtwebengine tarball not found: $tarball"
+
+    [ -x "$QTBASE/bin/qt-configure-module" ] || \
+        Die "qt-configure-module not found at $QTBASE/bin/qt-configure-module"
+
+    # QtBase's qt-cmake wrapper first looks for /System/Index/bin/cmake, which
+    # this ISO does NOT provide, so make sure a real cmake is on PATH.
+    export PATH="$QTBASE/bin:/Programs/CMake/Current/bin:/System/Index/bin:$PATH"
+
+    if [ ! -d "$QTSRC" ]; then
+        Log_Normal "Unpacking ${tarball} (881 MB, full Chromium source) ..."
+        tar xJf "$tarball" || Die "failed to extract qtwebengine tarball"
+    fi
+    local srcdir="$PWD/$QTSRC"
+    [ -f "$QTSRC/CMakeLists.txt" ] || Die "unexpected tarball layout for $QTSRC"
+
+    # ---------------------------------------------------------------------
+    # GCC compatibility patch: define _GNU_SOURCE on non-clang builds.
+    #
+    # Chromium's build/config/compiler/BUILD.gn adds _GNU_SOURCE ONLY inside
+    # `if (is_clang) { ... }`. This ISO has no clang (cc -> /Programs/GCC/14.2.0),
+    # so gn reports is_clang=false and that define is never emitted. The bundled
+    # third_party/libdrm then fails to compile:
+    #   xf86drm.c:362:  error: implicit declaration of function 'asprintf'
+    #   xf86drm.c:3549: error: implicit declaration of function 'vasprintf'
+    #
+    # GCC's -std=gnu11 does NOT rescue this: gnu11 only turns off __STRICT_ANSI__,
+    # so glibc still settles on _DEFAULT_SOURCE (__USE_MISC) and NOT __USE_GNU,
+    # which is what gates asprintf/vasprintf. Only _GNU_SOURCE defines __USE_GNU.
+    # Fix: make the GCC branch do what the clang branch does. Idempotent.
+    # ---------------------------------------------------------------------
+    local gncompiler="$srcdir/src/3rdparty/chromium/build/config/compiler/BUILD.gn"
+    [ -f "$gncompiler" ] || Die "cannot find Chromium compiler config: $gncompiler"
+    if grep -q 'qtwebengine-gcc-gnu-source' "$gncompiler"; then
+        Log_Normal "Chromium _GNU_SOURCE GCC patch already applied."
+    else
+        Log_Normal "Patching Chromium compiler config for GCC (_GNU_SOURCE) ..."
+        python3.11 -c '
+import sys
+p = sys.argv[1]
+s = open(p).read()
+a = "      standard_prefix = \"gnu\"\n"
+n = s.count(a)
+if n != 1:
+    sys.exit("patch anchor found %d times, expected exactly 1" % n)
+ins = (a +
+       "      # qtwebengine-gcc-gnu-source: mirror the clang branch for GCC.\n" +
+       "      defines += [ \"_GNU_SOURCE\" ]\n")
+open(p, "w").write(s.replace(a, ins))
+print("patched: added defines += [ \"_GNU_SOURCE\" ] to the non-clang branch")
+' "$gncompiler" || Die "failed to patch Chromium compiler config for GCC"
+    fi
+
+    # ---------------------------------------------------------------------
+    # QtWebEngine 6.10.3 plugin sanity-check fix for the
+    # `-no-webengine-pepper-plugins` + `-webengine-printing-and-pdf` combo.
+    #
+    # src/core/CMakeLists.txt (gnArgArg list) sets the Chromium GN arg
+    # `enable_plugins` when EITHER printing-and-pdf OR pepper plugins is
+    # enabled, but src/core/build_config_qt.h's sanity check demands
+    # BUILDFLAG(ENABLE_PLUGINS) be OFF whenever QT_CONFIG(webengine_pepper_
+    # plugins) is off. With printing on and pepper off that combination is
+    # legitimately true, and the check trips a hard compile error exactly as
+    # seen here (2026-10-07, at object 23579/23826):
+    #     src/core/build_config_qt.h:44:2: error: #error Config sanity check
+    #     for ENABLE_PLUGINS failed
+    # Upstream builds enable BOTH features (defaults) so nobody notices.
+    # We keep printing (print-to-PDF) and drop pepper, hence the patch.
+    #
+    # The fix mirrors CMakeLists.txt's own logic: only enforce the direction
+    # that can never legitimately happen (pepper ON but plugins OFF). The
+    # ENABLE_PLUGINS flag alone no longer implies PPAPI, so dropping the
+    # `#else` branch is safe -- there is no false state left to catch.
+    #
+    # CRITICAL: the header lives in the REUSED source tree alongside ~23k
+    # finished .o files whose depfiles record its mtime. The patch MUST
+    # restore the original mtime afterwards, or ninja invalidates the whole
+    # QtWebEngineCore target and we lose the 99%-complete resume.
+    # ---------------------------------------------------------------------
+    local qtconfig="$srcdir/src/core/build_config_qt.h"
+    [ -f "$qtconfig" ] || Die "cannot find build_config_qt.h: $qtconfig"
+    if grep -q 'qtwebengine-plugins-sanity' "$qtconfig"; then
+        Log_Normal "build_config_qt.h ENABLE_PLUGINS sanity patch already applied."
+    else
+        local qtconfig_mtime
+        qtconfig_mtime=$(stat -c %Y "$qtconfig" 2>/dev/null)
+        Log_Normal "Patching build_config_qt.h ENABLE_PLUGINS sanity check ..."
+        python3.11 -c '
+import sys
+p = sys.argv[1]
+s = open(p).read()
+old = """#if QT_CONFIG(webengine_pepper_plugins)
+#if !BUILDFLAG(ENABLE_PLUGINS)
+#error Config sanity check for webengine_pepper_plugins failed
+#endif
+#else
+#if BUILDFLAG(ENABLE_PLUGINS)
+#error Config sanity check for ENABLE_PLUGINS failed
+#endif
+#endif
+"""
+if s.count(old) != 1:
+    sys.exit("patch anchor found %d times, expected exactly 1" % s.count(old))
+new = """#if QT_CONFIG(webengine_pepper_plugins)
+#if !BUILDFLAG(ENABLE_PLUGINS)
+#error Config sanity check for webengine_pepper_plugins failed
+#endif
+#endif // qtwebengine-plugins-sanity: ENABLE_PLUGINS is also driven by printing
+"""
+open(p, "w").write(s.replace(old, new))
+print("patched: build_config_qt.h ENABLE_PLUGINS sanity check")
+' "$qtconfig" || Die "failed to patch build_config_qt.h"
+        if [ -n "$qtconfig_mtime" ]; then
+            touch -d "@$qtconfig_mtime" "$qtconfig" 2>/dev/null || true
+            Log_Normal "Restored build_config_qt.h mtime ($qtconfig_mtime) so ninja resumes."
+        fi
+    fi
+
+    local builddir="$PWD/qtwebengine-build"
+    # Incremental builds. A full Chromium build is ~7-10 h, so when a failure
+    # happens late (a codegen step, a sanity check) it is worth resuming the
+    # existing tree instead of throwing away thousands of finished objects.
+    # $stamp records a fingerprint of everything that shapes the generated
+    # ninja/compile files; the tree is wiped only when that fingerprint moves.
+    local stamp="$builddir/.qtwebengine-configure.stamp"
+
+    # CAVEAT: CMAKE_PREFIX_PATH ALONE IS NOT ENOUGH to make find_package(Qt6)
+    # resolve Qt6Qml / Qt6Quick, which QtWebEngine hard-requires. Qt6Config.cmake
+    # searches for *components* with PATHS <a short list> + NO_DEFAULT_PATH, and
+    # that list is:
+    #     ${QT_BUILD_CMAKE_PREFIX_PATH}
+    #     ${_qt_cmake_dir}                      # = <Qt6_DIR>/..
+    #     ${_qt_additional_packages_prefix_paths} # = QT_ADDITIONAL_PACKAGES_PREFIX_PATH
+    #     ... host variants ...
+    # CMAKE_PREFIX_PATH is NOT in it, so with only CMAKE_PREFIX_PATH set we get
+    # the confusing result that Qt::Gui/Qt::Core resolve (they live in the
+    # QtBase tree, next to Qt6Config.cmake) while Qt::Qml/Qt::Quick do not
+    # (they live in the separate QtDeclarative tree) -- and configure then
+    # reports only:
+    #     "Missing required Qt::Qml."  /  "Missing required Qt::Quick."
+    # The fix is Qt's own documented knob, QT_ADDITIONAL_PACKAGES_PREFIX_PATH.
+    # ORDER MATTERS -- Programs trees FIRST, /System/Index only as a last resort.
+    # /System/Index is a FLAT symlink farm: /System/Index/lib/cmake/Qt6Qml/* are
+    # symlinks into /Programs/QtDeclarative/6.10.3/lib/cmake/Qt6Qml/. Qt's plugin
+    # Targets.cmake files derive their own install prefix by walking up from
+    # CMAKE_CURRENT_LIST_FILE:
+    #     get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)  # x4
+    # Reached via the Index that computes to /System/Index, so the plugin is
+    # expected at /System/Index/plugins/qmltooling/libqmldbg_messages.so -- and
+    # /System/Index/plugins does not exist at all, giving:
+    #     The imported target "Qt6::QDebugMessageServiceFactoryPlugin" references
+    #     the file "/System/Index/plugins/qmltooling/libqmldbg_messages.so"
+    #     but this file does not exist.
+    # Reached via /Programs/QtDeclarative/6.10.3 it computes correctly to
+    # /Programs/QtDeclarative/6.10.3, where the .so really lives. So every Qt
+    # module must be resolved from its real installation prefix.
+    local qtpaths="/System/Index"
+    local qtmodpaths=""
+    for t in QtBase QtDeclarative QtPositioning QtSVG QtTools QtMultimedia QtShaderTools; do
+        if [ -d "/Programs/$t/6.10.3/lib/cmake" ]; then
+            qtpaths="$qtpaths:/Programs/$t/6.10.3"
+            qtmodpaths="${qtmodpaths:+$qtmodpaths;}/Programs/$t/6.10.3"
+        fi
+    done
+    qtmodpaths="${qtmodpaths:+$qtmodpaths;}/System/Index"
+
+    # QtWebEngine hard-gates on `pkg_check_modules(NSS nss>=3.26)`
+    # (configure.cmake:412, CONDITION NOT LINUX OR NSS_FOUND), i.e. purely a
+    # pkg-config lookup. This ISO installs NSS 3.50 with headers and libraries
+    # but ships NO pkg-config file at all -- NSPR installs nspr.pc, NSS installs
+    # none -- so the check fails and configure reports "Build requires nss >= 3.26."
+    # even though NSS is present and perfectly usable.
+    # Synthesise nss.pc into the build dir and prepend it to PKG_CONFIG_PATH for
+    # both configure and build. Build-time only: nothing is installed into the ISO.
+    #
+    # The FILE MUST be named nss.pc: pkg-config resolves a module specifier by
+    # file name, not by the `Name:` field. Naming it nss3.pc silently leaves
+    # `pkg-config nss>=3.26` unmatched and Qt then skips the whole Chromium build.
+    local nssdir nssver nsspc=""
+    for d in /Programs/NSS/*; do
+        # Only accept a real version directory such as 3.50. /Programs/NSS also
+        # contains a 'Current' symlink, and a plain glob would pick that up LAST
+        # and emit 'Version: Current' into nss.pc -- which pkg-config cannot
+        # compare numerically against the '>= 3.26' gate Qt applies.
+        case "${d##*/}" in
+            Current|*[!.0-9]*) continue ;;
+        esac
+        [ -d "$d/lib" ] && [ -e "$d/lib/libnss3.so" ] && nssdir="$d"
+    done
+    if [ -n "$nssdir" ]; then
+        nssver="${nssdir##*/}"
+        # Built as a string first: it feeds the configure fingerprint below and
+        # is only written into the build dir once we know we are keeping it.
+        nsspc=$(cat <<EOF
+prefix=/System/Index
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: NSS
+Description: Network Security Services
+Version: $nssver
+Requires:
+Libs: -L\${libdir} -lnss3 -lnssutil3 -lsmime3 -lssl3 -lnspr4
+Cflags: -I\${includedir} -I\${includedir}/nss -I\${includedir}/nspr
+EOF
+)
+    fi
+
+    # ---- configure fingerprint: decide keep-vs-wipe ----------------------
+    # Everything that can change the generated build.ninja / compile commands
+    # goes in here. If any of it moves we must start from a clean tree, because
+    # ninja compares command strings, not the variables behind them.
+    # NOT included on purpose: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION and the
+    # -j job count. Neither appears in any compile command, and a step that
+    # failed last run is retried by ninja regardless.
+    local cfingerprint
+    cfingerprint=$(md5sum <<EOF 2>/dev/null | cut -d' ' -f1
+generator=Unix Makefiles
+install_prefix=$target
+cmake_prefix_path=$qtpaths
+qt_additional=$qtmodpaths
+build_type=Release
+rpath=$target/lib
+rpath_with_install=OFF
+skip_build_rpath=OFF
+qtwebengine_ffmpeg=no
+qtwebengine_opus=no
+qtwebengine_libwebp=no
+feature_embedded_build=OFF
+feature_pepper_plugins=OFF
+feature_proprietary_codecs=OFF
+feature_native_spellchecker=OFF
+feature_spellchecker=ON
+feature_printing_and_pdf=ON
+feature_webrtc=ON
+gn_compiler_md5=$(md5sum "$gncompiler" 2>/dev/null | cut -d' ' -f1)
+nss_pc=$nsspc
+EOF
+)
+
+    if [ -f "$stamp" ] && [ "$(cat "$stamp" 2>/dev/null)" = "$cfingerprint" ]; then
+        Log_Normal "Reusing existing build tree (configure inputs unchanged); resuming."
+    elif [ -f "$stamp" ]; then
+        Log_Normal "Configure inputs changed -- wiping build tree for a clean configure."
+        rm -rf "$builddir"
+    elif [ -n "$(find "$builddir" -maxdepth 6 -name args.gn -print -quit 2>/dev/null)" ]; then
+        # One-time migration for a tree built before stamping existed.
+        Log_Normal "No configure stamp but a generated build tree exists; adopting it."
+    else
+        rm -rf "$builddir"
+    fi
+    mkdir -p "$builddir" || Die "cannot create build dir"
+
+    if [ -n "$nssdir" ]; then
+        mkdir -p "$builddir/pkgconfig" || Die "cannot create pkgconfig dir"
+        rm -f "$builddir/pkgconfig/nss3.pc"
+        printf '%s\n' "$nsspc" > "$builddir/pkgconfig/nss.pc" || Die "cannot write nss.pc"
+        PKG_CONFIG_PATH="$builddir/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+        export PKG_CONFIG_PATH
+        Log_Normal "Synthesised nss.pc (version $nssver) from $nssdir for pkg-config"
+    fi
+
+    Log_Normal "Configuring QtWebEngine 6.10.3 (this is the slow part) ..."
+
+    ( cd "$builddir" && \
+      "$QTBASE/bin/qt-configure-module" "$srcdir" \
+        --webengine-ffmpeg=no \
+        --webengine-opus=no \
+        --webengine-libwebp=no \
+        -no-webengine-embedded-build \
+        -no-webengine-pepper-plugins \
+        -no-webengine-proprietary-codecs \
+        -no-webengine-native-spellchecker \
+        -webengine-spellchecker \
+        -webengine-printing-and-pdf \
+        -webengine-webrtc \
+        -- \
+        -G "Unix Makefiles" \
+        -DCMAKE_INSTALL_PREFIX="$target" \
+        -DCMAKE_PREFIX_PATH="$qtpaths" \
+        -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$qtmodpaths" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_RPATH="$target/lib" \
+        -DCMAKE_BUILD_WITH_INSTALL_RPATH=OFF \
+        -DCMAKE_SKIP_BUILD_RPATH=OFF \
+    ) || { rm -f "$stamp"; Die "qt-configure-module of QtWebEngine failed"; }
+
+    # Stamp only after configure succeeded, so that a failed configure always
+    # forces a clean tree next run (Qt asks for CMakeCache.txt + gn stamp
+    # removal in exactly that situation).
+    printf '%s\n' "$cfingerprint" > "$stamp" || Die "cannot write configure stamp"
+
+    local jobs memavail_kb memjobs
+    jobs=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
+    # Chromium's link step is memory hungry; never go below 4, and never let a
+    # bogus nproc value (empty/non-numeric) reach make -j.
+    case "$jobs" in (''|*[!0-9]*) jobs=4 ;; esac
+    [ "$jobs" -ge 4 ] || jobs=4
+
+    # Also cap by RAM, because CPU count lies about how much parallelism a
+    # 15 GB box can actually take. Chromium's heaviest translation units
+    # (render_frame_host_impl.cc and friends) peak at 3-6 GB of cc1plus RSS
+    # each under -O2, and the result of over-subscribing is an OOM kill that
+    # looks like a broken toolchain:
+    #     c++: fatal error: Killed signal terminated program cc1plus
+    #     {standard input}: Error: .size expression ... does not evaluate to
+    #     a constant
+    # (the second line is just the assembler receiving a truncated .s, because
+    # its input pipe was truncated by the kill). Budget 3 GB per concurrent
+    # compile from MemAvailable, then take the lesser of RAM and CPU.
+    # This is deliberately NOT part of the configure fingerprint: -j never
+    # appears in a compile command, so changing it resumes rather than wipes.
+    memavail_kb=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo 2>/dev/null)
+    case "$memavail_kb" in (''|*[!0-9]*) memavail_kb=0 ;; esac
+    memjobs=$(( memavail_kb / (3 * 1024 * 1024) ))
+    [ "$memjobs" -ge 1 ] || memjobs=1
+    if [ "$memjobs" -lt "$jobs" ]; then
+        Log_Normal "Memory cap: ${memavail_kb} kB available -> -j$memjobs instead of -j$jobs"
+        jobs=$memjobs
+    fi
+    [ "$jobs" -ge 4 ] || jobs=4
+    Log_Normal "Building QtWebEngine + bundled Chromium with $jobs jobs (expect hours) ..."
+
+    # Force protobuf's pure-Python implementation for all build-time codegen.
+    #
+    # Chromium stages google/protobuf/internal/_api_implementation (api_version
+    # == 2), which makes protobuf's api_implementation.Type() return 'cpp' --
+    # but it does NOT stage google/protobuf/pyext/. In upstream protobuf the
+    # 'cpp' branch of api_implementation deliberately does not fall back to
+    # Python when the C extension is missing (verbatim: "# TODO(jieluo): fail
+    # back to python"), so Type() stays 'cpp' and every consumer then does an
+    # unguarded `from google.protobuf.pyext import cpp_message`, e.g.
+    #   File ".../pyproto/google/protobuf/message_factory.py", line 49
+    #     from google.protobuf.pyext import cpp_message as message_impl
+    #   ModuleNotFoundError: No module named 'google.protobuf.pyext'
+    # which kills the ssl_error_assistant proto step and therefore the whole
+    # QtWebEngineCore target. PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION is the
+    # module's own documented override and is applied before any C probing, so
+    # nothing ever reaches for pyext. Codegen speed is irrelevant here.
+    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+
+    ( cd "$builddir" && make -j"$jobs" ) || Die "make of QtWebEngine failed"
+
+    Log_Normal "Installing QtWebEngine into $target ..."
+    ( cd "$builddir" && make install ) || Die "make install of QtWebEngine failed"
+
+    # Sanity checks -- a partial Chromium build can "succeed" at make level but
+    # leave out the process binary, which is what actually renders pages.
+    [ -f "$target/libexec/QtWebEngineProcess" ] || \
+        Die "QtWebEngineProcess was not installed (Chromium build incomplete?)"
+    ls "$target"/lib/libQt6WebEngineCore.so* >/dev/null 2>&1 || \
+        Die "libQt6WebEngineCore.so not installed"
+    ls "$target"/qml/QtWebEngine >/dev/null 2>&1 || \
+        Die "QtWebEngine QML module not installed"
+
+    Log_Info "QtWebEngine 6.10.3 installed into $target"
+}

@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# nvidia-settings 610.57.04 (Arch-style "nvidia-settings" split package).
+#
+# Part of the Arch-style split of the NVIDIA stack. nvidia-settings is built
+# from its OWN upstream source tarball (NOT from the driver .run): it is a
+# hand-rolled recursive Makefile project with no autotools configure -- the
+# top-level Makefile just recurses into src/, samples/ and doc/. It needs no
+# NVIDIA kernel sources and no driver build; it talks to the driver at RUNTIME
+# through the XNVCtrl extension provided by the Xorg DDX.
+#
+# Build recipe shape: PREFIX ?= /usr/local in utils.mk feeds BINDIR/LIBDIR/
+# MANDIR, so this must be recipe_type=makefile with PREFIX=$target (same pattern
+# as Wlr-Protocols/Scdoc). GNU make forwards command-line vars down the
+# recursive sub-makes via MAKEFLAGS, jansson is bundled by default
+# (NV_USE_BUNDLED_LIBJANSSON ?= 1), and samples/install is a declared no-op
+# "to satisfy the top-level recursion".
+#
+# What the Makefile installs:
+#   bin/nvidia-settings                       (BINDIR)
+#   lib/libnvidia-gtk2.so.<ver>               (if gtk+-2.0 is visible to pkg-config)
+#   lib/libnvidia-gtk3.so.<ver>               (if gtk+-3.0 is visible)
+#   lib/libnvidia-wayland-client.so.<ver>     (if wayland-client is visible)
+#   share/man/man1/nvidia-settings.1          (rewritten to man/man1 below)
+# What it does NOT install, and post_install adds: the .desktop file + the
+# icon -- both live in doc/ and carry unsubstituted placeholders
+# (__UTILS_PATH__, __NVIDIA_SETTINGS_DESKTOP_CATEGORIES__). They are placed
+# in share/applications/ and share/pixmaps/ (NOT in a "Shared/" dir): only
+# share/ is linked into /System/Index/share by SymlinkProgram, so that is the
+# only way the launcher reaches /usr/share/applications and the icon reaches
+# /usr/share/pixmaps (where "Icon=nvidia-settings" is looked up).
+#
+# Version note: the rest of the stack is 615.71.09; 610.57.04 was requested as
+# the settings panel version (nvidia-settings has its own version line --
+# nvidia-settings-615.71.09.tar.bz2 also exists upstream if a matched pair is
+# wanted later). nvidia-settings reaches the driver only through the stable
+# NVCtrl X extension, so the minor driver/settings skew is safe.
+
+compile_version=017-GIT
+url="https://download.nvidia.com/XFree86/nvidia-settings/nvidia-settings-610.57.04.tar.bz2"
+file_size=1138157
+file_md5=802961c3128c6b37805db939979044d1
+dir='nvidia-settings-610.57.04'
+recipe_type=makefile
+makefile='Makefile'
+make_variables=(
+   "PREFIX=$target"
+   # utils.mk puts the man page in $(PREFIX)/share/man/man1; Gobo's man path
+   # only walks /Programs/<name>/Current/man, so pin MANDIR explicitly.
+   "MANDIR=$target/man/man1"
+)
+
+post_install() {
+    # The Makefile installs the binary, the optional GTK2/GTK3/Wayland helper
+    # libs and the man page, but NOT the .desktop file or the icon: they are
+    # shipped in doc/ with placeholder tokens that only the driver .run's
+    # installer substitutes. Fill them in here.
+    local dtc png
+    dtc=$(find . -name nvidia-settings.desktop -type f 2>/dev/null | head -1)
+    png=$(find . -name nvidia-settings.png -type f 2>/dev/null | head -1)
+    [ -n "$dtc" ] || Die "nvidia-settings.desktop not found in the source tree."
+    # Install into Gobo's shared data dir (share/), NOT into a "Shared/"
+    # directory. SymlinkProgram links <program>/share into /System/Index/share,
+    # so only share/ reaches the system:
+    #   share/applications/nvidia-settings.desktop -> /System/Index/share/applications
+    #                                              -> /usr/share/applications
+    #   share/pixmaps/nvidia-settings.png           -> /System/Index/share/pixmaps
+    #                                              -> /usr/share/pixmaps
+    # A "Shared/" dir is invisible to Gobo: the launcher never reaches
+    # /usr/share/applications (so no menu entry, and the desktop database
+    # rebuild in SymlinkProgram is never triggered for this program), and the
+    # icon never reaches /usr/share/pixmaps, which is exactly where
+    # "Icon=nvidia-settings" is looked up -- so the launcher showed up with a
+    # generic/broken image.
+    mkdir -p "$target"/share/applications "$target"/share/pixmaps
+    # Exec points at the Current symlink (not a versioned path) so a later
+    # version bump does not leave a dead launcher behind.
+    # Icon stays the bare theme name "nvidia-settings", exactly like upstream
+    # and like every other Gobo launcher: it is resolved through
+    # /usr/share/pixmaps (KDE/Plasma's pixmaps fallback) and through the
+    # hicolor theme, both of which we populate below.
+    sed -e "s@__UTILS_PATH__@/Programs/Nvidia-Settings/Current/bin@" \
+        -e "s@__PIXMAP_PATH__@/usr/share/pixmaps@" \
+        -e "s@__NVIDIA_SETTINGS_DESKTOP_CATEGORIES__@Settings;HardwareSettings@" \
+        -e "/^Encoding=/d" \
+        "$dtc" | sed -e "s@;;@;@g" > "$target"/share/applications/nvidia-settings.desktop
+    if [ -n "$png" ]; then
+        cp -a "$png" "$target"/share/pixmaps/
+        # Also drop it into the hicolor theme (128x128 is the icon's real
+        # size) so the icon is found through the standard XDG icon theme
+        # lookup as well -- GTK-based launchers do not search pixmaps/.
+        mkdir -p "$target"/share/icons/hicolor/128x128/apps
+        cp -a "$png" "$target"/share/icons/hicolor/128x128/apps/nvidia-settings.png
+    fi
+}
+
+post_install_message="
+nvidia-settings 610.57.04 installed to /Programs/Nvidia-Settings.
+- Binary:      /Programs/Nvidia-Settings/Current/bin/nvidia-settings
+- Man page:    man/man1/nvidia-settings.1
+- Launcher:    share/applications/nvidia-settings.desktop + share/pixmaps/
+               (SymlinkProgram links share/ into /System/Index/share, so the
+                entry lands in /usr/share/applications and the icon in
+                /usr/share/pixmaps; apply-live-fixes.sh 14b1 is only a
+                fallback for trees merged from older packages)
+- The GTK2/GTK3 and Wayland helper libraries the panel dlopens live in lib/
+               (libnvidia-gtk2.so, libnvidia-gtk3.so,
+                libnvidia-wayland-client.so).
+- Talks to the driver through the NVCtrl X extension provided by the Nvidia
+               Xorg DDX (libglxserver_nvidia.so); no kernel sources are needed
+               to build it.
+"

@@ -1,0 +1,5 @@
+[Name] Polkit
+[Summary] PolicyKit authorization framework (library only)
+[License] LGPL-2.0-or-later
+[Homepage] https://gitlab.freedesktop.org/polkit/polkit
+[Description] polkit-gobject-1.pc required by gnome-settings-daemon 48.1. -Dlibs-only=true: no polkitd daemon (would need duktape). No systemd.

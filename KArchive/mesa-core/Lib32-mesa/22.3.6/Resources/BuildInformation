@@ -1,0 +1,30 @@
+Build type: manifest (extracts Debian bookworm i386 packages, no compile)
+Source: https://deb.debian.org/debian/pool/main/m/mesa/
+ - libgl1-mesa-dri_22.3.6-1+deb12u2_i386.deb
+ - libglx-mesa0_22.3.6-1+deb12u2_i386.deb
+ - libegl-mesa0_22.3.6-1+deb12u2_i386.deb
+Build order: 32-bit libraries, alongside the other Lib32-* packages; runtime
+companion to the 64-bit Mesa recipe (mesa-core/Mesa/25.3.6).
+Purpose: 32-bit DRI drivers + GLX/EGL backends so 32-bit games/clients on the
+live ISO fall back to software rendering (llvmpipe) when no 32-bit proprietary
+driver exists. Extracted from Debian i386 debs rather than compiled: there is
+no 32-bit compiler chain in this build and 22.3.6 matches the era of the
+other Lib32-* payloads.
+Installs to $target/lib32/dri/*.so, libGLX_mesa.so.0*, libGLX_indirect.so.0*,
+libEGL_mesa.so.0*.
+Version is 22.3.6, matching the Debian bookworm debs it extracts; the recipe
+directory name is what Compile matches on, so the deb version must be tracked
+here. (It was earlier frozen at 22.3.5 while the debs were already 22.3.6, which
+made the directory name disagree with every URL in the recipe.)
+
+Extra debs: only `url` is fetched by Compile.  libglx-mesa0 and libegl-mesa0
+have no per-file URL slot, so `pre_install` fetches them itself and verifies
+them against `deb_glx_md5` / `deb_egl_md5` (md5, and size recorded above):
+ - libglx-mesa0_22.3.6-1+deb12u2_i386.deb  155936  2837a46b052da880ac42de65ac839f25
+ - libegl-mesa0_22.3.6-1+deb12u2_i386.deb  123636  4ff1f98ddcb19b62f1ba691752fc7aaf
+They are cached in /Data/Compile/Archives under their URL basenames, and reused
+if present (`[ -s "$deb" ]`), so a rebuild does not re-download them.
+Field order in the pre_install loop is `name|url|md5` with "|" delimiters,
+deliberately not ":": the URL contains "https:", and `${rest%%:*}` would cut the
+URL down to the bare string "https" -- which is what broke the first forced
+build (libglx-mesa0 download handed to curl as the URL `https`).

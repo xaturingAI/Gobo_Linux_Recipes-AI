@@ -1,0 +1,5 @@
+[Name] Geoclue
+[Summary] Geolocation D-Bus daemon + libgeoclue
+[License] LGPL-2.1-or-later
+[Homepage] https://gitlab.freedesktop.org/geoclue/geoclue
+[Description] libgeoclue-2.0.pc + org.freedesktop.GeoClue2 daemon required by gnome-settings-daemon 48.1 and PantheonGeoclue2Agent. No ModemManager/Avahi sources.

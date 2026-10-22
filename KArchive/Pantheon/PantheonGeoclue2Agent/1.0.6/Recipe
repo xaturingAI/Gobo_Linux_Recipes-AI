@@ -1,0 +1,15 @@
+# Custom recipe for PantheonGeoclue2Agent 1.0.6 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/pantheon-agent-geoclue2/archive/refs/tags/1.0.6.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/pantheon-agent-geoclue2/archive/refs/tags/1.0.6.tar.gz"
+file_size=104734
+file_md5=c9c0b89f5aa69667d65e40728854aa59
+dir='pantheon-agent-geoclue2-1.0.6'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

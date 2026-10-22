@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorKeyboard 2.4.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/panel-keyboard/archive/refs/tags/2.4.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/panel-keyboard/archive/refs/tags/2.4.2.tar.gz"
+file_size=88390
+file_md5=f4a0c51d8ce05afbfbdea76bedfb2fac
+dir='panel-keyboard-2.4.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

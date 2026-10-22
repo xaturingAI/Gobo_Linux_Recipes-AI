@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorBluetooth 8.0.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/panel-bluetooth/archive/refs/tags/8.0.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/panel-bluetooth/archive/refs/tags/8.0.0.tar.gz"
+file_size=150298
+file_md5=24354b25e5c3fbbc5d959d38c82c3f68
+dir='panel-bluetooth-8.0.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

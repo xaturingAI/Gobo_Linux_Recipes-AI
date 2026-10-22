@@ -1,0 +1,5 @@
+[Name] LibCanberra
+[Summary] Sound event library (libcanberra)
+[Description] libcanberra plays event sounds via GStreamer/pulseaudio/null backends. Mutter 48+ optionally uses it for the sound_player feature. Build AFTER GLib 2.84 and BEFORE Mutter. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU LGPL v2.1+
+[Homepage] https://gitlab.freedesktop.org/libcanberra/libcanberra

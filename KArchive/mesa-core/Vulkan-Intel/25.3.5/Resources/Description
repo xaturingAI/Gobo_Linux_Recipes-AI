@@ -1,0 +1,4 @@
+[Name] Vulkan-Intel
+[Summary] Intel Vulkan driver (Arch split package of mesa) - libvulkan_intel + ICDs
+[License] MIT AND BSD-3-Clause AND SGI-B-2.0
+[Homepage] https://www.mesa3d.org/

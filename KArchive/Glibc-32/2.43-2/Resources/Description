@@ -1,0 +1,4 @@
+[Name] Glibc-32
+[Summary] 32-bit glibc runtime for the 32-bit Steam client and 32-bit games
+[License] LGPL-2.1+
+[Homepage] https://www.gnu.org/software/libc/

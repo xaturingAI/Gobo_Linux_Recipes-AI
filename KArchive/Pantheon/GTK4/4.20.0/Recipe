@@ -1,0 +1,68 @@
+# Custom recipe for GTK 4.20.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. GTK 4 widget toolkit. Build AFTER GLib
+# 2.84 + Pango 1.56 + HarfBuzz 11 + Fribidi 1.0.16 + graphene 1.10.8 +
+# GdkPixbuf 2.42 + JSON-GLib 1.10 + libepoxy (ISO 1.5) + libpng/libjpeg
+# (ISO) and BEFORE libadwaita 1.8 + Mutter 48.
+#
+# Bumped from the ROADMAP's 4.18.6 to 4.20.0 to satisfy libadwaita 1.8.0,
+# which hard-requires GTK >= 4.19.4 (libadwaita stays pinned at 1.8.0; no
+# downgrade). 4.20.0 drops the ISO's 4.18.6 tarball for the new one.
+#
+# Deps delta vs 4.18.6:
+#   - glib >= 2.82 (ISO has 2.84.4 - OK).
+#   - libdrm is now a hard dep on the Linux build (grep 'libdrm' meson.build)
+#     -- LibDrm 2.4.126 ships on the ISO index (libdrm.pc present).
+#   - Project options moved to meson.options (renamed from meson_options.txt).
+#   - glslc/glslang found_program gate for vulkan retained (kept disabled).
+#
+# file_md5 + file_size verified against download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gtk/4.20/gtk-4.20.0.tar.xz"
+file_size=15762152
+file_md5=885e5237eb134414f6122fc371d5e141
+dir='gtk-4.20.0'
+recipe_type=meson
+
+# - docs/gtk-doc/man: not shipped on the ISO.
+# - broadway: web frontend, optional. ISO doesn't need it.
+# - cloudproviders: optional, ISO doesn't need it.
+# - wayland-backend: ENABLE (default). ISO has Wayland 1.23 + Wayland-Protocols 1.44.
+# - x11-backend: ENABLE for XWayland fallback. ISO has libX11/XCB via the stock rootfs.
+# - colord: ENABLE (default) so GTK color management works; needs colord 1.4.8 first.
+# - trackers: optional; ISO doesn't ship tracker3.
+# - media-ffmpeg/gtk-media-media-streams/gst-plugin-base: optional; ISO doesn't ship gstreamer.
+# - vulkan: OFF. GTK4's meson does find_program('glslc', required: vulkan)
+#   (ShaderC SPIR-V compiler), which the ISO doesn't ship; the GL renderer is
+#   the default and fully functional. Mutter/gala composite via GL.
+# - sysprof-capture: enabled (libsysprof-capture will be installed just before).
+# - introspection: ON. LibAdwaita 1.8.0's GIR generation does
+#   includes: ['Gio-2.0', 'Gtk-4.0'], so Gtk-4.0.gir must exist; libadwaita's
+#   vapi (which valac needs for --pkg libadwaita-1) is only generated from its
+#   own GIR. GObject-Introspection 1.84.0 + all dep GIRs (cairo/Gio/GdkPixbuf/
+#   Pango/PangoCairo) are on the index; GdkX11 gir needs xlib-2.0 (present),
+#   GdkWayland gir needs only gdk_gir (wayland-client gir NOT required).
+meson_variables=(
+    --buildtype=release
+    "-Ddocumentation=false"
+    "-Dman-pages=false"
+    "-Dprofile=default"
+    "-Dintrospection=enabled"
+    "-Dbuild-tests=false"
+    "-Dbuild-testsuite=false"
+    "-Dbuild-examples=false"
+    "-Dbuild-demos=false"
+    "-Dbroadway-backend=false"
+    "-Dcloudproviders=disabled"
+    "-Dtracker=disabled"
+    "-Dcolord=enabled"
+    "-Dsysprof=enabled"
+    "-Dwayland-backend=true"
+    "-Dx11-backend=true"
+    "-Dprint-cups=disabled"
+    "-Dprint-cpdb=disabled"
+    "-Dmedia-gstreamer=disabled"
+    "-Dvulkan=disabled"
+    "-Ddefault_library=shared"
+)

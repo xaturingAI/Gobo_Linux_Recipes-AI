@@ -1,0 +1,182 @@
+# Custom recipe for GStreamer Plugins Bad 1.26.1 (meson)
+#
+# Part of the Pantheon stack port (media tier). Sits on top of gst-plugins-base
+# and gst-plugins-good (both 1.26.1) and pulls in the extra demuxers, muxers,
+# converters and small filters that QtWebEngine, QtMultimedia and the SDDM KCM
+# theme preview probe for.
+#
+# ENABLED (in-tree or deps already on the ISO): the AV demux/mux family
+# (mpegts, mpegps, mpegdemux, mpegtsmux, mpegpsmux, asf, avtp, rtp, sdp, mxf),
+# the raw/subtitle/video helpers (rawparse, subenc, dvbsubenc, dvbsuboverlay,
+# dvdspu, videofilters, videoparsers, videosignal, interlace, ivtc, coloreffects,
+# geometrictransform, gaudieffects, fieldanalysis, freeverb, audiofxbad,
+# audiomixmatrix, audiobuffersplit, audiolatency, audiovisualizers), the
+# the container utilities (insertbin, proxy, switchbin, segmentclip, siren,
+# speed, timecode, netsim, id3tag, pcapparse, pnm, y4m, ivfparse, bayer,
+# codecalpha, codectimestamper), the in-tree audio codecs
+# (adpcmdec, adpcmenc, aiff, accurip, lcevcdec/enc, aes), plus mse (media source
+# extension, needed by Chromium-backed QtWebEngine), libdrm + libudev helpers,
+# ipcpipeline, debugutils and camerabin2.
+#
+# EXPLICITLY DISABLED because the dependency is absent from this ISO, or because
+# the plugin is GPL/patent-encumbered, or because it duplicates what Qt does:
+#   - gpl, x265, x264/x265 family, nvcodec/nvcomp/cuda, mfx, qsv, va (VA-API),
+#     v4l2codecs, decklink, d3d*/wic/win32* (non-Linux or no hw in the chroot)
+#   - vaapi/va, voaacenc, voamrwbenc, openaptx, lc3, ldac, faac, faad, dvdnav
+#   - aom, av1 encoders (aom/svtav1/dav1d), webp, opus, srtp, webrtc, mplex
+#   - openjpeg, jp2kdecimator, zbar, zxing, rsvg, wavpack? (kept via base)
+#   - libcdio/dvdread family, teletext, rist, sctp, rtmp2 (no librtmp/librtmp2)
+#   - gl, gles2, gtk3, x11, wayland, kms, fbdev, va sinks (Qt owns display)
+#   - festival, flite, fluidsynth, soundtouch, sbc, gsm, modplug, musepack,
+#     openmpt, wildmidi, neon, lv2, sidplay (no synth/sound-font libraries)
+#
+# Anything not listed explicitly is left at its upstream `auto` default, so a
+# plugin whose dependency happens to be present still builds and one whose
+# dependency is missing is silently skipped rather than failing the configure.
+#
+# Tests/examples/benchmarks/doc/nls off, shared libs only.
+#
+# file_md5 + file_size verified against the gstreamer.freedesktop.org tarball.
+
+compile_version=017-GIT
+url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.26.1.tar.xz"
+file_size=7751024
+file_md5=1120a3f7fd793259fe9809e339a18cc9
+dir='gst-plugins-bad-1.26.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dorc=enabled"
+
+    # --- demuxers / muxers / RTP -------------------------------------------
+    "-Dmpegtsdemux=enabled"
+    "-Dmpegtsmux=enabled"
+    "-Dmpegdemux=enabled"
+    "-Dmpegpsmux=enabled"
+    "-Dasfmux=enabled"
+    "-Davtp=enabled"
+    "-Drtp=enabled"
+    "-Dsdp=enabled"
+    "-Dmxf=enabled"
+    "-Dnetsim=enabled"
+    "-Dpcapparse=enabled"
+
+    # --- raw / subtitle / video helpers ------------------------------------
+    "-Drawparse=enabled"
+    "-Dsubenc=enabled"
+    "-Ddvbsubenc=enabled"
+    "-Ddvbsuboverlay=enabled"
+    "-Ddvdspu=enabled"
+    "-Dvideofilters=enabled"
+    "-Dvideoparsers=enabled"
+    "-Dvideosignal=enabled"
+    "-Dinterlace=enabled"
+    "-Divtc=enabled"
+    "-Dcoloreffects=enabled"
+    "-Dgeometrictransform=enabled"
+    "-Dgaudieffects=enabled"
+    "-Dfieldanalysis=enabled"
+    "-Dfreeverb=enabled"
+
+    # --- audio --------------------------------------------------------------
+    "-Daudiofxbad=enabled"
+    "-Daudiomixmatrix=enabled"
+    "-Daudiobuffersplit=enabled"
+    "-Daudiolatency=enabled"
+    "-Daudiovisualizers=enabled"
+    "-Dadpcmdec=enabled"
+    "-Dadpcmenc=enabled"
+    "-Daiff=enabled"
+    "-Daccurip=enabled"
+    "-Dlcevcdecoder=enabled"
+    "-Dlcevcencoder=enabled"
+    "-Dremovesilence=enabled"
+
+    # --- container / utility -----------------------------------------------
+    "-Dinsertbin=enabled"
+    "-Dproxy=enabled"
+    "-Dswitchbin=enabled"
+    "-Dsegmentclip=enabled"
+    "-Dsiren=enabled"
+    "-Dspeed=enabled"
+    "-Dtimecode=enabled"
+    "-Did3tag=enabled"
+    "-Dpnm=enabled"
+    "-Dy4m=enabled"
+    "-Divfparse=enabled"
+    "-Dbayer=enabled"
+    "-Dcodecalpha=enabled"
+    "-Dcodectimestamper=enabled"
+    "-Dgdp=enabled"
+    "-Dinter=enabled"
+    "-Dfaceoverlay=enabled"
+    "-Dautoconvert=enabled"
+    "-Dcamerabin2=enabled"
+    "-Ddebugutils=enabled"
+    "-Djpegformat=enabled"
+    "-Dlibrfb=enabled"
+    "-Dmidi=enabled"
+
+    # --- Chromium / QtWebEngine support ------------------------------------
+    "-Dmse=enabled"
+    "-Dvmnc=enabled"
+    "-Daes=enabled"
+    "-Dipcpipeline=enabled"
+    "-Ddrm=enabled"
+    "-Dudev=enabled"
+
+    # --- absent deps / encumbered / display --------------------------------
+    "-Dgpl=disabled"
+    "-Dx265=disabled"
+    "-Dnvcodec=disabled"
+    "-Dnvcomp=disabled"
+    "-Dqsv=disabled"
+    "-Dva=disabled"
+    "-Dv4l2codecs=disabled"
+    "-Ddecklink=disabled"
+    "-Dteletext=disabled"
+    "-Dzbar=disabled"
+    "-Dzxing=disabled"
+    "-Drsvg=disabled"
+    "-Dopenjpeg=disabled"
+    "-Dwebp=disabled"
+    "-Dopus=disabled"
+    "-Dwebrtc=disabled"
+    "-Dsrtp=disabled"
+    "-Dvoaacenc=disabled"
+    "-Dvoamrwbenc=disabled"
+    "-Dfaac=disabled"
+    "-Dfaad=disabled"
+    "-Dlc3=disabled"
+    "-Dldac=disabled"
+    "-Dopenaptx=disabled"
+    "-Dfestival=disabled"
+    "-Dflite=disabled"
+    "-Dfluidsynth=disabled"
+    "-Dsoundtouch=disabled"
+    "-Dsbc=disabled"
+    "-Dgsm=disabled"
+    "-Dmodplug=disabled"
+    "-Dmusepack=disabled"
+    "-Dopenmpt=disabled"
+    "-Dwildmidi=disabled"
+    "-Dneon=disabled"
+    "-Dlv2=disabled"
+    "-Drist=disabled"
+    "-Dsrt=disabled"
+    "-Dgl=disabled"
+    "-Dgtk3=disabled"
+    "-Dx11=disabled"
+    "-Dwayland=disabled"
+    "-Dkms=disabled"
+    "-Dfbdev=disabled"
+    "-Ddirectfb=disabled"
+
+    # --- build hygiene -----------------------------------------------------
+    "-Dexamples=disabled"
+    "-Dtests=disabled"
+    "-Ddoc=disabled"
+    "-Dnls=disabled"
+    "-Ddefault_library=shared"
+)

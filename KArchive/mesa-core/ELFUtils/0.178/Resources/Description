@@ -1,0 +1,5 @@
+[Name] ELFUtils
+[Summary] Utilities and libraries to read, create and modify ELF binaries (libelf, libdw, libasm)
+[Description] A collection of utilities and DSOs to handle compiled objects. Provides libelf.pc, which Mesa 25.3.6 requires for the radeonsi gallium driver (meson.build: dependency('libelf'), hard error without it), plus libdw/libasm and the eu-* tools. Pinned to the ISO's own version 0.178 so making the dependency explicit does not silently upgrade the base system.
+[License] GNU General Public License version 2, GNU General Public License version 3
+[Homepage] https://sourceware.org/elfutils/

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xtst extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxtst/libxtst6_1.2.3-1.1_i386.deb"
+file_size=28560
+file_md5=f89f80b47a580b87edc017785683f6f1
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXtst.so.6* "$target"/lib32/ || Die "Failed copying 32-bit libXtst."
+}

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/glib2.0/libglib2.0-0_2.74.6-2+deb12u9_i386.deb"
+file_size=1473636
+file_md5=ac81f55cb59cd3ecf77177599d8e8f8e
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libglib-2.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit glib."
+    cp -a usr/lib/i386-linux-gnu/libgobject-2.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gobject."
+    cp -a usr/lib/i386-linux-gnu/libgio-2.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gio."
+    cp -a usr/lib/i386-linux-gnu/libgmodule-2.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gmodule."
+    cp -a usr/lib/i386-linux-gnu/libgthread-2.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gthread."
+}

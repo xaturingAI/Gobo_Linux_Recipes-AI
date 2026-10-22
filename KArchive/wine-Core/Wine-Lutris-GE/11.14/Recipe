@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Wine 11.14 staging (Kron4ek prebuilt), packaged as Wine-Lutris-GE.
+# This is the lutris-GE answer for this CD: upstream lutris-GE needs glibc
+# 2.38 and will not run on the CD's glibc 2.30, but Kron4ek's staging build
+# (wine-11.14-staging-amd64, same glibc 2.14/2.17 requirements as vanilla)
+# provides the staging patchset and works as a Lutris runner for non-Steam
+# games. Same manifest packaging, same baked mono/gecko MSIs as Wine/11.14:
+# mono ships ONLY as wine-mono-11.2.0-x86.msi (AnyCPU; Wine 11.14's addons.c
+# uses MONO_ARCH "x86" on x86_64 too, and winehq 404s on a -x86_64 mono MSI),
+# gecko as wine-gecko-2.47.4-x86_64.msi.
+# Asset is wine-11.14-staging-amd64.tar.xz (the tag has no kron4ek-*.tar.xz;
+# that name 404s on both GitHub and the gobolinux mirror).
+# 'Wine-Lutris-GE' sorts after 'Wine' so the merge links its bin/ with
+# --conflict=overwrite and staging wins the /System/Index symlinks.
+compile_version=017-GIT
+urls=(
+    "https://github.com/Kron4ek/Wine-Builds/releases/download/11.14/wine-11.14-staging-amd64.tar.xz"
+    "https://dl.winehq.org/wine/wine-mono/11.2.0/wine-mono-11.2.0-x86.msi"
+    "https://dl.winehq.org/wine/wine-gecko/2.47.4/wine-gecko-2.47.4-x86.msi"
+    "https://dl.winehq.org/wine/wine-gecko/2.47.4/wine-gecko-2.47.4-x86_64.msi"
+)
+files=(
+    "wine-11.14-staging-amd64.tar.xz"
+    "wine-mono-11.2.0-x86.msi"
+    "wine-gecko-2.47.4-x86.msi"
+    "wine-gecko-2.47.4-x86_64.msi"
+)
+file_sizes=(
+    102925336
+    83324416
+    55187968
+    53898752
+)
+file_md5s=(
+    c525b8db618a6b58e6da50d30eb74f1f
+    49aa6ff8814904be38f43e7f199db910
+    f61c2a0065301ce329aa390342e70f14
+    8cc7018079a8db70e822320b69185515
+)
+dir='wine-11.14-staging-amd64'
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "bin:bin"
+    "lib:lib"
+    "share:share"
+)
+
+pre_install() {
+    local wine_archive="$compileArchivesDir/wine-11.14-staging-amd64.tar.xz"
+    Log_Normal "Unpacking ${wine_archive}"
+    # Strip the tarball's wine-11.14-staging-amd64/ top dir: manifest srcs
+    # (bin/lib/share) resolve bare against the build CWD.
+    tar xJf "$wine_archive" --strip-components=1
+    mkdir -p share/wine/mono share/wine/gecko
+    cp -a "$compileArchivesDir"/wine-mono-*.msi share/wine/mono/
+    cp -a "$compileArchivesDir"/wine-gecko-*.msi share/wine/gecko/
+}

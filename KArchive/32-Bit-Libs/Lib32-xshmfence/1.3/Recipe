@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxshmfence/libxshmfence1_1.3-1_i386.deb"
+file_size=8976
+file_md5=db954eef4d64312f8944597417cb5d73
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libxshmfence.so.1* "$target"/lib32/ || Die "Failed copying 32-bit xshmfence."
+}

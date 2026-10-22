@@ -1,0 +1,4 @@
+[Name] SPIRV-Tools
+[Summary] SPIR-V Tools library + headers (build dep for Mesa clc)
+[License] Apache-2.0
+[Homepage] https://github.com/KhronosGroup/SPIRV-Tools

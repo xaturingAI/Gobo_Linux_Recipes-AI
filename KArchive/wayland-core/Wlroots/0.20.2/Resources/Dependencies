@@ -1,0 +1,13 @@
+Wayland
+Wayland-Protocols
+XKBcommon
+LibInput
+LibDrm
+Pixman
+SeatD
+XorgProto
+XWayland
+EGL-Wayland
+EGL-Wayland2
+LibGLVnd
+Mesa

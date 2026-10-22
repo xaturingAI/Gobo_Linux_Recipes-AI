@@ -1,0 +1,4 @@
+[Name] LibGLVnd
+[Summary] GLVND: GL/EGL/GLX/GLES dispatch library (vendor-neutral dispatch to Mesa/NVIDIA)
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/glvnd/libglvnd

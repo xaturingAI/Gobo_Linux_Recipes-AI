@@ -1,0 +1,4 @@
+[Name] LibXKBfile
+[Summary] X keyboard file manipulation library (xkbfile)
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/xorg/lib/libxkbfile

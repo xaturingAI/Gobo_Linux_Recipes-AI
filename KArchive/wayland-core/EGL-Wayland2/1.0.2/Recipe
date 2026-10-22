@@ -1,0 +1,32 @@
+# Custom recipe for EGL-Wayland2 1.0.2 (meson)
+# NVIDIA's second-generation EGL external platform for Wayland
+# (libnvidia-egl-wayland2.so.1). Upstream repo: NVIDIA/egl-wayland2; the driver
+# .run bundles libnvidia-egl-wayland2.so.1.0.2, so a matching independent build
+# is what Arch ships as its own egl-wayland2 package.
+#
+# The build installs BOTH the library and its glvnd/external-platform JSON:
+#   src/wayland/meson.build:
+#     shared_library('nvidia-egl-wayland2', ... install: true)  -> $libdir
+#     install_data('09_nvidia_wayland2.json',
+#                  install_dir: '<datadir>/egl/egl_external_platform.d')
+# Exactly like EGL-Wayland 1.1.9, the JSON goes to
+# share/egl/egl_external_platform.d (NOT glvnd/egl_vendor.d) and is reachable at
+# runtime through /usr/share/egl (System/Index/share chain).
+#
+# Dependency notes (all already satisfied in the build tree):
+#   eglexternalplatform >=1.2   (EGLExternalPlatform 1.2.1)
+#   egl >=1.5                   (LibGLVnd)
+#   libdrm                      (LibDrm 2.4.121)
+#   gbm                         (Mesa supplies libgbm)
+#   wayland-client              (Wayland 1.23.1)
+#   wayland-egl-backend >=3     (Wayland 1.23.1 pkgconfig)
+#   wayland-protocols >=1.38    (Wayland-Protocols 1.44; Current is 1.49) --
+#       needed for staging/linux-drm-syncobj, staging/fifo, staging/commit-timing
+#       and stable/presentation-time XMLs the build scans.
+compile_version=017-GIT
+url="https://github.com/NVIDIA/egl-wayland2/archive/refs/tags/v1.0.2.tar.gz"
+file="egl-wayland2-1.0.2.tar.gz"
+file_size=81287
+file_md5=57846b94e753be76db67b3243520c3a2
+dir='egl-wayland2-1.0.2'
+recipe_type=meson

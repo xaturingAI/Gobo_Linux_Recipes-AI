@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugLocale 8.0.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-locale/archive/refs/tags/8.0.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-locale/archive/refs/tags/8.0.3.tar.gz"
+file="settings-locale-8.0.3.tar.gz"
+file_size=237112
+file_md5=d74f5203bfa94ae392707f69e8de813e
+dir='settings-locale-8.0.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

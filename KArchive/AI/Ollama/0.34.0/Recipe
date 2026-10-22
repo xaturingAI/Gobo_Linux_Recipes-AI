@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Ollama 0.34.0 local LLM runtime for GoboLinux, packaged from the official
+# linux-amd64 release archive (zstd): bin/ollama (40 MB) plus lib/ollama/
+# backends -- llama.cpp CPU kernels for every x86-64 generation AND the
+# bundled CUDA 12/13 runtimes (libggml-cuda.so + libcublas/cudart), which is
+# the bulk of the archive: 1.34 GB compressed / 2.11 GB extracted, ~1.2 GB
+# extra on the ISO squashfs. CPU-only works without the NVIDIA driver; GPU
+# offload activates when the ISO's NVIDIA stack is present.
+#
+# Live CD has no systemd: run `ollama serve` in a terminal (port 11434) or
+# `ollama run <model>`, which starts the server on demand.
+# file_sha is sha256sum (Get_SHA); the value is the one published in the
+# ollama v0.34.0 release notes, verified locally.
+
+compile_version=017-GIT
+url="https://github.com/ollama/ollama/releases/download/v0.34.0/ollama-linux-amd64.tar.zst"
+file_size=1433537033
+file_sha=cf95886728959aa09910bb34de5cca1cc5a8f68003b5597197d3f2c2d57c0804
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "bin/ollama:bin/ollama"
+    "lib/ollama:lib/ollama"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${tarball} (zstd)"
+    zstd -dc "$tarball" | tar -x || Die "cannot unpack the Ollama tarball"
+}

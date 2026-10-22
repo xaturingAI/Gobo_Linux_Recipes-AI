@@ -1,0 +1,16 @@
+# Custom recipe for WingpanelIndicatorNetwork 8.0.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/panel-network/archive/refs/tags/8.0.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/panel-network/archive/refs/tags/8.0.1.tar.gz"
+file="panel-network-8.0.1.tar.gz"
+file_size=232457
+file_md5=7d638b4a73eaabdef63f330148600bbb
+dir='panel-network-8.0.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

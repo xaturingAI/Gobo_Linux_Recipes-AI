@@ -1,0 +1,5 @@
+[Name] Libmtp
+[Summary] Media Transfer Protocol (MTP) client library
+[Description] libmtp is a library for talking to devices over the Media Transfer Protocol (MTP), the protocol Android phones use when they are plugged in over USB in "file transfer" mode. It enumerates the connected devices and reads/writes their storage. It is the protocol stack behind simple-mtpfs, which mounts a phone as a FUSE filesystem.
+[License] LGPL-2.1
+[Homepage] https://github.com/libmtp/libmtp

@@ -1,0 +1,22 @@
+# Custom recipe for XDG-Desktop-Portal-GTK 1.15.3 (meson)
+#
+# GTK portal backend for xdg-desktop-portal: provides file chooser, settings,
+# wallpaper, appchooser etc. to Flatpak apps and libportal clients. Works
+# under Gala Wayland for the non-compositor portals; screenshot/screencast
+# portals need compositor support (Gala 8.x implements its own interfaces).
+#
+# Needs only gtk3 family + the xdg-desktop-portal daemon pc, all built before.
+# No systemd units on this ISO (elogind/sysvinit).
+
+compile_version=017-GIT
+url="https://github.com/flatpak/xdg-desktop-portal-gtk/archive/refs/tags/1.15.3.tar.gz"
+file="xdg-desktop-portal-gtk-1.15.3.tar.gz"
+file_size=118265
+file_md5=fa0a7332c0a16d810e326ad8e1e08074
+dir='xdg-desktop-portal-gtk-1.15.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dsystemd-user-unit-dir=no"
+)

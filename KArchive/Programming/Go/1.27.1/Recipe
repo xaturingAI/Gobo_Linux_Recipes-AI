@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Go 1.27.1 for GoboLinux, packaged from the official linux-amd64 tarball.
+# Self-contained compiler + standard library (GOROOT is derived from the go
+# binary's location, so bin/ stays a sibling of pkg/src/lib/api like the
+# canonical /usr/local/go layout). Ships gofmt + toolchain. Runtime needs only
+# the ISO base libc. Install binaries with `go install`, modules work as usual.
+
+compile_version=017-GIT
+url="https://go.dev/dl/go1.27.1.linux-amd64.tar.gz"
+file_size=70553950
+file_md5=e5c9667c860c2202db75aeba9c3a21e8
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "go/bin:bin"
+    "go/pkg:pkg"
+    "go/src:src"
+    "go/lib:lib"
+    "go/api:api"
+    "go/misc:misc"
+    "go/go.env:go.env"
+    "go/CONTRIBUTING.md:share/licenses/go/CONTRIBUTING.md"
+    "go/LICENSE:share/licenses/go/LICENSE"
+    "go/PATENTS:share/licenses/go/PATENTS"
+    "go/README.md:share/licenses/go/README.md"
+    "go/SECURITY.md:share/licenses/go/SECURITY.md"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    tar xzf "$tarball"
+}

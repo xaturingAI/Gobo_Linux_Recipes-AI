@@ -1,0 +1,5 @@
+[Name] XKBcommon
+[Summary] Keymap handling library for XKB
+[Description] A library to handle keyboard descriptions, including loading them from disk, parsing them and handling their state.
+[License] MIT
+[Homepage] https://xkbcommon.org/

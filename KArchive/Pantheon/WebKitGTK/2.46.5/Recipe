@@ -1,0 +1,47 @@
+# Custom recipe for WebKitGTK 2.46.5 (GTK4 API 6.0; cmake)
+#
+# Part of the Pantheon stack port. The GTK 4 web engine, needed by
+# PantheonCapnetAssist 8.0.2: dependency('webkitgtk-6.0') (gcr-4 + granite-7 +
+# libadwaita-1 + gtk4 app). Built from the SAME webkitgtk-2.46.5 tarball as
+# WebKit2GTK 2.46.5 (GTK3 4.1) but with the default USE_GTK4=ON, producing the
+# 6.0 API (libwebkitgtk-6.0.so + webkitgtk-6.0.pc).
+#
+# Requires gtk4 (built 4.20.0 with introspection) in addition to everything the
+# 4.1 build needs; cairo rendering path (skia is PRIVATE OFF) -> Fontconfig +
+# Freetype from the ISO. WebKitWebProcess/NetworkProcess binaries are
+# version-suffixed (webkitwebprocess-6.0), so the two builds do not collide on
+# the index.
+#
+# Flags mirror WebKit2GTK: USE_GBM=OFF (no libgbm.pc), ENABLE_GAMEPAD=OFF,
+# ENABLE_INTROSPECTION=OFF, ENABLE_DOCUMENTATION=OFF, ENABLE_MINIBROWSER=OFF,
+# ENABLE_SPELLCHECK=OFF (no enchant-2), ENABLE_PDFJS=OFF (offline, pdf.js not
+# bundled), USE_JPEGXL/USE_AVIF/USE_WOFF2/USE_LIBBACKTRACE=OFF (libs not on
+# the ISO), USE_GSTREAMER_TRANSCODER=OFF (gst-transcoder not built;
+# ENABLE_WEB_RTC is OFF by default so gstreamer-webrtc is never probed).
+# USE_LCMS/ENABLE_JOURNALD_LOG/ENABLE_BUBBLEWRAP_SANDBOX stay ON.
+#
+# file_md5 + file_size verified against the webkitgtk.org release tarball.
+
+compile_version=017-GIT
+url="https://webkitgtk.org/releases/webkitgtk-2.46.5.tar.xz"
+file_size=42898600
+file_md5=095d7f72acb300839c9879a4f95bf941
+dir='webkitgtk-2.46.5'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DPORT=GTK
+    -DUSE_GBM=OFF
+    -DENABLE_GAMEPAD=OFF
+    -DENABLE_INTROSPECTION=OFF
+    -DENABLE_DOCUMENTATION=OFF
+    -DENABLE_MINIBROWSER=OFF
+    -DENABLE_SPELLCHECK=OFF
+    -DENABLE_PDFJS=OFF
+    -DUSE_JPEGXL=OFF
+    -DUSE_AVIF=OFF
+    -DUSE_WOFF2=OFF
+    -DUSE_LIBBACKTRACE=OFF
+    -DUSE_GSTREAMER_TRANSCODER=OFF
+)

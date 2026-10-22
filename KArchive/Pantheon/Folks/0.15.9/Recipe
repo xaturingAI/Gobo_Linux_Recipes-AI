@@ -1,0 +1,34 @@
+# Custom recipe for Folks 0.15.9 (meson)
+#
+# Part of the Pantheon stack port. Meta-contacts library that merges contact
+# sources; needed by PantheonMail 8.0.1 (dependency('folks') -> folks.pc) and
+# PantheonCalendar 8.0.2 (folks). The EDS addressbook backend is the only one
+# enabled (libebook-1.2 + libebook-contacts-1.2 from EvolutionDataServer
+# 3.54.3 + libedataserver-1.2).
+#
+# Builds on libgee (gee-0.8.pc, ISO), glib/gio/gmodule, and the EDS pcs.
+# Backends off: telepathy (needs dbus-glib + telepathy-glib), bluez, ofono,
+# zeitgeist (Files already disables zeitgeist; folks' zeitgeist module would
+# need zeitgeist-2.0.pc). Import/inspect tools, tests + docs off.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/folks/0.15/folks-0.15.9.tar.xz"
+file_size=506044
+file_md5=e297a1fa21839522777be991782f9543
+dir='folks-0.15.9'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Deds_backend=false"
+    "-Dtelepathy_backend=false"
+    "-Dbluez_backend=false"
+    "-Dofono_backend=false"
+    "-Dzeitgeist=false"
+    "-Dimport_tool=false"
+    "-Dinspect_tool=false"
+    "-Dtests=false"
+    "-Ddocs=false"
+)

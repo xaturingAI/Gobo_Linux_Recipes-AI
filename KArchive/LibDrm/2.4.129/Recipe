@@ -1,0 +1,16 @@
+# Custom recipe for LibDrm 2.4.129 (meson)
+# Required by wlroots 0.20.2 (needs >= 2.4.129)
+compile_version=017-GIT
+url="https://dri.freedesktop.org/libdrm/libdrm-2.4.129.tar.xz"
+file_size=433392
+file_md5=bb1e3c32f7b55baeb5db598967684713
+dir='libdrm-2.4.129'
+recipe_type=meson
+
+meson_variables=(
+    "-Dman-pages=disabled"
+    "-Dvalgrind=disabled"
+    "-Dcairo-tests=disabled"
+    "-Dtests=false"
+    "-Dinstall-test-programs=false"
+)

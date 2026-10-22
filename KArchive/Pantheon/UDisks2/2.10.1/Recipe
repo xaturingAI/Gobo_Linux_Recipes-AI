@@ -1,0 +1,24 @@
+# Custom recipe for UDisks2 2.10.1 (autotools)
+#
+# Part of the Pantheon stack port. org.freedesktop.UDisks2 +
+# libudisks2-1.0.vapi for SwitchboardPlugAbout (drive/firmware info).
+#
+# Client-lib-only build: --disable-daemon skips the udisksd block, whose
+# configure checks hard-require libatasmart/gudev/libblockdev. libudisks2,
+# its GIR and vapi build unconditionally, and that is all consumers
+# (SwitchboardPlugAbout) link against.
+compile_version=017-GIT
+url="https://github.com/storaged-project/udisks/releases/download/udisks-2.10.1/udisks-2.10.1.tar.bz2"
+file_size=1896207
+file_md5=613af9bfea52cde74d2ac34d96de544d
+dir='udisks-2.10.1'
+recipe_type=configure
+
+do_configuration() {
+    ./configure --prefix="$target" \
+        --sysconfdir="$target/etc" \
+        --localstatedir="$target/var" \
+        --disable-daemon \
+        --disable-man \
+        --disable-gtk-doc
+}

@@ -1,0 +1,180 @@
+#!/bin/bash
+
+# XIVLauncher (FFXIVQuickLauncher) 7.0.20 for GoboLinux, packaged from the
+# official Velopack "full" nupkg (Windows .NET WPF build).  The nupkg is a
+# plain zip whose lib/app/ tree contains the complete self-contained .NET 9
+# application (including the bundled coreclr runtime and DirectWriteForwarder),
+# so no .NET install is needed inside the Wine prefix -- it just needs a Wine
+# that can run .NET Core/WPF apps (our own Wine 11.14 / Wine-Lutris-GE
+# staging build handles this, and bakes wine-mono/wine-gecko into
+# share/wine/{mono,gecko} for offline bootstrapping).
+#
+# The app is Windows-only: the "native Linux" XIVLauncher is a separate
+# upstream delivery (Flathub / XIVLauncher.Core) with its own release stream,
+# so here we ship the Windows build under Wine, exactly as Lutris/Heroic
+# run Windows games on this CD.
+#
+# On first launch the app creates its own Wine prefix, downloads the FFXIV
+# game client, and sets up Dalamud; all persistent data lives under
+# WINEPREFIX (defaults to ~/.local/share/wineprefixes/xivlauncher).
+# The app self-updates via Velopack.
+#
+# ---- XIVLAUNCHER-WINE-FIX baked in (see that doc for the analysis) ------
+# 1. The payload is shipped in the VELOPACK layout (velopack/app-7.0.20/
+#    next to an empty Update.exe and a sq.version nuspec) so WindowsVelopack-
+#    Locator resolves an install root immediately.  No first-run relocation.
+# 2. bin/xivlauncher is the FIXED wrapper: it exports XL_WINEONLINUX=true,
+#    XL_NO_RUNAS=true, XL_NO_SPACE_REQUIREMENTS=true (bool.Parse needs the
+#    literal true/false), and contains NO `wine certutil` CA-import block
+#    (that was a no-op -- Wine validates TLS against the host trust store).
+#    The idempotent legacy->velopack migration is kept as a safety net only.
+# Game files, Dalamud and updates all live under WINEPREFIX.
+
+compile_version=017-GIT
+url="https://github.com/goatcorp/FFXIVQuickLauncher/releases/download/7.0.20/XIVLauncher-7.0.20-full.nupkg"
+file_size=112025386
+file_md5=f1d38b524bdacfe185455d9921ee8148
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+unmanaged_files=(
+    usr/share/applications/xivlauncher.desktop
+    usr/share/pixmaps/xivlauncher.png
+)
+
+manifest=(
+    "velopack:velopack"
+    "xivlauncher:bin/xivlauncher"
+)
+
+pre_install() {
+    local nupkg="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${nupkg}"
+    unzip -qo "$nupkg" -d .
+
+    # --- Pre-apply the Velopack install layout (Option B of the rebuild
+    # guide).  WindowsVelopackLocator wants <root>/app-<version>/ alongside
+    # an Update.exe and a sq.version nuspec, or EnsureInstalled() throws
+    # NotInstalledException.  Arranging it here means the live ISO needs no
+    # first-run payload move.
+    VER="7.0.20"
+    VLROOT="velopack"
+    APPDIR="$VLROOT/app-$VER"
+    mkdir -p "$VLROOT/packages"
+    mv lib/app "$APPDIR"
+    # Empty on purpose: only File.Exists() is probed at startup; a genuine
+    # Update.exe is extracted from the .nupkg when an update is downloaded.
+    # Deltas are disabled (MaximumDeltasBeforeFallback = -1), so it is never
+    # executed.  Do NOT ship a copied/fake binary here.
+    : > "$VLROOT/Update.exe"
+    cat > "$APPDIR/sq.version" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>XIVLauncher</id>
+    <version>$VER</version>
+    <title>XIVLauncher</title>
+    <authors>goatcorp</authors>
+    <owners>goatcorp</owners>
+    <description>XIVLauncher</description>
+  </metadata>
+</package>
+EOF
+
+    # Menu icon: the nupkg ships only setup.ico (a 256x256 PNG-in-ICO).
+    # Convert it to a plain PNG for the desktop entry.
+    mkdir -p usr/share/pixmaps
+    magick setup.ico -thumbnail 256x256 usr/share/pixmaps/xivlauncher.png
+
+    # The wrapper must be byte-identical to the "Final working wrapper" in
+    # XIVLAUNCHER-WINE-FIX.md (verified).  NOTE the outer heredoc delimiter is
+    # XIVLWRAP_EOF: the wrapper itself contains a nested <<EOF heredoc for
+    # sq.version, so a plain EOF here would collide and truncate the script.
+    cat > xivlauncher <<'XIVLWRAP_EOF'
+#!/bin/bash
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+VER="7.0.20"
+
+WINE="${WINE:-}"
+if [ -z "$WINE" ]; then
+    for cand in "/Programs/Wine-Lutris-GE/Current/bin/wine" \
+                "/Programs/Wine/Current/bin/wine" \
+                "$(command -v wine 2>/dev/null)"; do
+        [ -n "$cand" ] && [ -x "$cand" ] && WINE="$cand" && break
+    done
+fi
+[ -n "$WINE" ] || { echo "xivlauncher: no wine found"; exit 1; }
+
+WINEPREFIX="${WINEPREFIX:-$HOME/.local/share/wineprefixes/xivlauncher}"
+export WINEPREFIX WINEDEBUG="${WINEDEBUG:--all}"
+
+# Tell XIVLauncher it is running under Wine. See FAULT #2 in the docs.
+# Values must be exactly "true"/"false" (bool.Parse).
+export XL_WINEONLINUX="${XL_WINEONLINUX:-true}"
+export XL_NO_RUNAS="${XL_NO_RUNAS:-true}"
+export XL_NO_SPACE_REQUIREMENTS="${XL_NO_SPACE_REQUIREMENTS:-true}"
+
+if [ ! -d "$WINEPREFIX/drive_c" ]; then
+    echo "Initializing Wine prefix $WINEPREFIX"
+    mkdir -p "$WINEPREFIX"
+    "$WINE" wineboot --init 2>/dev/null
+fi
+
+# --- Velopack install layout (FAULT #1) ----------------------------------
+LEGACY_APP="$DIR/lib/xivlauncher"
+VLROOT="$DIR/velopack"
+APPDIR="$VLROOT/app-$VER"
+APP="$APPDIR/XIVLauncher.exe"
+
+if [ ! -f "$APP" ] && [ -f "$LEGACY_APP/XIVLauncher.exe" ]; then
+    echo "Setting up Velopack install layout in $VLROOT"
+    mkdir -p "$VLROOT"
+    mv "$LEGACY_APP" "$APPDIR"
+fi
+
+if [ -f "$APP" ]; then
+    mkdir -p "$VLROOT/packages"
+    # Only needs to exist for the locator; a real Update.exe is extracted from
+    # the .nupkg on first update. Deltas are disabled, so it is never executed.
+    [ -f "$VLROOT/Update.exe" ] || : > "$VLROOT/Update.exe"
+    [ -f "$APPDIR/sq.version" ] || cat > "$APPDIR/sq.version" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>XIVLauncher</id>
+    <version>$VER</version>
+    <title>XIVLauncher</title>
+    <authors>goatcorp</authors>
+    <owners>goatcorp</owners>
+    <description>XIVLauncher</description>
+  </metadata>
+</package>
+EOF
+fi
+
+# No CA import needed: Wine validates TLS against the host trust store (FAULT #3).
+rm -f "$WINEPREFIX/.gobo-cacert-imported"
+
+[ -f "$APP" ] || { echo "xivlauncher: application payload not found under $DIR"; exit 1; }
+
+exec "$WINE" "$APP" "$@"
+XIVLWRAP_EOF
+    chmod +x xivlauncher
+
+    mkdir -p usr/share/applications
+    cat > usr/share/applications/xivlauncher.desktop <<'EOF'
+[Desktop Entry]
+Name=XIVLauncher
+Comment=FFXIV Quick Launcher (Windows, under Wine)
+Exec=xivlauncher
+Icon=xivlauncher
+Terminal=false
+Type=Application
+Categories=Game;
+StartupWMClass=XIVLauncher
+EOF
+}

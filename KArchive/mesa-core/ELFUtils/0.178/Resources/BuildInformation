@@ -1,0 +1,44 @@
+Build type: configure (autotools, ships a generated ./configure)
+Source: https://sourceware.org/elfutils/ftp/0.178/elfutils-0.178.tar.bz2
+        file_size=9007557 file_md5=5480d0b7174446aba13a6adde107287f
+Build order: foundation, before Mesa 25.3.6 (mesa-core/Mesa). Nothing else in
+this repo builds against it.
+Ported from the canonical GoboLinux recipe ELFUtils/0.178 (Lucas C. Villa Real,
+24 Feb 2020); the URL, file_size and file_md5 are identical to upstream and to
+the tarball actually used for the ISO's /Programs/ELFUtils/0.178.
+Version pinned to 0.178 on purpose. CheckDependencies treats a bare dependency
+line as satisfied by ANY installed version, so the only reason this recipe
+exists is to make the graph complete: without it, `dependency('libelf')` in
+Mesa fails on a host that does not already have the Program. Bumping it would
+rebuild a base-system library for no benefit.
+configure_options:
+ --enable-deterministic-archives  ar/ranlib use -D by default (reproducible).
+ --disable-debuginfod             do NOT build the debuginfod *server* (it pulls
+                                  libmicrohttpd/libcurl/sqlite/libarchive). The
+                                  debuginfod *client* library libdebuginfod is
+                                  still built, which is why the installed tree
+                                  has lib/pkgconfig/libdebuginfod.pc.
+pre_build strips -Werror. elfutils turns every warning into an error from
+config/eu.am's AM_CFLAGS
+(`... $(if $($(*F)_no_Werror),,-Werror) ...`, with no --disable-werror), and
+this 2019 code predates warnings a modern GCC reports -- e.g.
+libebl/ebl_syscall_abi.c: `argument 5 of type 'int *' declared as a pointer
+[-Werror=array-parameter=]` (libebl.h:248 declares it `int args[6]`).
+The sed has to target **Makefile.in**, not Makefile: Compile runs the pre_build
+hook BEFORE do_configuration, so a freshly unpacked tree has only Makefile.in,
+and that is what config.status copies into Makefile (the -Werror text is plain
+make syntax with no @substitutions@, so it survives verbatim).  Touching
+Makefile.in also keeps it newer than Makefile.am/eu.am, so automake is not
+re-run and the flag is not restored.  Existing Makefile files are patched too,
+for the pkgforced --keep case where the tree is already configured.
+Reproduced with GCC 16.2.1 (the same error), and the object builds clean with
+the flag removed; config.status regeneration of libebl/Makefile after the sed
+leaves 0 -Werror.
+Optional compression backends are auto-detected by configure (--with-zlib,
+--with-bzlib, --with-lzma are all default-on when the headers are present).
+The ISO build has zlib, bzip2 and liblzma, so the resulting libdw links
+libz/liblzma/libbz2 exactly like /Programs/ELFUtils/0.178/lib/libdw.so does.
+Output: lib/libelf.so.1 (+ libelf.pc), lib/libdw.so.1 (+ libdw.pc),
+lib/libasm.so.1, lib/libdebuginfod.so, include/{elf.h,gelf.h,libelf.h,dwarf.h},
+include/elfutils/*, and the eu-* tools (elfutils' own configure defaults to
+--program-prefix=eu-, which is why the binaries are eu-readelf, eu-nm, ...).

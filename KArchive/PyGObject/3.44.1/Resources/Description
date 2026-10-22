@@ -1,0 +1,5 @@
+[Name] PyGObject
+[Summary] Python 3 bindings for GObject/GTK/GNOME via introspection (module gi)
+[License] LGPL-2.1
+[Homepage] https://pygobject.readthedocs.io
+[Description] PyGObject is a Python package which provides bindings for GObject based libraries such as GTK, GStreamer, WebKitGTK and more. This 3.44.1 build targets Python 3.11 and provides the gi module required by Lutris.

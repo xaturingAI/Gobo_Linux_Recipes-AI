@@ -1,0 +1,53 @@
+# Custom recipe for LibCanberra 0.30 (GNOME 48 era; autotools)
+#
+# Part of the Pantheon stack port. libcanberra plays event sounds. Mutter
+# optionally links it for sound_player; gnome-settings-daemon 48.1's
+# color/media-keys/power plugins hard-require libcanberra-gtk3.pc, so the
+# GTK3 sound module/library MUST be enabled here (needs GTK+ 3 headers).
+#
+# Build AFTER GLib 2.84 and BEFORE Mutter/gsd. libcanberra uses autotools.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 verified vs download.gnome.org copy.
+
+compile_version=017-GIT
+url="https://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz"
+file_size=318960
+file_md5=34cb7e4430afaf6f447c4ebdb9b42072
+dir='libcanberra-0.30'
+recipe_type=configure
+
+configure_options=(
+    --disable-oss
+    --disable-alsa
+    --disable-pulse
+    --disable-gstreamer
+    --disable-gtk-doc
+    --enable-gtk3
+    --disable-gtk4
+    --enable-null
+    --disable-man
+    --disable-tests
+    --disable-tdb
+)
+
+# The ISO ships index directory-symlinks that point into /Programs/LibCanberra/
+# 0.30 (modules, libcanberra-0.30, share/gdm, share/gnome, share/doc/libcanberra,
+# share/gtk-doc/html/libcanberra). During install Gobo's
+# Pre_Installation_Preparation empties the old program (keeping only a
+# -safelinking copy), so inside the union sandbox these index symlinks DANGLE
+# (the sandbox sees the original ISO link, not the re-pointed one) exactly
+# while libcanberra's install runs 'mkdir -p -m <dir>' on paths through them --
+# coreutils 8.31 errors with "File exists" on a dangling symlink leaf even
+# with -p, failing the install. The very first such mkdir is in
+# install-exec-hook, which automake runs before all install-*DATA targets.
+#
+# We neutralize the generated install-exec-hook itself: prepend an 'rm -rf' of
+# the six directory symlinks so the sandboxed make drops them (SymlinkProgram
+# regenerates the index links after install) and each mkdir creates a fresh
+# directory. Self-contained and robust against the overlay's view of the leaf.
+pre_install() {
+    if ! grep -qF 'rm -rf $(DESTDIR)$(gtk3moduledir)' src/Makefile
+    then
+        sed -i 's|^\t\$(MKDIR_P) -m 755 \$(DESTDIR)\$(gtk3moduledir)$|\trm -rf $(DESTDIR)$(gtk3moduledir) /System/Index/lib/libcanberra-0.30 /System/Index/share/gdm /System/Index/share/gnome /System/Index/share/doc/libcanberra /System/Index/share/gtk-doc/html/libcanberra\n\t$(MKDIR_P) -m 755 $(DESTDIR)$(gtk3moduledir)|' src/Makefile
+    fi
+}

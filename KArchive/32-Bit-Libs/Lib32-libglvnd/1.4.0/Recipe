@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# 32-bit GLVND dispatch libraries extracted from Debian bookworm i386 packages.
+# Provides libGL, libGLX, libEGL, libGLESv1_CM, libGLESv2, libOpenGL, and
+# libGLdispatch for Wine/Proton 32-bit Vulkan and OpenGL passthrough.
+#
+# The Nvidia driver supplies its own 32-bit GLVND dispatch stubs; these are the
+# generic libglvnd dispatch libraries that sit between the application and the
+# actual driver (or Mesa, for software rendering).
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/libg/libglvnd/libglvnd0_1.6.0-1_i386.deb"
+file_size=42728
+file_md5=8c302c245d8f3b55e0783a1be1008e45
+recipe_type=manifest
+uncompress=no
+
+# Additional packages fetched during pre_install.
+deb_libglx_url="https://deb.debian.org/debian/pool/main/libg/libglvnd/libglx0_1.6.0-1_i386.deb"
+deb_egl_url="https://deb.debian.org/debian/pool/main/libg/libglvnd/libegl1_1.6.0-1_i386.deb"
+deb_gl_url="https://deb.debian.org/debian/pool/main/libg/libglvnd/libgl1_1.6.0-1_i386.deb"
+deb_gles2_url="https://deb.debian.org/debian/pool/main/libg/libglvnd/libgles2_1.6.0-1_i386.deb"
+deb_gles1_url="https://deb.debian.org/debian/pool/main/libg/libglvnd/libgles1_1.6.0-1_i386.deb"
+deb_opengl_url="https://deb.debian.org/debian/pool/main/libg/libglvnd/libopengl0_1.6.0-1_i386.deb"
+
+pre_install() {
+    local base="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking libglvnd0"
+    ar p "$base" data.tar.xz | tar xJf -
+
+    local dl_dir="$compileArchivesDir"
+    for pair in \
+        "libglx0:${deb_libglx_url}" \
+        "libegl1:${deb_egl_url}" \
+        "libgl1:${deb_gl_url}" \
+        "libgles2:${deb_gles2_url}" \
+        "libgles1:${deb_gles1_url}" \
+        "libopengl0:${deb_opengl_url}"; do
+        local name="${pair%%:*}"
+        local url="${pair#*:}"
+        local deb="$dl_dir/${name}_i386.deb"
+        Log_Normal "Fetching ${name} i386"
+        curl -sL -o "$deb" "$url" || Die "Failed downloading ${name} i386."
+        ar p "$deb" data.tar.xz | tar xJf -
+    done
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+
+    # libglvnd0 core
+    cp -a usr/lib/i386-linux-gnu/libGLdispatch.so.0* "$target"/lib32/ || Die "Failed copying libGLdispatch."
+
+    # libglx0
+    cp -a usr/lib/i386-linux-gnu/libGLX.so.0* "$target"/lib32/ || Die "Failed copying libGLX."
+
+    # libegl1
+    cp -a usr/lib/i386-linux-gnu/libEGL.so.1* "$target"/lib32/ || Die "Failed copying libEGL."
+
+    # libgl1
+    cp -a usr/lib/i386-linux-gnu/libGL.so.1* "$target"/lib32/ || Die "Failed copying libGL."
+
+    # libgles2
+    cp -a usr/lib/i386-linux-gnu/libGLESv2.so.2* "$target"/lib32/ || Die "Failed copying libGLESv2."
+
+    # libgles1
+    cp -a usr/lib/i386-linux-gnu/libGLESv1_CM.so.1* "$target"/lib32/ || Die "Failed copying libGLESv1_CM."
+
+    # libopengl0
+    cp -a usr/lib/i386-linux-gnu/libOpenGL.so.0* "$target"/lib32/ || Die "Failed copying libOpenGL."
+
+    # EGL vendor JSON manifests (if present)
+    if [ -d usr/share/glvnd/egl_vendor.d ]; then
+        mkdir -p "$target"/Resources/Unmanaged/usr/share/glvnd/egl_vendor.d/
+        cp -a usr/share/glvnd/egl_vendor.d/*.json \
+              "$target"/Resources/Unmanaged/usr/share/glvnd/egl_vendor.d/ || true
+    fi
+}

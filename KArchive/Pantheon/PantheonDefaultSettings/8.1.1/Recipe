@@ -1,0 +1,31 @@
+# Custom recipe for PantheonDefaultSettings 8.1.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/default-settings/archive/refs/tags/8.1.1.tar.gz
+#
+# The accountsservice subdir is unconditional (no meson option) and its
+# meson.build does `dependency('accountsservice')`, which is not on the ISO.
+# It only ships a D-Bus interface + polkit policy for a Greeter extension that
+# no other recipe references, so pre_build drops the subdir to unblock the
+# otherwise pure data/config build.
+
+compile_version=017-GIT
+url="https://github.com/elementary/default-settings/archive/refs/tags/8.1.1.tar.gz"
+file_size=129258
+file_md5=ad18b0e19b73beed731c9cc64d112bf0
+dir='default-settings-8.1.1'
+recipe_type=meson
+
+pre_build() {
+    # NOTE: pre_build runs with cwd = $builddir (meson's _build/), so patch the
+    # source tree explicitly via $sourcedir. Idempotent.
+    if grep -q "^subdir('accountsservice')" "$sourcedir/meson.build"
+    then
+        Log_Normal "Dropping accountsservice subdir (dep not on the ISO; greeter extension unused)"
+        sed -i "s/^subdir('accountsservice')/# subdir('accountsservice')  # patched: no AccountsService on ISO/" "$sourcedir/meson.build"
+    fi
+}
+
+meson_variables=(
+    --buildtype=release
+
+)

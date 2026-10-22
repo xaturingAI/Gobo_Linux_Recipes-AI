@@ -1,0 +1,30 @@
+# Custom recipe for aurorae 6.7.4 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh.
+#
+# Aurorae = the themeable window-decoration ENGINE for KWin. KWin 6 no longer
+# ships an engine, so downloaded Aurorae themes have nothing to render them.
+# This package provides the org.kde.kdecoration3 plugin (libaurorae_v2.so)
+# plus the shipped aurorae.knsrc (which already sets AliasFor=window-decorations,
+# ProvidersUrl=https://autoconfig.kde.org/ocs/providers.xml, TargetDir=aurorae/themes,
+# Uncompress=archive and an AdoptionCommand via the plasma-apply-aurorae helper),
+# so KNewStuff theme downloads work end-to-end. Theme CONTENT is never baked;
+# users install whatever they pick from the KDE store at runtime.
+# Build deps: Qt6 (Core/DBus/Quick/UiTools/Widgets), KF6 (ColorScheme/Config/
+# CoreAddons/I18n/KCMUtils/NewStuff/Package/Svg), KDecoration3 >= 6.7, KF6Svg.
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/aurorae-6.7.4.tar.xz"
+file_size=67132
+file_md5=e3117b48474022601917b1643f629656
+dir='aurorae-6.7.4'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

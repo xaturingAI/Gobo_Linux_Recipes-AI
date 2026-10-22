@@ -1,0 +1,42 @@
+# Custom recipe for VTE 0.80.1 (GTK3 + GTK4 dual-backend; meson)
+#
+# Part of the Pantheon stack port. Terminal emulator widget library. Both
+# backends are built in ONE build:
+#   - vte-2.91-gtk4.pc -> PantheonTerminal 8.1.0 (dependency('vte-2.91-gtk4'));
+#   - vte-2.91.pc      -> PantheonCode 8.3.2 (dependency('vte-2.91'), GTK3 app).
+# Code (restored to the full-desktop scope) hard-requires the GTK3 pc, so the
+# single backend is no longer an option.
+#
+# Builds with glib 2.84, gtk+-3.0 (3.24.43) + gtk4, pango, fribidi, libpcre2
+# (ISO), liblz4 (ISO), gnutls (ISO). gir + vapi ON (vala apps bind via the
+# gir/vapi; vapigen + g-ir-scanner on the index).
+#
+# ICU is DISABLED (-Dicu=false): the ISO's LibICU4C 65.1 is a reduced build
+# whose ucnv.h/libicuuc.so lack `ucnv_clone` (VTE 0.80.1's icu-glue.cc calls it
+# unconditionally and the file has no WITH_ICU guard). With icu=false meson
+# drops icu_sources entirely (src/meson.build `if get_option('icu')`) and the
+# terminal falls back to libc/glib charset decoding — fine for the UTF-8
+# terminals on this ISO.
+#
+# file_md5 + file_size verified against download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/vte/0.80/vte-0.80.1.tar.xz"
+file_size=585604
+file_md5=a76e346a25148ee00955e7084972a85e
+dir='vte-0.80.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dgtk3=true"
+    "-Dgtk4=true"
+    "-Dgir=true"
+    "-Dvapi=true"
+    "-Da11y=true"
+    "-Dicu=false"
+    "-Dgnutls=true"
+    "-D_systemd=false"
+    "-Ddocs=false"
+    "-Dglade=false"
+)

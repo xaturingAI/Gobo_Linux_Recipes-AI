@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# 32-bit libmp3lame (LAME MP3 encoder), extracted from the Debian bookworm
+# i386 package. Provides libmp3lame.so.0, which the Steam client and
+# Wine/Proton games link against.
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/l/lame/libmp3lame0_3.100-6_i386.deb"
+file_size=364996
+file_md5=0c70415dc99057899363c8977ceb67f4
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libmp3lame.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libmp3lame."
+}

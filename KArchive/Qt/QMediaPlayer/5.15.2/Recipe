@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# QMediaPlayer / Qt5Multimedia 5.15.2 recipe
+# Provides Qt5Multimedia libraries and plugins needed by apps like RPCS3
+
+compile_version=017-GIT
+url="file://"
+recipe_type=manifest
+
+manifest=(
+)
+
+pre_install() {
+    :
+}
+
+post_install() {
+    # Symlink Qt5Multimedia libs/plugins from Qt 5.15.2 if available
+    if [ -d "/Programs/Qt/5.15.2" ]; then
+        mkdir -p "$target/lib" "$target/plugins"
+        for f in /Programs/Qt/5.15.2/lib/libQt5Multimedia*; do
+            [ -f "$f" ] && ln -sf "$f" "$target/lib/$(basename $f)" 2>/dev/null
+        done
+        for d in /Programs/Qt/5.15.2/plugins/*; do
+            b=$(basename "$d")
+            mkdir -p "$target/plugins/$b"
+            for f in "$d"/*; do
+                [ -f "$f" ] && ln -sf "$f" "$target/plugins/$b/$(basename $f)" 2>/dev/null
+            done
+        done
+        for d in /Programs/Qt/5.15.2/qml/*; do
+            b=$(basename "$d")
+            mkdir -p "$target/qml/$b"
+            for f in "$d"/*; do
+                [ -f "$f" ] && ln -sf "$f" "$target/qml/$b/$(basename $f)" 2>/dev/null
+            done
+        done
+    fi
+}

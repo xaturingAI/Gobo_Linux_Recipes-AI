@@ -1,0 +1,17 @@
+# Custom recipe for LibEvdev 1.13.6 (meson)
+#
+# Bump from the ISO's 1.9.0: libinput 1.31.3 requires libevdev >= 1.10.0
+# (its meson.build does dependency('libevdev', version: '>= 1.10.0')
+# unconditionally). libevdev is a kernel-wrapper library with no runtime
+# deps; python3 is only needed at build time to generate the event-code
+# headers. Build BEFORE LibInput 1.31.3 in the Pantheon foundation.
+compile_version=017-GIT
+url="https://www.freedesktop.org/software/libevdev/libevdev-1.13.6.tar.xz"
+file_size=472152
+file_md5=4202ff132e3efe95fe9ca2c4f8f119f7
+dir='libevdev-1.13.6'
+recipe_type=meson
+meson_variables=(
+    -Ddocumentation=disabled
+    -Dtests=disabled
+)

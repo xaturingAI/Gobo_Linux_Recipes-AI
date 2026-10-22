@@ -1,0 +1,16 @@
+# Custom recipe for Bubblewrap 0.11.0 (meson)
+# Unprivileged sandboxing tool; the backend for Flatpak and useful standalone.
+# Needs libcap (already on the ISO). man/selinux/tests are disabled so the build
+# needs nothing but meson+ninja + a C compiler; installed setuid is NOT used
+# (user namespaces path), so no setuid wrapper configuration on the ISO.
+compile_version=017-GIT
+url="https://github.com/containers/bubblewrap/releases/download/v0.11.0/bubblewrap-0.11.0.tar.xz"
+file_size=115228
+file_md5=630eec714ea04729efd116ea85a715a3
+dir='bubblewrap-0.11.0'
+recipe_type=meson
+meson_variables=(
+    -Dman=disabled
+    -Dselinux=disabled
+    -Dtests=false
+)

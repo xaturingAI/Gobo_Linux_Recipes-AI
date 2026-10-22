@@ -1,0 +1,5 @@
+[Name] LibYaml
+[Summary] YAML 1.1 parser/emitter library
+[Description] libyaml is a C library for parsing and emitting YAML 1.1. It provides yaml-0.1.pc, a hard dependency of AppStream (which libadwaita 1.8.0 requires). Not shipped on the 017.01 ISO. Build AFTER GLib 2.84 and BEFORE LibXmlb/AppStream/LibAdwaita. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] MIT
+[Homepage] https://github.com/yaml/libyaml

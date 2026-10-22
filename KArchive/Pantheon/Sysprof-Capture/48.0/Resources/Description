@@ -1,0 +1,5 @@
+[Name] Sysprof-Capture
+[Summary] Sysprof profiling capture library (libsysprof-capture-4)
+[Description] libsysprof-capture is the lightweight capture library used by sysprof. Mutter 48+ requires >= 3.40.1 for the profiler feature. Build standalone (no dependencies) and BEFORE Mutter. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] BSD-2-Clause
+[Homepage] https://gitlab.gnome.org/GNOME/sysprof

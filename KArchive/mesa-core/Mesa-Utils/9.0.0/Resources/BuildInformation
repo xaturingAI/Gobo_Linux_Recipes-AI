@@ -1,0 +1,17 @@
+Build type: meson
+Source: https://archive.mesa3d.org/demos/mesa-demos-9.0.0.tar.xz
+Build order: after Mesa 25.3.6 + LibGLVnd 1.7.0 (gl.pc / glx.pc come from
+glvnd, not from a system GL) and after XorgProto/LibX11/LibXext; any later
+step. Only glxinfo really matters -- Lutris' system-check wizard runs it to
+print the OpenGL renderer/version in its GPU detection panel -- so egl, gles1,
+gles2, osmesa, vulkan, wayland and libdrm are all disabled in meson_variables
+and glut stays disabled too (it gates the demos/tests block, and freeglut is
+present on the ISO, so it must stay OFF to avoid pulling the whole demo suite
+in).
+Configure-time hard requirements behind those switches: dependency('gl'),
+dependency('x11, xext') and GLU (dep_glu falls back to find_library('GLU')
+with header GL/glu.h and is required whenever x11 is found). dependency('glx')
+is required:false+disabler, so if glvnd's glx.pc were missing the targets
+would just be disabled instead of failing.
+Everything installs under /Programs/Mesa-Utils/9.0.0 (bin/glxinfo, bin/glxgears,
+bin/eglinfo, ... plus /usr/share/mesa-demos data files).

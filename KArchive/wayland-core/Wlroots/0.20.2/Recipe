@@ -1,0 +1,86 @@
+# Custom recipe for Wlroots 0.20.2 (meson)
+# Build AFTER XWayland: the xwayland feature is 'auto' and only enables if the
+# 'xwayland' pkg-config module is findable at build time.
+# Also needs Wayland, Wayland-Protocols, XKBcommon, LibInput >= 1.26.0,
+# LibDrm >= 2.4.129, pixman >= 0.44.0 (all earlier).
+#
+# The build system installs the real XKBcommon 1.8.0 and Pixman 0.46.4 before
+# this recipe, so upstream's version gates (xkbcommon >= 1.8.0, pixman-1 >=
+# 0.46.0) are satisfied.  wlroots-0.20.2-deps.patch additionally relaxes those
+# gates and makes the two features that need the new libraries optional, so a
+# failed dependency upgrade costs one niche feature instead of the build:
+#
+#   * pixman: PIXMAN_a16b16g16r16 (16 bits per component, used for
+#     DRM_FORMAT_ABGR16161616) only exists from pixman 0.46.0 on.  The patch
+#     guards that single format entry with the pixman version, so the 64bpp
+#     format is advertised with pixman >= 0.46 and simply not offered with an
+#     older pixman.
+#   * xkbcommon: XKB_LED_NAME_COMPOSE and XKB_LED_NAME_KANA only exist from
+#     xkbcommon 1.8.0 on.  The patch spells those two stable LED names out,
+#     which behaves identically with both versions.
+#
+# Everything else wlroots 0.20.2 uses exists in xkbcommon 1.7.0 and
+# pixman 0.44.2 (checked symbol by symbol against the installed libraries).
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/0.20.2/wlroots-0.20.2.tar.bz2"
+file_size=525240
+file_md5=03634ea5be3d116490630c955355610c
+dir='wlroots-0.20.2'
+recipe_type=meson
+
+meson_variables=(
+    "-Dexamples=false"
+    # Upstream builds with werror=true; gcc 14.2 is newer than the compiler
+    # wlroots 0.20.2 was released against, so a new warning would abort the
+    # whole build. Keep warnings, do not treat them as errors.
+    "-Dwerror=false"
+)
+
+pre_build() {
+    # Safety net for the two relaxed version gates. The recipe patch
+    # (wlroots-0.20.2-deps.patch) already does this, but Compile's do_patch
+    # step aborts the build when a patch fails to apply, so keep the
+    # relaxation independent of the patch. Idempotent: a no-op when the
+    # patch has already been applied.
+    for _f in "$sourcedir/meson.build" "$sourcedir/render/pixman/meson.build"
+    do
+        [ -f "$_f" ] || continue
+        sed -i -e "s/version: '>=1\.8\.0',/version: '>=1.7.0',/g" \
+               -e "s/version: '>=0\.46\.0'/version: '>=0.44.0'/g" "$_f" || true
+    done
+    # Fail loudly (instead of letting meson fail later with a confusing
+    # "Automatic wrap-based subproject downloading is disabled") if a gate is
+    # still too strict for the libraries installed on this system.  If
+    # upstream raises the gates again, this is where the recipe has to be
+    # updated.
+    if ! grep -q "version: '>=1\.7\.0'" "$sourcedir/meson.build" 2>/dev/null
+    then
+        echo "ERROR: the xkbcommon version gate is not '>=1.7.0' - update this recipe" >&2
+        return 1
+    fi
+    if ! grep -q "version: '>=0\.44\.0'" "$sourcedir/render/pixman/meson.build" 2>/dev/null
+    then
+        echo "ERROR: the pixman-1 version gate is not '>=0.44.0' - update this recipe" >&2
+        return 1
+    fi
+    # PIXMAN_a16b16g16r16 needs pixman >= 0.46.0 and the Compose/Kana LED
+    # names need xkbcommon >= 1.8.0.  The patch makes both of them
+    # conditional; if the guards are missing the build would fail with a
+    # confusing "undeclared here", so check them.
+    _pf="$sourcedir/render/pixman/pixel_format.c"
+    if [ -f "$_pf" ] && grep -q "PIXMAN_a16b16g16r16" "$_pf" &&
+       ! grep -q "PIXMAN_VERSION_MINOR >= 46" "$_pf"
+    then
+        echo "ERROR: the 64bpp pixman format entry is not version-guarded - check wlroots-0.20.2-deps.patch" >&2
+        return 1
+    fi
+    _kb="$sourcedir/types/wlr_keyboard.c"
+    if [ -f "$_kb" ] && grep -q "XKB_LED_NAME_COMPOSE" "$_kb" &&
+       ! grep -q '"Compose"' "$_kb"
+    then
+        echo "ERROR: the Compose/Kana LED names are not version-guarded - check wlroots-0.20.2-deps.patch" >&2
+        return 1
+    fi
+    echo "wlroots: xkbcommon>=1.7.0 and pixman-1>=0.44.0 version gates relaxed"
+    return 0
+}

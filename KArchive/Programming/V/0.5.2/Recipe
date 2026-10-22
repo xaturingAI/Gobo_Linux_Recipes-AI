@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# V language (vlang/v) 0.5.2 for GoboLinux, packaged from the official GitHub
+# release v_linux.zip. Ships the prebuilt linux-amd64 v compiler binary plus
+# the stdlib (vlib) and thirdparty C sources it links against (tcc/libgc/
+# mbedtls/...). V resolves its install root via /proc/self/exe, so the real
+# binary lives at the program root with vlib/thirdparty as siblings; bin/v is
+# a relative symlink so System/Index/bin picks it up. Compiled programs are
+# linked on first use by the ISO's cc (GCC 14.2.0) + ld (BinUtils 2.33.1).
+# The prebuilt binary needs GLIBC_2.34, satisfied by the merged glibc 2.44-2.
+
+compile_version=017-GIT
+url="https://github.com/vlang/v/releases/download/0.5.2/v_linux.zip"
+file_size=25674314
+file_md5=7a45bef53f12bcc86c557da7bd6b8498
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "v/v:v"
+    "v/vlib:vlib"
+    "v/thirdparty:thirdparty"
+    "v/cmd:cmd"
+    "v/examples:examples"
+    "v/LICENSE:doc/LICENSE"
+    "v/README.md:doc/README.md"
+    "bin:bin"
+)
+
+pre_install() {
+    local archive="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${archive}"
+    unzip -q "$archive"
+    mkdir -p bin
+    ln -sfn ../v bin/v
+}

@@ -1,0 +1,28 @@
+# Custom recipe for HWData 0.410 (makefile/configure)
+#
+# Part of the Pantheon stack port. libdisplay-info 0.3.0 needs
+# /usr/share/hwdata/pnp.ids at configure time (meson.build:24 -- the pnp id
+# table is compiled into the library via tool/gen-search-table.py). The ISO
+# ships no hwdata, so `files('/usr/share/hwdata/pnp.ids')` fails.
+#
+# hwdata is a data-only package (pci.ids, usb.ids, oui.txt, iab.txt,
+# pnp.ids + hwdata.pc). Its `configure` is a minimal shell script; the
+# `all` make target is a no-op. Installs into /Programs/HWData/0.410/share
+# and relinks to /System/Index/share, so /usr/share/hwdata resolves on the
+# chroot and the final ISO.
+#
+# --disable-blacklist skips the modprobe.d/dist-blacklist.conf drop.
+#
+# Build BEFORE Libdisplay-Info 0.3.0. file_md5 verified against the GitHub
+# v0.410 tag archive (codeload; deterministic -- re-download matched).
+
+compile_version=017-GIT
+url="https://github.com/vcrhonek/hwdata/archive/refs/tags/v0.410.tar.gz"
+file_size=2641544
+file_md5=07f1de937ff5b830280f6157221164eb
+dir='hwdata-0.410'
+recipe_type=configure
+
+configure_options=(
+    --disable-blacklist
+)

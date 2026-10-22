@@ -1,0 +1,15 @@
+# Custom recipe for Contractor 0.3.5 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/contractor/archive/refs/tags/0.3.5.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/contractor/archive/refs/tags/0.3.5.tar.gz"
+file_size=22122
+file_md5=77ae44cdd80b1919566a5d5bcde4af4a
+dir='contractor-0.3.5'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

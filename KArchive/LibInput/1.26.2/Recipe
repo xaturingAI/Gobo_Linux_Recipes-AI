@@ -1,0 +1,16 @@
+# Custom recipe for LibInput 1.26.2 (meson)
+# -Dlibwacom=false: the 017.01 ISO has no LibWacom, and its meson default is
+#   "true" (mandatory) -- tablets are not needed on a gaming LiveCD.
+# Build AFTER LibEvdev (present in ISO). Uses libudev from Eudev (present).
+# Based on the upstream gobo-recipes recipe, adapted to 'meson_variables'.
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.26.2/libinput-1.26.2.tar.gz"
+file_size=1032914
+file_md5=65bfce1b15c7b2375d4df4f390a9233f
+recipe_type=meson
+meson_variables=(
+    -Db_lto=false
+    -Ddocumentation=false
+    -Dtests=false
+    -Dlibwacom=false
+)

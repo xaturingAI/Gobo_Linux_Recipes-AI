@@ -1,0 +1,6 @@
+Build type: meson
+Source: https://github.com/elogind/elogind/archive/refs/tags/v257.16.tar.gz
+Build order: foundation, before Mutter/GNOME session stack (part of Pantheon port, see Recipes/pantheon-recipes.md).
+Provides libelogind.pc (Mutter logind dep), the elogind daemon, org.freedesktop.login1 D-Bus service, pam_elogind.so.
+No systemd on this ISO: everything links libelogind, not libsystemd.
+Runtime: Resources/Tasks/Elogind starts the daemon; PostInstall appends the boot line to the Gobo BootUp script.

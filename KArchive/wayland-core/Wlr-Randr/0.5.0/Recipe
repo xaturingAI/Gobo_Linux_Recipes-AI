@@ -1,0 +1,14 @@
+# Custom recipe for wlr-randr 0.5.0 (meson)
+# xrandr clone for wlroots compositors (output positioning, --left-of etc.).
+# Bundles its own wlr-output-management XML, so it only needs wayland-client +
+# wayland-scanner (scdoc for the man page is optional). werror is disabled so
+# strict warnings do not fail the build on GCC 14.
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/emersion/wlr-randr/-/archive/v0.5.0/wlr-randr-v0.5.0.tar.bz2"
+file_size=13860
+file_md5=ce47b7aef62ee32e8812d100a6a15605
+dir='wlr-randr-v0.5.0'
+recipe_type=meson
+meson_variables=(
+    -Dwerror=false
+)

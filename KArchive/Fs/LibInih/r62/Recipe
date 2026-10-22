@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# inih r62 -- tiny INI file parser library. Build-dependency ONLY for
+# XFSProgs 7.1.1 (its configure probes for ini.h + -linih even with scrub
+# disabled). The XFS tools themselves never link inih, so this lib is not
+# needed at runtime -- it just satisfies the autoconf check.
+
+compile_version=017-GIT
+url="https://github.com/benhoyt/inih/archive/refs/tags/r62.tar.gz"
+file_size=22145
+file_md5=c0c6982525958a0376a3cb5bfbee14a0
+dir='inih-r62'
+recipe_type=meson
+
+meson_variables=(
+    -Ddistro_install=true
+)

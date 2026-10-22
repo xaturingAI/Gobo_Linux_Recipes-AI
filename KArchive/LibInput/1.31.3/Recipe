@@ -1,0 +1,22 @@
+# Custom recipe for LibInput 1.31.3 (meson)
+#
+# Bump from the ISO's 1.26.2. Mutter 48.7's native backend requires
+# libinput >= 1.27 (it probes libinput_version / libinput_event 1.27 API).
+#
+# -Dlibwacom=true: LibWacom 2.16.0 is now built in the Pantheon foundation
+#   (the ISO originally had none, hence the old -Dlibwacom=false).
+# Build AFTER LibEvdev (present in ISO), LibWacom 2.16.0 and Wayland; uses
+# libudev from Eudev (present). Based on the upstream gobo-recipes recipe,
+# adapted to 'meson_variables'.
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.31.3/libinput-1.31.3.tar.gz"
+file_size=1176599
+file_md5=022aa3838b0cf8b932c0e4a4dbeac150
+dir='libinput-1.31.3'
+recipe_type=meson
+meson_variables=(
+    -Db_lto=false
+    -Ddocumentation=false
+    -Dtests=false
+    -Dlibwacom=true
+)

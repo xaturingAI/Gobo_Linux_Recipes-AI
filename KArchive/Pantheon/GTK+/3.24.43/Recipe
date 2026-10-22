@@ -1,0 +1,53 @@
+# Custom recipe for GTK+ 3.24.43 (final GTK 3.x line; MESON)
+#
+# Part of the Pantheon stack port. OVERRIDES the reference ISO's GTK+ 3.24.13,
+# which ships only the X11 backend (no gdk-wayland-3.0.pc, no wayland GDK
+# backend). Wingpanel 8.0.4's src/meson.build hard-requires
+# `dependency('gdk-wayland-3.0')` (the panel renders its surface on the wayland
+# session), so the wayland backend must exist.
+#
+# IMPORTANT: the 3.24.43 tarball is MESON-ONLY — the autotools build was
+# removed on the 3.24 line (no configure / configure.ac in the release
+# tarball), so this recipe is recipe_type=meson, not configure.
+#
+# Built AFTER the wayland stack (Wayland 1.23.1, wayland-protocols,
+# XKBcommon, Mesa EGL) and the GNOME 48 base (GLib 2.84, Pango 1.56,
+# HarfBuzz 11, GdkPixbuf 2.42, cairo 1.18) and BEFORE the GTK3 pantheon apps
+# (Wingpanel, Files, Geoclue2Agent). The merge step removes the old GTK+/3.24.13
+# tree and re-links the index to 3.24.43.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball
+# (3.24.43 is the newest release on the 3.24 line, 2024-07-10).
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gtk+/3.24/gtk+-3.24.43.tar.xz"
+file_size=13227856
+file_md5=226e372664a7fae749a50a04983ecd8d
+dir='gtk+-3.24.43'
+recipe_type=meson
+
+# - x11 + wayland backends: BOTH enabled (the wayland one needs
+#   wayland-client/-cursor/-egl + wayland-protocols + xkbcommon, all on the
+#   index after the wayland stack). EGL/GLX come via epoxy.
+# - introspection: ON. gobject-introspection 1.84 is on the index.
+# - broadway: web frontend, not needed. tracker3/cloudproviders/profiler: off.
+# - print_backends pinned to file,lpr (no CUPS on the ISO; auto would probe it).
+# - gtk-doc/man/demos/examples/tests/installed-tests: not shipped on the ISO.
+meson_variables=(
+    --buildtype=release
+    -Dx11_backend=true
+    -Dwayland_backend=true
+    -Dbroadway_backend=false
+    -Dintrospection=true
+    -Dgtk_doc=false
+    -Dman=false
+    -Ddemos=false
+    -Dexamples=false
+    -Dtests=false
+    -Dinstalled_tests=false
+    -Dcloudproviders=false
+    -Dtracker3=false
+    -Dprofiler=false
+    -Dprint_backends=file,lpr
+    -Dcolord=no
+)

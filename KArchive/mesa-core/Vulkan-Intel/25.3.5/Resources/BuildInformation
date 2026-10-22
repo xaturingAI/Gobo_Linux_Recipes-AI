@@ -1,0 +1,53 @@
+# Build source: vulkan-intel-1:25.3.5-1-x86_64.pkg.tar.zst
+# Official Arch Linux package (repo "extra"), a SPLIT of the mesa PKGBUILD.
+# Pinned to the 25.3.x line to match this tree's Mesa 25.3.6 (Arch's current
+# vulkan-intel is 1:26.2.5-1, a newer mesa series).
+url="https://archive.archlinux.org/packages/v/vulkan-intel/vulkan-intel-1:25.3.5-1-x86_64.pkg.tar.zst"
+file_size=4649334
+file_md5=bdf1c5f5595d968e45e05004d733eda5
+file_sha256=dcd58800fe1b5d3070c76e3c8dd6c08430d4d7d64313e555e88e5df3ab1c2be8
+file="vulkan-intel-1:25.3.5-1-x86_64.pkg.tar.zst"
+
+# The "1:" in the version is the Arch epoch. Both the literal and the
+# %3A-encoded URL forms return 200 (Content-Length 4649334, Last-Modified
+# 2026-02-07); md5/sha256 computed locally on 2026-10-19 from the download.
+# 25.3.6 is NOT in the Arch archive (HEAD returns 302), so 25.3.5 is the
+# newest package matching the tree's Mesa minor line.
+
+# Package metadata (from .PKGINFO):
+#   pkgname  = vulkan-intel
+#   pkgbase  = mesa
+#   pkgver   = 1:25.3.5-1
+#   packager = Jan Alexander Steffens (heftig)
+#   license  = MIT AND BSD-3-Clause AND SGI-B-2.0
+#   provides = vulkan-driver
+#   depends  = expat gcc-libs glibc libdisplay-info libdrm libx11 libxcb
+#              libxshmfence spirv-tools systemd-libs vulkan-icd-loader
+#              vulkan-mesa-implicit-layers wayland xcb-util-keysyms zlib zstd
+
+# Payload files (verified by extracting the package):
+#   usr/lib/libvulkan_intel.so                        22 317 272 bytes
+#   usr/lib/libvulkan_intel_hasvk.so                  18 323 328 bytes
+#   usr/share/vulkan/icd.d/intel_icd.x86_64.json      api_version 1.4.328
+#   usr/share/vulkan/icd.d/intel_hasvk_icd.x86_64.json api_version 1.3.328
+#   usr/share/licenses/vulkan-intel/license.rst
+
+# ABI closure of libvulkan_intel.so (readelf -d NEEDED), all confirmed present
+# in the build tree on 2026-10-19:
+#   libdrm.so.2 libz.so.1 libzstd.so.1 libxcb.so.1 libX11-xcb.so.1
+#   libxcb-dri3.so.0 libxcb-present.so.0 libxcb-xfixes.so.0 libxcb-sync.so.1
+#   libxcb-randr.so.0 libxcb-shm.so.0 libxshmfence.so.1 libxcb-keysyms.so.1
+#   libwayland-client.so.0 libdisplay-info.so.3 libudev.so.1 libexpat.so.1
+#   libSPIRV-Tools.so libstdc++.so.6 libm.so.6 libgcc_s.so.1 libc.so.6
+# Loader in tree is Vulkan-Loader 1.4.357.0 (>= ICD's 1.4.328), good.
+
+# Why extracted and not built from Mesa sources:
+#   This tree builds Mesa 25.3.6 with -Dvulkan-drivers=[] (no Vulkan at all),
+#   so a standalone Vulkan-Intel recipe cannot "just compile" from the same
+#   tree without re-running the entire Mesa build with
+#   -Dvulkan-drivers=intel,intel_hasvk. Arch already publishes exactly the two
+#   files we need as a split package, so we consume those bytes (same pattern
+#   the Lib32-* recipes use against Debian .debs).
+
+# Version history for this file:
+# - created for 25.3.5-1 (2026-10-19)

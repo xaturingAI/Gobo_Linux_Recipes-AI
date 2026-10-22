@@ -1,0 +1,4 @@
+[Name] Elogind
+[Summary] Login manager for non-systemd systems (org.freedesktop.login1, libelogind)
+[License] LGPL-2.1-or-later
+[Homepage] https://github.com/elogind/elogind

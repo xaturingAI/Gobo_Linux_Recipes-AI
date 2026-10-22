@@ -1,0 +1,5 @@
+[Name] GnomeSession
+[Summary] GNOME session manager
+[License] GPL-2.0-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/gnome-session
+[Description] Runs pantheon / pantheon-wayland sessions. 45.0 pinned for -Dsystemd=false support (46+ require libsystemd); falls back to the legacy session manager on sysvinit.

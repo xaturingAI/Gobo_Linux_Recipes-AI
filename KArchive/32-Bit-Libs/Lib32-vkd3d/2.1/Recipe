@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# 32-bit VKD3D (Direct3D 12 -> Vulkan translation) shared libraries for x86
+# Wine/Proton hosts, extracted from Debian sid i386 packages (upstream vkd3d
+# 2.1, current). Provides libvkd3d.so.1, libvkd3d-shader.so.1 and
+# libvkd3d-utils.so.1 so 32-bit games and Wine builds can link the D3D12
+# translation layer directly. Delivering the .so's into a prefix (DLL
+# injection) stays the job of wine-Core/Vkd3d-Proton; this recipe is the
+# "system library on lib-32" counterpart, mirroring every other Lib32-*
+# recipe's Debian-i386-extract idiom.
+#
+# Runtime deps (already in the Lib32 tree): libvkd3d-shader1 (>= 1.15),
+# libvulkan1 (>= 1.3.228) -> Lib32-vulkan-loader, libc6 -> Glibc-32.
+
+compile_version=017-GIT
+
+url="https://deb.debian.org/debian/pool/main/v/vkd3d/libvkd3d1_2.1+ds-1_i386.deb"
+file_size=200936
+file_md5=d50c709d70fc013ea83cc95e23d10820
+recipe_type=manifest
+uncompress=no
+
+deb_shader_url="https://deb.debian.org/debian/pool/main/v/vkd3d/libvkd3d-shader1_2.1+ds-1_i386.deb"
+deb_shader_size=622524
+deb_shader_md5=971229a38bfb6cc0453c8c1760e8269a
+
+deb_utils_url="https://deb.debian.org/debian/pool/main/v/vkd3d/libvkd3d-utils1_2.1+ds-1_i386.deb"
+deb_utils_size=68308
+deb_utils_md5=4e2264cf2fd94f7890b3aa21acc062c5
+
+pre_install() {
+    local base="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking libvkd3d1"
+    ar p "$base" data.tar.xz | tar xJf -
+
+    local dl_dir="$compileArchivesDir"
+    # Note: a plain ":" cannot separate URL from md5 here -- the URL itself
+    # contains "https:", and ${rest%%:*} truncates at the FIRST colon (the
+    # Lib32-mesa extra-deb fetch has this latent bug). Use "|" instead.
+    for spec in \
+        "libvkd3d-shader1|${deb_shader_url}|${deb_shader_md5}" \
+        "libvkd3d-utils1|${deb_utils_url}|${deb_utils_md5}"; do
+        local name="${spec%%|*}"
+        local rest="${spec#*|}"
+        local file_url="${rest%%|*}"
+        local want_md5="${rest##*|}"
+        local deb="$dl_dir/$(basename "$file_url")"
+        # Use pre-downloaded file if present; otherwise fetch.
+        if [ ! -s "$deb" ]; then
+            Log_Normal "Fetching ${name} i386"
+            curl -sL -o "$deb" "$file_url" || Die "Failed downloading ${name} i386."
+        else
+            Log_Normal "Using pre-downloaded ${name} i386"
+        fi
+        local got_md5
+        got_md5=$(md5sum "$deb" | awk '{print $1}')
+        [ "$got_md5" = "$want_md5" ] || Die "${name}: md5 mismatch ($got_md5)"
+        ar p "$deb" data.tar.xz | tar xJf -
+    done
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+
+    cp -a usr/lib/i386-linux-gnu/libvkd3d.so.1* "$target"/lib32/ || Die "Failed copying libvkd3d."
+    cp -a usr/lib/i386-linux-gnu/libvkd3d-shader.so.1* "$target"/lib32/ || Die "Failed copying libvkd3d-shader."
+    cp -a usr/lib/i386-linux-gnu/libvkd3d-utils.so.1* "$target"/lib32/ || Die "Failed copying libvkd3d-utils."
+}

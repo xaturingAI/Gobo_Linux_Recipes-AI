@@ -1,0 +1,28 @@
+# Custom recipe for ALSA-Lib 1.2.13 (autotools)
+#
+# Version bump required by the PipeWire 1.4.0 system-wide audio stack: PipeWire
+# 1.4.0 declares a hard `alsa >= 1.2.10` meson dependency, but the base Gobo
+# ISO ships the original prebuilt ALSA-Lib 1.2.2 (no recipe in this tree), so
+# meson aborts with:
+#     Dependency alsa found: NO. Found 1.2.2 but need: '>=1.2.10'
+# libasound.so.2 is ABI-stable, so replacing 1.2.2 with 1.2.13 is transparent
+# to every existing consumer (PulseAudio 13.0, ALSA-Utils, ALSA-Plugins,
+# PipeWire/LibPipewire, ...).  Built BEFORE PipeWire 1.4.0 in step_pipewire.
+#
+# Installs the usual index layout the 1.2.2 tree already uses:
+#   lib/libasound.so.2*, lib/libatopology.so.2*, lib/pkgconfig/alsa.pc,
+#   include/alsa/*, share/alsa/{alsa.conf,cards,ucm,...}
+#
+# file_size/file_md5 verified against alsa-project.org release tarball.
+
+compile_version=017-GIT
+url="https://www.alsa-project.org/files/pub/lib/alsa-lib-1.2.13.tar.bz2"
+file_size=1116739
+file_md5=dd856a78e0702c3c4c1d8f56bc07bf61
+dir='alsa-lib-1.2.13'
+recipe_type=configure
+
+configure_options=(
+    --disable-static
+    --disable-dependency-tracking
+)

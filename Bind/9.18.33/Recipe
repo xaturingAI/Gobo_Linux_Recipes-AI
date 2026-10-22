@@ -1,0 +1,39 @@
+# Custom recipe for BIND 9.18.33 (autotools) -- DNS client tools
+#
+# Supplies the classic DNS look-up tools the base ISO is missing: `dig`, `host`
+# and `nslookup` (all built from this tree).  They are the expected companions
+# for `ping`/`curl` (inetutils/curl are present) when debugging name resolution
+# from the live session or over SSH.
+#
+# This is a deliberately reduced build: BIND's daemon and the client tools come
+# from the same tree, but every optional dependency that could drag in more
+# recipes is turned off.  Required libs are already on the ISO: OpenSSL 1.1.1w
+# (DNSSEC) and libuv (network manager).  libxml2/json-c/zlib/lmdb/libidn2 are
+# present but unnecessary for dig/host/nslookup, so they are disabled too.
+# Linux capabilities and DNS-over-HTTPS (needs libnghttp2) are off.
+#
+# Installs bin/dig, bin/host, bin/nslookup (+ named, tools, libs) into
+# Programs/Bind/9.18.33.
+
+compile_version=017-GIT
+url="https://downloads.isc.org/isc/bind9/9.18.33/bind-9.18.33.tar.xz"
+file_size=5341616
+file_md5=2e6596e78c8f4aa1908c5974c27dfdc0
+dir='bind-9.18.33'
+recipe_type=configure
+
+configure_options=(
+    --disable-static
+    --disable-dependency-tracking
+    --disable-geoip
+    --disable-doh
+    --disable-linux-caps
+    --with-libxml2=no
+    --with-json-c=no
+    --with-zlib=no
+    --with-lmdb=no
+    --with-maxminddb=no
+    --with-readline=no
+    --without-gssapi
+    --without-libidn2
+)

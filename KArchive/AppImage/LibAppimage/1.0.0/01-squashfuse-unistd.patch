@@ -1,0 +1,9 @@
+--- a/src/patches/patch-squashfuse.sh.in
++++ b/src/patches/patch-squashfuse.sh.in
+@@ -4,5 +4,6 @@
+ 
+ patch -p1 < @PROJECT_SOURCE_DIR@/src/patches/squashfuse.patch
+ patch -p1 < @PROJECT_SOURCE_DIR@/src/patches/squashfuse_dlopen.patch
++sed -i '1i#include <unistd.h>' ll.c
+ 
+ cp -v @PROJECT_SOURCE_DIR@/src/patches/squashfuse_dlopen.c @PROJECT_SOURCE_DIR@/src/patches/squashfuse_dlopen.h .

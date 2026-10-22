@@ -1,0 +1,16 @@
+# Custom recipe for WingpanelIndicatorSound 8.0.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/wingpanel-indicator-sound/archive/refs/tags/8.0.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/wingpanel-indicator-sound/archive/refs/tags/8.0.3.tar.gz"
+file="wingpanel-indicator-sound-8.0.3.tar.gz"
+file_size=194601
+file_md5=9d3a4d14a47a7843ed068876917abf5d
+dir='panel-sound-8.0.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

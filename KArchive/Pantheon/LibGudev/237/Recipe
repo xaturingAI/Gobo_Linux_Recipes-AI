@@ -1,0 +1,32 @@
+# Custom recipe for LibGudev 237 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Provides gudev-1.0.pc (GObject wrapper for
+# libudev), needed by libwacom 2.16.0, colord 1.4.8, gnome-settings-daemon
+# 48.1, UPower 1.90.9 and libgweather 4.6.0. The ISO's Eudev 3.2.9 ships no
+# gudev layer, hence this recipe.
+#
+# 237 (NOT 238) because the ISO's libudev is 243 (Eudev 3.2.9): 238 hard-
+# requires libudev >= 251 (meson.build:44) and fails the pkg-config check;
+# 237 only needs >= 199. gudev-1.0 has no version pins from any consumer
+# (libwacom/colord/gsd/upower/libgweather all use unversioned
+# dependency('gudev-1.0')), so the API/ABI difference is irrelevant here.
+#
+# Build AFTER GLib 2.84 and BEFORE Libwacom/Colord/UPower/gsd/libgweather.
+#
+# file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libgudev/237/libgudev-237.tar.xz"
+file="libgudev-237.tar.gz"
+file_size=29060
+file_md5=a7783083cd74957d3a727ddc4737ee84
+dir='libgudev-237'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dtests=disabled
+    -Dintrospection=disabled
+    -Dvapi=disabled
+    -Dgtk_doc=false
+)

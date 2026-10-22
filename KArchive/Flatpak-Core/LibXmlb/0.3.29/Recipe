@@ -1,0 +1,30 @@
+# Custom recipe for LibXmlb 0.3.29 (meson)
+#
+# Part of the Pantheon stack port. libxmlb provides xmlb.pc (Xapian-style
+# XML binary blob indexing used by AppStream). AppStream's meson.build does
+# `dependency('xmlb', version: '>= 0.3.14', fallback: ...)` unconditionally,
+# so xmlb.pc must be on the index; 0.3.29 satisfies >= 0.3.14.
+#
+# Deps: gio-2.0 >= 2.56 (GLib 2.84.4 - OK), liblzma + libzstd (both on the
+# ISO index). gtk-doc off (no gtk-doc on ISO), introspection off (AppStream
+# is built with gir off too, so xmlb's typelibs aren't needed), tests off.
+#
+# Build AFTER GLib 2.84 and BEFORE AppStream/LibAdwaita.
+#
+# file_md5 + file_size verified against the GitHub 0.3.29 release tarball
+# (md5 matches BLFS's listing).
+
+compile_version=017-GIT
+url="https://github.com/hughsie/libxmlb/releases/download/0.3.29/libxmlb-0.3.29.tar.xz"
+file_size=108240
+file_md5=83f87e2ce1fd6b34b25e7f5e1443293c
+dir='libxmlb-0.3.29'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dgtkdoc=false
+    -Dintrospection=true
+    -Dtests=false
+    -Dcli=true
+)

@@ -1,0 +1,16 @@
+# Custom recipe for Gala 8.5.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/gala/archive/refs/tags/8.5.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/gala/archive/refs/tags/8.5.1.tar.gz"
+file_size=602029
+file_md5=da229a9fd624be1ad30451ff361ae743
+dir='gala-8.5.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemd=false
+
+)

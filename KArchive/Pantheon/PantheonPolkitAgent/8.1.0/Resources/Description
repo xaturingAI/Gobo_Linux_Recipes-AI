@@ -1,0 +1,5 @@
+[Name] PantheonPolkitAgent
+[Summary] Polkit authentication agent
+[License] LGPL-3.0-or-later
+[Homepage] https://elementary.io
+[Description] Polkit authentication agent.

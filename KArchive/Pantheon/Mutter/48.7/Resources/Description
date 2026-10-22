@@ -1,0 +1,5 @@
+[Name] Mutter
+[Summary] Wayland display server library (libmutter)
+[Description] GNOME's Wayland compositor library. Used by Gala (Pantheon's compositor) and GNOME Shell. Part of the Pantheon stack port (GNOME 48 era). Replaces the ISO's null mutter dependency. Requires a long foundation chain: GLib 2.84, Pango 1.50+, HarfBuzz 11+, graphene 1.10+, libei, libdisplay-info, gsettings-desktop-schemas 48, gnome-desktop-44, libwacom, libpipewire 1.2+, sysprof-capture 3.40+, colord, lcms2, libgudev, GTK 4.18, libadwaita 1.8. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md and Recipes/pantheon-recipes.md
+[License] GNU GPL v2.0+
+[Homepage] https://gitlab.gnome.org/GNOME/mutter

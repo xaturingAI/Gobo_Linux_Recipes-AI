@@ -1,0 +1,8 @@
+Build type: cmake (subdirectory of the LLVM monorepo)
+Source: https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-19.1.7.tar.gz (same archive/tag as Pantheon/LLVM/19.1.7)
+dir=llvm-project-llvmorg-19.1.7/libclc (Gobo builds sourcedir=$compileSourcesDir/<dir>).
+LIBCLC_TARGETS_TO_BUILD=spirv-mesa3d-;spirv64-mesa3d- produces exactly the files Mesa expects: spirv-mesa3d-.spv and spirv64-mesa3d-.spv (arch_suffix == ARG_TRIPLE, DEVICE none).
+CMAKE_INSTALL_DATADIR=lib -> builtins in lib/clc and lib/pkgconfig/libclc.pc, whose libexecdir=${prefix}/lib/clc. Gobo's PKG_CONFIG_PATH is /System/Index/lib/pkgconfig, so Mesa's dependency('libclc') resolves and its get_variable('libexecdir') returns /System/Index/lib/clc.
+LLVM_DIR=/System/Index/lib/cmake/llvm makes LLVM_TOOLS_BINARY_DIR=/System/Index/bin, so libclc finds llvm-as/llvm-link/opt/clang and (NO_DEFAULT_PATH) llvm-spirv from the SPIRV-LLVM-Translator recipe.
+Also requires Python3 for the OpenCL C conversion/header generation scripts.
+Build order: last of the CLC toolchain, after LLVM 19.1.7 and SPIRV-LLVM-Translator 19.1.7; before Mesa 25.3.6.

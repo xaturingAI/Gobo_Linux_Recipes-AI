@@ -1,0 +1,30 @@
+# Custom recipe for LibHyphen 2.8.8 (autotools)
+#
+# Part of the Pantheon stack port. Hyphenation library, required by
+# WebKitGTK 2.46.5 (OptionsGTK.cmake: find_package(Hyphen) FATAL_ERROR for
+# the default-on USE_LIBHYPHEN option). WebKit's FindHyphen.cmake does plain
+# find_path/find_library on hyphen.h + libhyphen; those resolve through
+# /usr/include -> /System/Index/include and /usr/lib -> /System/Index/lib,
+# so a regular Index install is found without extra cmake hints.
+#
+# Provides hyphen.pc (the pc carries the hyphen include/lib paths, though
+# webkit's own FindHyphen module doesn't use pkg-config).
+#
+# Source tarball is the github tag archive for tag v2.8.8
+# (https://github.com/hunspell/hyphen/archive/refs/tags/v2.8.8.tar.gz,
+#  downloaded as hyphen-2.8.8.tar.gz). md5/size verified against the staged
+# tarball.
+#
+# Built BEFORE the webkit builds; no special deps beyond glibc (plain libtool
+# build, no glib requirement).
+
+compile_version=017-GIT
+url="https://github.com/hunspell/hyphen/archive/refs/tags/v2.8.8.tar.gz"
+file_size=638314
+file_md5=32f6b6ff39d91f52bee6068745dd6591
+dir='hyphen-2.8.8'
+recipe_type=configure
+
+configure_options=(
+    --disable-static
+)

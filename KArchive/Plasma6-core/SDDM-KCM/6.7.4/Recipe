@@ -1,0 +1,69 @@
+# Custom recipe for sddm-kcm 6.7.4 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh (directly after Systemsettings).
+# Adds the "Login Screen (SDDM)" settings page (systemsettings -> Colors & Themes)
+# with preview + "Get New Login Screens" (KNewStuff/OCS, sddmtheme.knsrc).
+# Optional REQUIRED deps (all already on the stack):
+#   Qt6: Core Gui Widgets Quick QuickWidgets DBus
+#   KF6 6.26.0 COMPONENTS: CoreAddons I18n Auth KIO Archive NewStuff KCMUtils Service
+# Installs kcm_sddm.{so,qml} -> lib/plugins/plasma/kcms/systemsettings/,
+# kcmsddm_authhelper -> lib/kf6/kauth (D-Bus/KAuth polkit actions
+# org.kde.kcontrol.kcmsddm) and share/knsrcfiles/sddmtheme.knsrc.
+#
+# PACKAGING GAP (fixed in build.sh, deliberately NOT here): installing a theme
+# escalates through KAuth::Action, which needs a polkit policy registered first.
+# That policy is not a file in this tarball -- KDE generates it at install time
+# from kcm_sddm.actions via kauth_install_actions() (CMakeLists.txt:42). On this
+# ISO that macro emits nothing (the build log installs the authhelper but no
+# policy), so /Programs/SDDM-KCM/6.7.4/share/polkit-1/actions/ is never created
+# and no org.kde.kcontrol.kcmsddm.policy reaches the package or the index farm.
+# Consequence: KAuth aborts with "The backend does not specify how to
+# authorize" *before* showing a password prompt, the settings module says
+# "Unable to install theme", and sddmthemeinstaller exits 255.
+#
+# The recipe has no post-install hook available (Gobo's Compile runs the cmake
+# recipe and nothing else), so build.sh's install_kcmsddm_policy() generates the
+# policy from this version's kcm_sddm.actions and installs it into the PROGRAM
+# tree, where CreatePackage captures it. Do not "fix" this by writing into
+# /usr/share/polkit-1/actions -- that is a symlink to /System/Index (the writable
+# overlay) and the file is lost on reboot.
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/sddm-kcm-6.7.4.tar.xz"
+file_size=107564
+file_md5=317ca68615ef017390275a222b15ce9d
+dir='sddm-kcm-6.7.4'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)
+
+# No pre_build needed.
+#
+# main.qml:10 does ask for a versioned QtMultimedia module:
+#     import QtMultimedia 6.9
+# and our Qt6 qtmultimedia (6.10.3) generates an unversioned module line:
+#     module QtMultimedia
+#     plugin quickmultimediaplugin
+# but that is NOT a problem. Qt accepts a versioned import against an
+# unversioned qmldir - every other module on this ISO works the same way,
+# including QtQuick, whose qmldir is equally unversioned.
+#
+# The real cause of
+#     qrc:/lcm/kcm_sddm/main.qml:10 module "QtMultimedia" is not installed
+# was that /Programs/Qt/Current/qml/QtMultimedia (Qt's own QML import root,
+# searched BEFORE QML2_IMPORT_PATH) held a stale Qt5-era payload:
+#     qmldir -> "plugin declarative_multimedia"   (Qt5's plugin name)
+#     libdeclarative_multimedia.so                (Qt5, dated 2020)
+# Qt6 read that Qt5 qmldir, failed to load the Qt5 plugin, and reported the
+# module as not installed. QtMultimedia is owned and fixed by the QtMultimedia
+# package (it installs into /Programs/QtMultimedia, so the symlink farm never
+# linked it and the Qt5 leftovers were never cleared); see
+# Recipes/Plasma6-core/QtMultimedia/6.10.3/Recipe and zfs49.sh.

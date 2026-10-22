@@ -1,0 +1,16 @@
+# Build dependencies for SDDM 0.20.0 (all present on the ISO / build env)
+- Extra-CMake-Modules (ECM >= 1.4.0)
+- PAM
+- xau (pkg-config: xau)
+- XCB
+- XKB (libxkbcommon) + xkb
+- Qt >= 5.15.0 (Qt5 CONFIG: Core, DBus, Gui, Qml, Quick,
+  LinguistTools, Test, QuickTest) -> REQUIRES the Qt 5.15.2 migration
+- (build tools) cmake >= 3.4, C++ compiler
+# Runtime
+- weston (Wayland compositor; [Wayland] CompositorCommand, default
+  "weston --shell=fullscreen-shell.so")
+- Qt Wayland platform plugin (qtwayland: libqwayland-{egl,generic}.so) for the
+  greeter's QT_QPA_PLATFORM=wayland
+- Elogind (seat/admin + session tracking; USE_ELOGIND=ON)
+- sddm system user in video/input groups

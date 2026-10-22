@@ -1,0 +1,15 @@
+# Custom recipe for PantheonOnboarding 8.1.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/onboarding/archive/refs/tags/8.1.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/onboarding/archive/refs/tags/8.1.0.tar.gz"
+file_size=243706
+file_md5=47f834deb2dd763d5304d0fd392ee64a
+dir='onboarding-8.1.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

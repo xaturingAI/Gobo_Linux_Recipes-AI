@@ -1,0 +1,28 @@
+# Custom recipe for QtKeyChain 0.16.0 (cmake)
+# Qt6Keychain is a REQUIRED CONFIG find of plasma-nm 6.7.4
+# (find_package(Qt6Keychain 0.16.0 CONFIG REQUIRED)). Not part of KDE -- the
+# project lives at github.com/frankosterfeld/qtkeychain and releases are only
+# uploaded there, so the download URL is the GitHub tag archive (archived
+# offline as qtkeychain-0.16.0.tar.gz mapped to url basename 0.16.0.tar.gz).
+#
+# Qt6 build (BUILD_WITH_QT6=ON) only needs Qt6 Core (+ Widgets/DBus for the
+# demo/test apps, which we disable). Installs lib/cmake/Qt6Keychain/... which
+# merges into /System/Index so later recipes resolve it via CMAKE_PREFIX_PATH.
+# Uses ECM (System/Index) for ecm_setup_version/pri file generation.
+compile_version=017-GIT
+url="https://github.com/frankosterfeld/qtkeychain/archive/refs/tags/0.16.0.tar.gz"
+file_size=63901
+file_md5=f97ec6ec37a465abdea63c2def01f280
+dir='qtkeychain-0.16.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TRANSLATIONS=OFF
+    -DBUILD_TEST_APPLICATION=OFF
+    -DBUILD_QTQUICK_DEMO=OFF
+    -DBUILD_TESTING=OFF
+)

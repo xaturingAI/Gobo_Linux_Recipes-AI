@@ -1,0 +1,35 @@
+# Zstd 1.4.4 (plain Makefile) -- the source of libzstd.pc.
+#
+# Written for this repo: unlike ELFUtils/Eudev/LibXRandR/LibXxf86vm there is no
+# upstream GoboLinux recipe for Zstd, so this one is assembled from the 1.4.4
+# release tarball. Version, file_size and file_md5 are pinned to exactly what
+# the ISO has installed as /Programs/Zstd/1.4.4.
+#
+# Why it is needed: Mesa 25.3.6 probes it as an optional feature
+#   zstd (meson.options, default auto) -> dependency('libzstd') -> HAVE_ZSTD
+# and libzstd is what libgallium uses for compressed shader cache entries (see
+# mesa-core/Mesa/25.3.6/Resources/BuildInformation). Optional means a missing
+# recipe does not fail the build today, but the dependency would stay invisible
+# to CheckDependencies and could never be rebuilt.
+#
+# The Makefile is not a GNU autotools build and has no ./configure:
+#   default: lib-release zstd-release   <- make's default target
+#     -> lib/Makefile builds libzstd.so/.a and generates libzstd.pc
+#     -> programs/Makefile builds the zstd/zstdcat/unzstd/zstdmt CLIs
+#   install -> lib/Makefile install-pc install-static install-shared
+#                                install-includes
+#           -> programs/Makefile install (binaries + man pages)
+# Nothing in the install path calls ldconfig (checked), so it is sandbox-safe.
+# lib/Makefile has `LIBDIR ?= $(libdir)` and `libdir ?= $(exec_prefix)/lib`
+# with `exec_prefix ?= $(PREFIX)`, so passing PREFIX is enough to redirect
+# lib/, include/, bin/ and lib/pkgconfig/ under $target.
+compile_version=017-GIT
+url="https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz"
+file_size=1948426
+file_md5=487f7ee1562dee7c1c8adf85e2a63df9
+dir='zstd-1.4.4'
+recipe_type=makefile
+makefile='Makefile'
+make_variables=(
+    "PREFIX=$target"
+)

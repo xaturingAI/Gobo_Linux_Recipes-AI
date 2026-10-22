@@ -1,0 +1,65 @@
+# Custom recipe for AppStream 1.0.6 (meson)
+#
+# Part of the Pantheon stack port. AppStream provides libappstream + the
+# appstream.pc that libadwaita 1.8.0 hard-requires: its meson.build does
+# `dependency('appstream', fallback: ['appstream', 'appstream_dep'],
+# default_options: [systemd=false, apidocs=false, install-docs=false,
+# stemming=false, svg-support=false, gir=false])`. We pre-install AppStream
+# to the index, so that dependency resolves via pkg-config and the
+# subproject fallback never runs; the flags below mirror those fallback
+# defaults so the standalone build needs nothing the ISO lacks.
+# Exception: GIR + vapi are ON - SwitchboardPlugAbout needs the `appstream`
+# Vala binding (--pkg appstream).
+#
+# 1.0.6 is the last of the 1.0.x line (mid-2025, GNOME 48 era; Debian trixie
+# class). Uses libyaml. The 1.1.x line would need libfyaml instead, and 1.0.6
+# keeps deps minimal.
+#
+# Hard deps (all present on the ISO once LibYaml + LibXmlb are built):
+#   glib >= 2.62 (2.84.4), libcurl >= 7.62 (ISO), libxml-2.0 (LibXML2 2.9.10
+#   on ISO), yaml-0.1 (LibYaml 0.2.5), xmlb >= 0.3.14 (LibXmlb 0.3.29),
+#   libzstd (ISO). compose defaults off (no extra deps). docs off avoids the
+#   `find_program('daps')` gate in docs/meson.build.
+#
+# Build AFTER GLib 2.84 + LibYaml + LibXmlb and BEFORE LibAdwaita.
+#
+# file_md5 + file_size verified against freedesktop.org tarball.
+
+compile_version=017-GIT
+url="https://www.freedesktop.org/software/appstream/releases/AppStream-1.0.6.tar.xz"
+file_size=2736948
+file_md5=d65b1c4689ea967d7c0e901d6c44a979
+dir='AppStream-1.0.6'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemd=false
+    -Dapidocs=false
+    -Ddocs=false
+    -Dinstall-docs=false
+    -Dstemming=false
+    -Dsvg-support=false
+    -Dgir=true
+    -Dvapi=true
+    -Dcompose=false
+    -Dqt=false
+    -Dzstd-support=true
+    -Dstatic-analysis=false
+)
+
+# Rebuild-over-existing fix: Compile installs into a fresh $target, so any
+# Index symlink pointing into the OLD tree of THIS package dangles mid-install
+# and meson's installer aborts (FileExistsError on dirs, ENOENT under
+# locale/). pre_build is the only hook proven to execute reliably here;
+# clear every known self-link before the build. (A generic purge in
+# build.sh was tried and reverted: deleting links of introspection-enabled
+# base pkgs like GLib breaks their own build tooling.)
+pre_build() {
+    rm -rf /usr/include/appstream \
+           /usr/share/locale/ain /usr/share/locale/rom \
+           /usr/share/appstream \
+           /usr/share/metainfo/org.freedesktop.appstream.cli.metainfo.xml \
+           /usr/share/installed-tests/appstream \
+           /Programs/AppStream/1.0.6/include/appstream
+}

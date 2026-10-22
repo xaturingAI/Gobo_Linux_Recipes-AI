@@ -1,0 +1,7 @@
+Prebuilt official release tarball (vkd3d-proton-3.0.1.tar.zst), manifest
+recipe. The archive is zstd-compressed; pre_install pipes it through the
+ISO's zstd binary into a plain tar stream before manifest placement.
+x86/ and x64/ DLL directories map to lib/vkd3d/{x86,x64};
+setup_vkd3d_proton.sh is preserved for reference. These are Windows PE
+DLLs used by Wine (DXVK), not Linux libraries; the Vulkan-Loader
+dependency is a defensive build-order hint.

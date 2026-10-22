@@ -1,0 +1,4 @@
+[Name] LibCLc
+[Summary] OpenCL C builtins for SPIR-V (consumed by Mesa clc)
+[License] Apache-2.0 WITH LLVM-exception
+[Homepage] https://libclc.llvm.org/

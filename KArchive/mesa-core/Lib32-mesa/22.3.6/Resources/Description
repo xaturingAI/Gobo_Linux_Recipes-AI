@@ -1,0 +1,4 @@
+[Name] Lib32-mesa
+[Summary] 32-bit Mesa DRI drivers for software rendering fallback
+[License] MIT
+[Homepage] https://mesa3d.org/

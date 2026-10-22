@@ -1,0 +1,30 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libv/libvorbis/libvorbis0a_1.3.7-1_i386.deb"
+file_size=91876
+file_md5=c777e85de77af6c3644de89904dd937a
+recipe_type=manifest
+uncompress=no
+
+vorbisfile_url="https://deb.debian.org/debian/pool/main/libv/libvorbis/libvorbisfile3_1.3.7-1_i386.deb"
+vorbisfile_md5=92cd1b729032ce7455b01cc1df3309f1
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+
+    Log_Normal "Fetching libvorbisfile3 32-bit package"
+    curl -sL -o vorbisfile.deb "$vorbisfile_url" || Die "Failed downloading libvorbisfile3 i386."
+    echo "$vorbisfile_md5  vorbisfile.deb" | md5sum -c - || Die "libvorbisfile3 i386 checksum mismatch."
+    mkdir -p vorbisfile
+    ar p vorbisfile.deb data.tar.xz | tar xJf - -C vorbisfile
+    rm -f vorbisfile.deb
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libvorbis.so.0* "$target"/lib32/ || Die "Failed copying 32-bit vorbis."
+    cp -a vorbisfile/usr/lib/i386-linux-gnu/libvorbisfile.so.3* "$target"/lib32/ || Die "Failed copying 32-bit vorbisfile."
+}

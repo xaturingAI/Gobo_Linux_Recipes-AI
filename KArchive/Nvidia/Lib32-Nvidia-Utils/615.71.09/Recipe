@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# NVIDIA 32-bit userspace libraries 615.71.09 (Arch-style "lib32-nvidia-utils").
+#
+# Part of the Arch-style split of the NVIDIA stack. This recipe unpacks the SAME
+# NVIDIA-Linux-x86_64-615.71.09.run as Recipes/Nvidia/615.71.09 and
+# Recipes/Nvidia/Nvidia-Utils, but installs ONLY the 32-bit (i686) half: the
+# Steam/Proton/Wine compatibility libraries.
+#
+# OWNERSHIP MAP (who ships what in the split):
+#   Nvidia                 -> kernel modules, Xorg DDX, GSP/ucode firmware.
+#   Nvidia-Utils           -> 64-bit libs + tools + all the registration JSONs
+#                             (Vulkan ICDs incl. the i686 ICD, glvnd EGL vendor
+#                             JSONs, OpenCL ICD, udev rule, modprobe blacklist,
+#                             Xorg OutputClass, app profiles, NVNGX/DLSS DLLs).
+#   Lib32-Nvidia-Utils     -> the 32-bit libs (here). Peels the transitional
+#                             lib32 block OUT of Nvidia-Utils once both build.
+#   Nvidia-Settings        -> the nvidia-settings GUI.
+#
+# NOTE: Arch's lib32-nvidia-utils registers NOTHING outside /usr/lib32: the
+# i686 Vulkan ICD JSON and the both-arch glvnd EGL vendor JSONs are 64-bit
+# files owned by the (64-bit) nvidia-utils package. In this tree Nvidia-Utils
+# already ships nvidia_icd.i686.json and pins the 32-bit EGL/GLX sonames, so
+# this recipe deliberately installs no JSONs of its own - it only supplies the
+# lib32/ libraries + their soname symlinks + the ld.so.conf.d entry.
+#
+# Version MUST match the Nvidia + Nvidia-Utils recipes (all read the same .run).
+
+compile_version=017-GIT
+url="https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/NVIDIA-Linux-x86_64-615.71.09.run"
+file_size=529618784
+file_md5=82ed972f937bf7324542a163272b6d11
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local archive="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Uncompressing NVIDIA installer ${archive}"
+    sh "$archive" -x || Die "Failed to uncompress the NVIDIA installer."
+    pkgdir=$(basename "$url" | sed 's,\.run$,,g')
+    mv "$pkgdir"/* .
+    rm -rf "$pkgdir"
+}
+
+do_install() {
+    # The 32-bit library set from the .run's 32/ directory (flat: the .run does
+    # not pre-nest gbm/ or vdpau/, unlike Arch's packaged layout - we keep the
+    # same flat lib32/ layout the transitional block in Nvidia-Utils used, so
+    # nothing that already resolves a 32-bit soname changes).
+    mkdir -p "$target"/lib32
+    cp -a 32/*.so* "$target"/lib32/ || Die "Failed copying 32-bit libraries."
+
+    # Never ship the glvnd install checker (a build-time probe, not a library).
+    rm -f "$target"/lib32/libglvnd_install_checker
+}
+
+post_install() {
+    # soname symlinks: libFOO.so.615.71.09 -> .so.<major> -> .so
+    private__create_lib_symlinks "$target/lib32"
+
+    # glvnd loads the 32-bit vendor libs by these unversioned names.
+    ln -sf libGLX_nvidia.so.615.71.09 "$target/lib32/libGLX_nvidia.so.0"
+    ln -sf libEGL_nvidia.so.615.71.09 "$target/lib32/libEGL_nvidia.so.0"
+
+    # EGL external platforms (32-bit), pinned by soname so the packaged glvnd
+    # vendor JSONs resolve to THIS driver's 32-bit libraries:
+    #   10_nvidia_wayland.json  -> libnvidia-egl-wayland.so.1   (egl-wayland)
+    #   09_nvidia_wayland2.json -> libnvidia-egl-wayland2.so.1  (egl-wayland2)
+    #   15_nvidia_gbm.json      -> libnvidia-egl-gbm.so.1
+    #   20_nvidia_xcb.json      -> libnvidia-egl-xcb.so.1
+    #   20_nvidia_xlib.json     -> libnvidia-egl-xlib.so.1
+    ln -sf libnvidia-egl-wayland.so.1.1.20   "$target/lib32/libnvidia-egl-wayland.so.1"
+    ln -sf libnvidia-egl-wayland2.so.1.0.2   "$target/lib32/libnvidia-egl-wayland2.so.1"
+    ln -sf libnvidia-egl-gbm.so.1.1.3        "$target/lib32/libnvidia-egl-gbm.so.1"
+    ln -sf libnvidia-egl-xcb.so.1.0.6        "$target/lib32/libnvidia-egl-xcb.so.1"
+    ln -sf libnvidia-egl-xlib.so.1.0.6       "$target/lib32/libnvidia-egl-xlib.so.1"
+
+    # Register the 32-bit library directory for the dynamic linker.
+    local confd="$target/Resources/Defaults/Settings/ld.so.conf.d"
+    mkdir -p "$confd"
+    echo "$target/lib32" > "$confd/nvidia-32.conf"
+}
+
+private__create_lib_symlinks() {
+    local dir="$1"
+    [ -d "$dir" ] || return 0
+    cd "$dir" || return 0
+    for f in lib*.so* libnvidia-*.so* libcuda.so* libvdpau_nvidia.so* libnvoptix.so*
+    do
+        [ -f "$f" ] || continue
+        local soname=$(readelf -d "$f" 2>/dev/null | awk -F'[' '/SONAME/{gsub(/]/,"",$2); print $2}')
+        [ -n "$soname" ] && [ "$soname" != "$f" ] && ln -sf "$f" "$soname"
+    done
+}
+
+post_install_message="
+NVIDIA 32-bit userspace (lib32-nvidia-utils) 615.71.09 installed to
+/Programs/Lib32-Nvidia-Utils.
+- <N> 32-bit libraries in lib32/ with soname symlinks (libGLX_nvidia,
+  libEGL_nvidia, libcuda, libnvidia-*, libvdpau_nvidia, ...).
+- ld.so.conf.d/nvidia-32.conf registers lib32/ with the 32-bit loader.
+- Vulkan i686 ICD + glvnd EGL JSONs are NOT installed here: they belong to
+  Nvidia-Utils, which pins both-arch sonames.
+- Kernel modules + DDX come from Nvidia; the 64-bit libs/tools from Nvidia-Utils.
+"

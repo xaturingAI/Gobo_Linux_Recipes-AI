@@ -1,0 +1,15 @@
+# Custom recipe for CapnetAssist 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/capnet-assist/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/capnet-assist/archive/refs/tags/8.0.2.tar.gz"
+file_size=2038375
+file_md5=b8b0088c12f75c6ab7655e1829eef12e
+dir='capnet-assist-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

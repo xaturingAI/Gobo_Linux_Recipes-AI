@@ -1,0 +1,16 @@
+# Custom recipe for SwayIdle 1.9.0 (meson)
+# Sway's idle-management daemon. Uses the ext-idle-notify-v1 protocol from
+# wayland-protocols' staging tree. Needs only the wayland client/server libs +
+# scdoc. logind support is disabled: the ISO ships elogind but the default
+# sway config does not use swayidle -C inhibition. -Dwerror=false: GCC 14.
+compile_version=017-GIT
+url="https://github.com/swaywm/swayidle/releases/download/v1.9.0/swayidle-1.9.0.tar.gz"
+file_size=12879
+file_md5=b5be689e783331def72b03af92a9bf9b
+dir='swayidle-1.9.0'
+recipe_type=meson
+meson_variables=(
+    -Dwerror=false
+    -Dlogind=disabled
+    -Dman-pages=enabled
+)

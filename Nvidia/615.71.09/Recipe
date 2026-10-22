@@ -1,0 +1,216 @@
+#!/bin/bash
+
+# NVIDIA proprietary driver 615.71.09 for the Live CD's own Linux 7.2.5 kernel.
+#
+# Scope after the true Arch-style split: this is the "nvidia" *driver* package -
+# the kernel modules, the Xorg DDX (nvidia_drv.so + libglxserver_nvidia.so) and
+# the GSP + ucode firmware.
+#
+# What moved out (all from this same .run, except Nvidia-Settings which is built
+# from its own source tarball):
+#   Recipes/Nvidia/Nvidia-Utils -> 64-bit libs, tools, Vulkan ICDs, glvnd EGL
+#                                  vendor JSONs, OpenCL ICD, udev rule, modprobe
+#                                  blacklist, Xorg OutputClass, app profiles,
+#                                  NVNGX/DLSS wine DLLs, the 32-bit set
+#                                  (transitional; Lib32-Nvidia-Utils later).
+#   Nvidia-Settings             -> the nvidia-settings GUI (610.57.04).
+#   Lib32-Nvidia-Utils          -> NOT created yet (the 32-bit set stays in
+#                                  Nvidia-Utils for now).
+#
+# The .run is treated as a binary archive: only the kernel modules are
+# compiled - against the exact kernel package (Linux/Current -> 7.2.5) shipped
+# on the Live CD. The modules land in
+# /lib/modules/<kernelrelease>/kernel/drivers/video, so this must be built
+# AFTER Linux is installed on the build system.
+#
+# No source patches are needed for 615.71.09 (this differs from 580.159.04):
+#   - strncpy() is gone from the module sources entirely, so the kernel-7.2.5
+#     strscpy() rewrite is obsolete;
+#   - the drm_atomic_state -> drm_atomic_commit rename (Linux commit
+#     5164f7e7ff8e, landed in v7.2) is detected by NVIDIA's own conftest
+#     (conftest.sh:5490-5503, probe drm_atomic_commit_struct_present, which
+#     emits NV_DRM_ATOMIC_COMMIT_STRUCT_PRESENT) and consumed by the typedef in
+#     nvidia-drm-helper.h:144 - a mechanical rename patch would break the
+#     nv_drm_atomic_state_base_* helper family;
+#   - the CRTC/plane atomic_check argument change is likewise probed by
+#     conftest.sh (drm_crtc_atomic_check_has_atomic_state_arg at 3249 and
+#     drm_plane_atomic_check_has_atomic_state_arg at 3425).
+
+compile_version=017-GIT
+url="https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/NVIDIA-Linux-x86_64-615.71.09.run"
+file_size=529618784
+file_md5=82ed972f937bf7324542a163272b6d11
+recipe_type=manifest
+uncompress=no
+needs_safe_linking=yes
+
+# Kernel release the modules are built against: the one installed by the Linux
+# package. In a LiveCD chroot there is no booted Gobo kernel, so /System/Kernel/Modules
+# (a boot-time bind mount of /lib/modules) does not exist; derive the release
+# from the installed Linux program tree instead.
+kernelrelease="$(ls /Programs/Linux/Current/lib/modules 2>/dev/null | grep -vE '^(Current|Settings|Variable)$' | head -1)"
+[ -n "$kernelrelease" ] || Die "Could not determine kernel release from /Programs/Linux/Current/lib/modules (is Linux installed?)."
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+# The kernel modules AND the GSP/ucode firmware land in the system root; the
+# userspace/registration files are owned by Nvidia-Utils.
+unmanaged_files=(
+    "lib/firmware/nvidia/615.71.09/gsp_ga10x.bin"
+    "lib/firmware/nvidia/615.71.09/gsp_tu10x.bin"
+    "lib/firmware/nvidia/615.71.09/ucodes_ga10x.bin"
+    "lib/firmware/nvidia/615.71.09/ucodes_tu10x.bin"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-modeset.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-drm.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-uvm.ko"
+    "lib/modules/$kernelrelease/kernel/drivers/video/nvidia-peermem.ko"
+)
+
+pre_install() {
+    # Uncompress the self-extracting .run into the build directory.
+    local archive="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Uncompressing NVIDIA installer ${archive}"
+    sh "$archive" -x || Die "Failed to uncompress the NVIDIA installer."
+    pkgdir=$(basename "$url" | sed 's,\.run$,,g')
+    mv "$pkgdir"/* .
+    rm -rf "$pkgdir"
+
+    # 615.71.09 needs NO source patches against Linux 7.2.5: the strscpy
+    # conversion is already done upstream (zero strncpy() call sites in
+    # kernel/), and the drm_atomic_state -> drm_atomic_commit rename plus the
+    # CRTC/plane atomic_check argument change are detected by NVIDIA's own
+    # conftest probes (see the header comment). Deliberately NOT applying the
+    # 580.159.04 sed patches here.
+
+    # Build the kernel modules against the Live CD kernel source.
+    local syssrc="/Programs/Linux/Current/lib/modules/$kernelrelease/build"
+    # Regenerate the kernel build tree metadata if the shipped Linux package
+    # did not come with a fully prepared tree (include/generated/rustc_cfg etc.
+    # are required for out-of-tree module builds).
+    # The sanitized source copy shipped in the Linux package omits a few files
+    # that `make prepare` needs: kernel/sched/rq-offsets.c (to regenerate
+    # include/generated/rq-offsets.h) and tools/arch + tools/include (objtool).
+    # Restore them from the kernel archive so prepare + module build can run.
+    if [ ! -e "$syssrc/tools/arch/x86/tools/gen-insn-attr-x86.awk" ] || \
+       [ ! -e "$syssrc/tools/include" ] || \
+       [ ! -e "$syssrc/kernel/sched/rq-offsets.c" ]
+    then
+       Log_Normal "Restoring missing kernel sources from the kernel archive"
+       local karchive=""
+       for f in "$compileArchivesDir/linux-$kernelrelease.tar.xz" \
+                "$compileArchivesDir/cachyos-"*"-$kernelrelease".tar.gz \
+                "$compileArchivesDir/cachyos-$kernelrelease"*.tar.gz
+       do [ -f "$f" ] && { karchive="$f"; break; }
+       done
+       [ -n "$karchive" ] || Die "No kernel archive for release $kernelrelease in $compileArchivesDir (needed to restore tools/ + rq-offsets.c)."
+       local kdir="$(tar -tf "$karchive" | head -1 | cut -d/ -f1)"
+       tar -C "$syssrc/tools" --strip-components=2 -xf "$karchive" \
+           "$kdir/tools/arch" "$kdir/tools/include" \
+           || Die "Failed to restore kernel tools/ from $karchive."
+       mkdir -p "$syssrc/kernel/sched"
+       tar -C "$syssrc/kernel/sched" --strip-components=3 -xf "$karchive" \
+           "$kdir/kernel/sched/rq-offsets.c" \
+           || Die "Failed to extract kernel/sched/rq-offsets.c from $karchive."
+    fi
+    Log_Normal "Preparing kernel build tree at ${syssrc}"
+    $sudo_exec make -C "$syssrc" LD=ld.bfd prepare || Die "'make prepare' in the kernel build tree failed."
+    Log_Normal "Building NVIDIA kernel modules against ${syssrc}"
+    ( cd kernel && $sudo_exec make LD=ld.bfd module SYSSRC="$syssrc" ) || Die "Kernel module build failed."
+}
+
+do_install() {
+    # Xorg DDX: the driver module and the GLX server extension.
+    mkdir -p "$target"/lib/xorg/modules/drivers
+    mkdir -p "$target"/lib/xorg/modules/extensions
+    cp -a nvidia_drv.so "$target"/lib/xorg/modules/drivers/
+    cp -a libglxserver_nvidia.so.* "$target"/lib/xorg/modules/extensions/
+
+    # Kernel modules. The installer's `make` emits FLAT outputs (kernel/nvidia.ko,
+    # not kernel/nvidia/nvidia.ko) -- accept both layouts and FAIL LOUDLY if a
+    # module is missing instead of silently skipping ([ -e ] && cp hid this for
+    # the entire 580 build).
+    # They are copied into the *Linux program's* module tree, because
+    # /System/Index/lib/modules is a single symlink to that tree: anything only
+    # present in Nvidia's own Unmanaged dir never shows up under /lib/modules.
+    local moddir="/Programs/Linux/Current/lib/modules/$kernelrelease/kernel/drivers/video"
+    mkdir -p "$moddir"
+    local m missing=""
+    for name in nvidia nvidia-modeset nvidia-drm nvidia-uvm nvidia-peermem; do
+        if   [ -e "kernel/$name.ko" ]; then m="kernel/$name.ko"
+        elif [ -e "kernel/$name/$name.ko" ]; then m="kernel/$name/$name.ko"
+        else missing="$missing $name"; continue
+        fi
+        cp -a "$m" "$moddir"/ || Die "Failed installing kernel/$name.ko"
+    done
+    [ -z "$missing" ] || Die "NVIDIA kernel modules not found after build:$missing"
+    # Keep a copy in our own Unmanaged tree as well, so the package tarball is
+    # self-contained for auditing/repacking.
+    local umdir="$target/Resources/Unmanaged/lib/modules/$kernelrelease/kernel/drivers/video"
+    mkdir -p "$umdir" && cp -a "$moddir"/*.ko "$umdir"/
+    # Regenerate dependency maps so modprobe finds them on the Live CD.
+    # NOTE: this must run INSIDE the chroot. Running `depmod -b <rootfs>` from
+    # the host destroys /System/Index/lib/modules' chroot-absolute symlinks.
+    depmod -b / "$kernelrelease" 2>/dev/null || true
+
+    # GSP firmware + the per-GPU microcode blobs 615.71.09 added. Shipped here
+    # (same .run) rather than by a separate Linux-Firmware-Nvidia recipe: that
+    # package would do nothing except re-copy these four files.
+    local fwdir="$target/Resources/Unmanaged/lib/firmware/nvidia/615.71.09"
+    mkdir -p "$fwdir"
+    cp -a firmware/gsp_*.bin firmware/ucodes_*.bin "$fwdir"/ \
+        || Die "Failed copying NVIDIA firmware blobs."
+    [ -f "$fwdir/gsp_ga10x.bin" ] || Die "NVIDIA firmware blobs missing after copy."
+}
+
+post_install() {
+    # Nothing to do: the library soname symlinks, the EGL external platform
+    # pins and the 32-bit ld.so registration all live in Nvidia-Utils now.
+    :
+}
+
+pre_link() {
+    # Keep /etc/modprobe.d owned by this program (it is currently the symlink
+    # /etc/modprobe.d -> /Programs/Nvidia/Settings/modprobe.d). The authoritative
+    # packaged copies are written by Nvidia-Utils under Resources/Unmanaged.
+    mkdir -p "${settings_target}/X11/xorg.conf.d"
+    cat > "${settings_target}/X11/xorg.conf.d/10-nvidia.conf" <<'EOF'
+Section "OutputClass"
+    Identifier    "nvidia"
+    MatchDriver   "nvidia-drm"
+    Driver        "nvidia"
+    Option        "AllowEmptyInitialConfiguration" "true"
+    Option        "NoLogo" "true"
+    Option        "ForceFullCompositionPipeline" "true"
+    Option        "TripleBuffer" "true"
+EndSection
+EOF
+
+    # modprobe: blacklist nouveau, enable DRM modesetting for Wayland/NSC.
+    mkdir -p "${settings_target}/modprobe.d"
+    cat > "${settings_target}/modprobe.d/nvidia.conf" <<'EOF'
+blacklist nouveau
+options nvidia-drm modeset=1 fbdev=1
+EOF
+}
+
+post_install_message="
+NVIDIA driver 615.71.09 installed.
+- The driver stack auto-loads at boot on NVIDIA hardware (udev PCI rule);
+  verify with:            nvidia-smi
+- Tune settings with:     nvidia-settings   (from the Nvidia-Settings recipe,
+  610.57.04; full panel under the plasmax11 session; Wayland shows the basic
+  GPU info page)
+- Kernel modules for release $kernelrelease were built against
+  /Programs/Linux/Current and installed to
+  /lib/modules/$kernelrelease/kernel/drivers/video (through /System/Index).
+  Module dependency info (modules.dep) is regenerated by CompressAndBuildISO.
+- The Xorg DDX (nvidia_drv.so + libglxserver_nvidia.so.615.71.09) is in
+  /Programs/Nvidia/lib/xorg/modules.
+- Userspace libraries, tools, the Vulkan ICDs, the glvnd EGL vendor JSONs, the
+  udev rule, the modprobe blacklist and the Xorg OutputClass are provided by
+  the Nvidia-Utils recipe. The GSP/ucode firmware
+  (/lib/firmware/nvidia/615.71.09/) ships with this package.
+"

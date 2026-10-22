@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugDisplay 8.0.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-display/archive/refs/tags/8.0.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-display/archive/refs/tags/8.0.3.tar.gz"
+file="settings-display-8.0.3.tar.gz"
+file_size=202605
+file_md5=58e15af3a0a7b56a4753f6304aea3f67
+dir='settings-display-8.0.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

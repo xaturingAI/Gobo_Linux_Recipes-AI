@@ -1,0 +1,4 @@
+[Name] Mesa-Utils
+[Summary] Mesa 9.0.0 GL/X11 diagnostic tools (glxinfo, glxgears, eglinfo, ...)
+[License] MIT
+[Homepage] https://www.mesa3d.org/

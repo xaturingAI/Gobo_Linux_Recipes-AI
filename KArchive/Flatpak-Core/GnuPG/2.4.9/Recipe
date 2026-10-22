@@ -1,0 +1,29 @@
+# Custom recipe for GnuPG 2.4.9 (autotools)
+#
+# Part of the Flatpak-Core stack port.  Flatpak-Core.
+#
+# file_md5 + file_size taken from the ACTUAL tarball we verified on disk
+# (gnupg-2.4.9.tar.bz2, md5=21a5a83bd7fae40c8c9c3f79c6d0358b, 8086407 bytes).
+#
+# YAT2M: configure finds the base ISO's ancient /System/Index/bin/yat2m (from
+# LibGPG-Error 1.37) which predates man-page generation and dies on the doc/
+# --html --gnupgorg pass ("usage: yat2m [OPTION] [FILE]", yat2m-stamp error ->
+# doc build fails). configure.ac declares AC_PATH_PROG(YAT2M,...), so a bare
+# YAT2M=./yat2m is IGNORED (the override branch only accepts absolute paths,
+# configure:8264); the RELATIVE value must instead go through autoconf's cache
+# variable ac_cv_path_YAT2M=./yat2m (configure:8260 "test ${ac_cv_path_YAT2M+y}"
+# honors it verbatim). At make time ./yat2m canonicalizes to the doc-local
+# yat2m target, which builds from doc/yat2m.c (doc/Makefile.am:109,
+# $(CC_FOR_BUILD) -o yat2m yat2m.c) -- exactly the 2.4.9 source, since tools/
+# does NOT build a yat2m of its own. That local build handles --html --gnupgorg.
+
+compile_version=017-GIT
+url="https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.9.tar.bz2"
+file_size=8086407
+file_md5=21a5a83bd7fae40c8c9c3f79c6d0358b
+dir='gnupg-2.4.9'
+recipe_type=configure
+
+configure_options=(
+   ac_cv_path_YAT2M=./yat2m
+)

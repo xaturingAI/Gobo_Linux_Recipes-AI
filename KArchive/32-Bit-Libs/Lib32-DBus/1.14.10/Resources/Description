@@ -1,0 +1,4 @@
+[Name] Lib32-DBus
+[Summary] 32-bit D-Bus IPC library for Steam
+[License] AFL-2.1
+[Homepage] https://www.freedesktop.org/wiki/Software/dbus/

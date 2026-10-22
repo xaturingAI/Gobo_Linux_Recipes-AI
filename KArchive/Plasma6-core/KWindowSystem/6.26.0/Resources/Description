@@ -1,0 +1,5 @@
+[Name] KWindowSystem
+[Summary] KDE Frameworks 6 window management
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kwindowsystem
+[Description] KDE Frameworks 6 Tier 1: window system abstraction (KWindowInfo, NET, KStartupInfo). Wayland + X11.

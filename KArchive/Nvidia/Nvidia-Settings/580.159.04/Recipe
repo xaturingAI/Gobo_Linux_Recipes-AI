@@ -1,0 +1,25 @@
+# Custom recipe for Nvidia-Settings 580.159.04 (plain Makefile)
+#
+# Part of the Nvidia stack port.  Nvidia.
+#
+# nvidia-settings ships NO autotools configure -- it's a hand-rolled recursive
+# Makefile (top-level Makefile just runs `$(MAKE) -C src/samples/doc`).
+# PREFIX ?= /usr/local in utils.mk feeds BINDIR/LIBDIR/MANDIR, so this must be
+# recipe_type=makefile with PREFIX=$target (the same pattern as Wlr-Protocols/
+# Scdoc). GNU make forwards command-line vars down the recursive sub-makes via
+# MAKEFLAGS, jansson is bundled by default (NV_USE_BUNDLED_LIBJANSSON ?= 1),
+# and samples/install is a declared no-op "to satisfy top-level recursion".
+#
+# file_md5 + file_size taken from the ACTUAL tarball we verified on disk
+# (nvidia-settings-580.159.04.tar.bz2, md5=03d34135815b1ab8905cf727b6d2b938, 1133196 bytes).
+
+compile_version=017-GIT
+url="https://download.nvidia.com/XFree86/nvidia-settings/nvidia-settings-580.159.04.tar.bz2"
+file_size=1133196
+file_md5=03d34135815b1ab8905cf727b6d2b938
+dir='nvidia-settings-580.159.04'
+recipe_type=makefile
+makefile='Makefile'
+make_variables=(
+   "PREFIX=$target"
+)

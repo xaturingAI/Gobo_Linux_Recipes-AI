@@ -1,0 +1,15 @@
+[Name] BinUtils
+[Summary] Provides programs to assemble and manipulate binary and object files.
+[License] GNU General Public License (GPL)
+[Description] GNU BinUtils 2.43.1. The base GoboLinux 017.01 ISO ships
+BinUtils 2.33.1, whose ld.bfd and ld.gold (hard-linked: the same binary
+object) both predate SHT_RELR (.relr.dyn) support, added in BinUtils 2.38.
+After the Glibc 2.44-2 upgrade, linking against libc.so.6 (whose dynamic
+relocations live in a .relr.dyn section) fails with:
+    ld.bfd: /lib/libc.so.6: unknown type [0x13] section `.relr.dyn'
+    ld.bfd: cannot find /lib/libc.so.6
+    collect2: error: ld returned 1 exit status
+This package provides a RELR-aware linker: ld.bfd is installed as the default
+ld (--enable-ld=default); gold is deliberately disabled. Utilities include:
+ld as nm objdump objcopy ar ranlib strip size addr2line.
+[Homepage] https://www.gnu.org/software/binutils/

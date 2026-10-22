@@ -1,0 +1,21 @@
+# Custom recipe for KJobWidgets 6.26.0 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh.
+compile_version=017-GIT
+url="https://download.kde.org/stable/frameworks/6.26/kjobwidgets-6.26.0.tar.xz"
+file_size=2198704
+file_md5=abbea8478249d1e10092e166293a9d33
+dir='kjobwidgets-6.26.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    -DBUILD_PYTHON_BINDINGS=OFF
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

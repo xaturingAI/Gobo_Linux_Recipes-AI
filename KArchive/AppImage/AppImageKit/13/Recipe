@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# AppImageKit 13 -- AppImage runtime + appimagetool + AppRun (binary assets).
+#
+# Part of the AppImage support tier (AppImageKit / libappimage, ROADMAP phase 4).
+# The AppImageKit SOURCE project is deprecated upstream (tags 12/13/continuous
+# are all marked "obsolete, DO NOT USE"; appimagetool moved to the Go rewrite,
+# the runtime to type2-runtime), so this recipe packages the official v13
+# x86_64 release binaries directly instead of building deprecated sources that
+# would need a recursive git clone of submodules.
+#
+# What these files are / what needs them:
+#   bin/appimagetool          - the classic tool that turns an AppDir into an
+#                               AppImage (FUSE AppImage: at runtime it mounts
+#                               itself via libfuse.so.2 + /dev/fuse; use
+#                               --appimage-extract to run FUSE-free).
+#   lib/appimagekit/runtime   - the AppImage runtime blob that appimagetool
+#                               appends to AppImages (dlopens libfuse at run
+#                               time); pass via appimagetool --runtime-file.
+#   lib/appimagekit/AppRun    - the AppRun helper executable (no deps, static).
+#
+# The ISO already ships FUSE 2.9.9, so these run as-is. Nothing is compiled,
+# hence the manifest/_bin layout (same pattern as the Steam binary recipe).
+#
+# file_size + file_md5 verified against the official v13 release assets.
+
+compile_version=017-GIT
+url="https://github.com/AppImage/AppImageKit/releases/download/13/obsolete-appimagetool-x86_64.AppImage"
+file_size=2172096
+file_md5=8897f478bb7b701fcd107503a08f62c4
+recipe_type=manifest
+uncompress=no
+
+manifest=(
+    "obsolete-appimagetool-x86_64.AppImage:bin/appimagetool"
+    "obsolete-runtime-x86_64:lib/appimagekit/runtime"
+    "obsolete-AppRun-x86_64:lib/appimagekit/AppRun"
+)
+
+pre_install() {
+    # Download the two companion assets (the main appimagetool arrives via the
+    # recipe url) and verify all three checksums before installing them.
+    local url_base="https://github.com/AppImage/AppImageKit/releases/download/13"
+    curl -sL -o obsolete-runtime-x86_64 "$url_base/obsolete-runtime-x86_64" &&
+    curl -sL -o obsolete-AppRun-x86_64 "$url_base/obsolete-AppRun-x86_64" &&
+    {
+        md5sum -c <<'EOF'
+37d6f0bc41f143c8c0376e874769e20a  obsolete-runtime-x86_64
+91b81afc501f78761adbf3bab49b0590  obsolete-AppRun-x86_64
+EOF
+    } &&
+    chmod +x obsolete-appimagetool-x86_64.AppImage obsolete-runtime-x86_64 obsolete-AppRun-x86_64
+}

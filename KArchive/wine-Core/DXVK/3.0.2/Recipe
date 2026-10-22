@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# DXVK 3.0.2 for GoboLinux, packaged from the official release tarball.
+# Vulkan-based D3D9/D3D10/D3D11 translation layer for Wine (d3d8, d3d9,
+# d3d10core, d3d11, dxgi). Prebuilt 32-bit (x32) and 64-bit (x64) DLLs are
+# installed under lib/dxvk/, so a prefix's DXVK can be pointed at
+# /Programs/DXVK/3.0.2/lib/dxvk (Lutris ships it into each prefix from there).
+# The DLLs are Windows PE binaries; they are picked up by Wine, not linked
+# into the Linux index, so no Linux-side dependencies are required at runtime.
+compile_version=017-GIT
+url="https://github.com/doitsujin/dxvk/releases/download/v3.0.2/dxvk-3.0.2.tar.gz"
+file_size=17999049
+file_md5=98bbb353fe6c10a2d2608d7cbc6335dc
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    # uncompress=no only copies the archive into the source dir; unpack here
+    # so the manifest's dxvk-3.0.2/{x32,x64} srcs resolve (they keep the
+    # tarball's top dir, resolved bare against the build CWD).
+    local archive="$compileArchivesDir/dxvk-3.0.2.tar.gz"
+    Log_Normal "Unpacking ${archive}"
+    tar xzf "$archive"
+}
+
+manifest=(
+    "dxvk-3.0.2/x32:lib/dxvk/x32"
+    "dxvk-3.0.2/x64:lib/dxvk/x64"
+)

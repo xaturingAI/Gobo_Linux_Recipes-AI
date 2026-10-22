@@ -1,0 +1,17 @@
+# Custom recipe for zxing-cpp 3.1.1 (cmake)
+# Barcode read/write library; WITH_ZXING=ON (default) makes Prison's
+# find_package(ZXing CONFIG) REQUIRED (exported target ZXing::ZXing).
+compile_version=017-GIT
+url="https://github.com/zxing-cpp/zxing-cpp/releases/download/v3.1.1/zxing-cpp-3.1.1.tar.gz"
+file_size=1628322
+file_md5=40092c87b4a87b2f46a54d1371866966
+dir='zxing-cpp-3.1.1'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DZXING_EXAMPLES=OFF
+    -DZXING_BLACKBOX_TESTS=OFF
+    -DZXING_UNIT_TESTS=OFF
+    -DZXING_TEST_INSTALL=OFF
+)

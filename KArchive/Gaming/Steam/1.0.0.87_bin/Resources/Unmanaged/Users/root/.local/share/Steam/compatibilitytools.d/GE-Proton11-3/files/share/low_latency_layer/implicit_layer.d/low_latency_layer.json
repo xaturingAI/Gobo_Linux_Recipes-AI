@@ -1,0 +1,21 @@
+{
+    "file_format_version": "1.0.0",
+    "layer": {
+        "name": "VK_LAYER_KORTHOS_low_latency",
+        "type": "GLOBAL",
+        "library_path": "/mnt/Storage/Projects/Development/proton/build/dst-low_latency_layer-x86_64/lib/x86_64-linux-gnu/libVkLayer_KORTHOS_LowLatency.so",
+        "api_version": "1.3.0",
+        "implementation_version": "3",
+        "description": "Input latency reduction layer",
+        "functions": {
+            "vkGetInstanceProcAddr": "LowLatency_GetInstanceProcAddr",
+            "vkGetDeviceProcAddr": "LowLatency_GetDeviceProcAddr"
+        },
+        "enable_environment": {
+            "LOW_LATENCY_LAYER": "1"
+        },
+        "disable_environment": {
+            "DISABLE_LOW_LATENCY_LAYER": "1"
+        }
+    }
+}

@@ -1,0 +1,15 @@
+# Custom recipe for SoundThemeElementary 1.1.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/sound-theme/archive/refs/tags/1.1.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/sound-theme/archive/refs/tags/1.1.0.tar.gz"
+file_size=67348
+file_md5=b91f28fe6ccc55c67fb3245235cf8026
+dir='sound-theme-1.1.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

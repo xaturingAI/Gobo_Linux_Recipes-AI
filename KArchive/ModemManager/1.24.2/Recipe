@@ -1,0 +1,41 @@
+# Custom recipe for ModemManager 1.24.2 (meson) -- rebuilt WITH QMI+MBIM
+#
+# The base Gobo ISO ships ModemManager 1.24.2 built with -Dmbim=false -Dqmi=false
+# (no libqmi/libmbim recipes existed), so it can only drive AT/PPP modems and
+# most 4G/5G sticks are invisible to it.  This recipe rebuilds the SAME version
+# with both back ends ENABLED, against the Libqmi 1.30/Libqmi 1.34 packages built
+# just before it in step_network (Libmbim 1.30 + Libqmi 1.34).
+#
+# The step removes the stale /Programs/ModemManager/1.24.2 tree and tarball
+# first, then `compile`s fresh (a plain same-version `compile` would otherwise
+# skip the installed tree), and packages the result; `mmcli` is the front end
+# and the ModemManager Gobo task (wired by apply-live-fixes.sh section 41)
+# starts the daemon at boot.
+#
+# systemd/elogind suspend-resume and journald integration are off (no systemd);
+# polkit is disabled (the daemon is root-launched on the LiveCD), and
+# tests/examples/introspection/vala/man pages are skipped.
+
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/archive/1.24.2/ModemManager-1.24.2.tar.gz"
+file_size=2120956
+file_md5=b72860c54670f362e947edba160fa98e
+dir='ModemManager-1.24.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dqmi=true"
+    "-Dmbim=true"
+    "-Dqrtr=false"
+    "-Dsystemd_suspend_resume=false"
+    "-Dsystemd_journal=false"
+    "-Dpolkit=no"
+    "-Dtests=false"
+    "-Dexamples=false"
+    "-Dintrospection=false"
+    "-Dvapi=false"
+    "-Dman=false"
+    "-Dgtk_doc=false"
+    "-Dbash_completion=false"
+)

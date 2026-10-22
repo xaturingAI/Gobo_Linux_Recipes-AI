@@ -1,0 +1,52 @@
+# Custom recipe for GnomeSettingsDaemon 48.1 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. The org.gnome.SettingsDaemon.* session
+# autostart components required by session-settings 8.1.0 (A11ySettings,
+# Color, Datetime, Housekeeping, Keyboard, MediaKeys, Power,
+# PrintNotifications, ScreensaverProxy, Sharing, Sound, Wacom, XSettings).
+# Also ships gnome-settings-daemon.pc which session-settings needs.
+#
+# HARD CONSTRAINT: no systemd/libnm/mm-glib on this ISO. Stock meson.build
+# hard-asserts rfkill + NetworkManager on Linux, so those asserts are dropped
+# in do_patch and the plugins disabled via flags. The sharing plugin already
+# gates libnm behind enable_network_manager, so it builds fine without it.
+# libcanberra-gtk3 (from LibCanberra) is a hard dep of color/media-keys/power.
+#
+# Build AFTER GLib 2.84, LibGudev, Libgweather4, Geoclue, GeocodeGlib,
+# UPower, Polkit, Gcr3, GnomeDesktop, LibCanberra(gtk3), GSettingsSchemas.
+#
+# Era: GNOME 48 (Sep 2025). file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gnome-settings-daemon/48/gnome-settings-daemon-48.1.tar.xz"
+file_size=1498444
+file_md5=0ec5ed77aa85685cdf3d44f3d8dce0b5
+dir='gnome-settings-daemon-48.1'
+recipe_type=meson
+
+do_patch() {
+    # Note: run in a subshell -- the meson recipe type invokes `meson setup`
+    # from the build dir, so do_patch must not leave cwd inside the source dir.
+    ( cd "$sourcedir"
+      # Drop the two Linux-only hard asserts: the ISO has no libnm/mm-glib and
+      # no rfkill; we build with -Drfkill=false -Dnetwork_manager=false.
+      sed -i "/assert(enable_rfkill or not host_is_linux/d" meson.build
+      sed -i "/assert(enable_network_manager or not host_is_linux/d" meson.build )
+}
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemd=false
+    -Delogind=false
+    -Dalsa=true
+    -Dgudev=true
+    -Dcups=true
+    -Dcolord=true
+    -Dnetwork_manager=false
+    -Drfkill=false
+    -Dsmartcard=false
+    -Dusb-protection=false
+    -Dwayland=false
+    -Dwwan=false
+    -Dgcr3=false
+)

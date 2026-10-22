@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/gstreamer1.0/libgstreamer1.0-0_1.22.0-2+deb12u1_i386.deb"
+file_size=1221024
+file_md5=4d0f0b3b9ff2578d99248ce288ea3d3f
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libgstreamer-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit gstreamer."
+}

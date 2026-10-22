@@ -1,0 +1,33 @@
+#!/bin/sh
+
+_possible_certs='
+  /etc/ssl/certs/ca-certificates.crt
+  /etc/pki/tls/cert.pem
+  /etc/pki/tls/cacert.pem
+  /etc/ssl/cert.pem
+  /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+  /var/lib/ca-certificates/ca-bundle.pem
+'
+
+for c in $_possible_certs; do
+        if [ -f "$c" ]; then
+                break
+        fi
+done
+
+if [ -f "$c" ]; then
+        # With p11kit we have to make a symlink in /tmp because the meme
+        # library does not check any of these variables set by sharun:
+        #
+        # REQUESTS_CA_BUNDLE
+        # CURL_CA_BUNDLE
+        # SSL_CERT_FILE
+        #
+        # So we had to patch it to a path in /tmp and now symlink to the
+        # found certificate at runtime...
+        _host_cert=/tmp/.___host-certs/ca-certificates.crt
+        if [ -d "$APPDIR"/lib/pkcs11 ] && [ ! -f "$_host_cert" ]; then
+                mkdir -p /tmp/.___host-certs || :
+                ln -sfn "$c" "$_host_cert" || :
+        fi
+fi

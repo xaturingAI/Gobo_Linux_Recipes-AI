@@ -1,0 +1,23 @@
+# Custom recipe for qtpositioning 6.10.3 (cmake, Qt 6 module)
+# Provides the Qt6Positioning module (KNightTime's find_package REQUIRED
+# component) plus Qt6PositioningQuick.  This is a separate repo from
+# qtlocation (which contains no positioning sources at all).  Installs
+# into its own prefix like the other Qt modules; KNightTime's
+# CMAKE_PREFIX_PATH must list /Programs/QtPositioning/6.10.3.
+compile_version=017-GIT
+url="https://download.qt.io/official_releases/qt/6.10/6.10.3/submodules/qtpositioning-everywhere-src-6.10.3.tar.xz"
+file_size=650180
+file_md5=ffbcf969a87b2e9fa39e5b227d29e5bc
+dir='qtpositioning-everywhere-src-6.10.3'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_PREFIX=/Programs/QtPositioning/6.10.3
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DQT_BUILD_TESTS=OFF
+    -DQT_BUILD_EXAMPLES=OFF
+    -DQT_BUILD_BENCHMARKS=OFF
+)

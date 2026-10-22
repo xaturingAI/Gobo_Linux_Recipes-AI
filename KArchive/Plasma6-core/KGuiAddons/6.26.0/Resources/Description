@@ -1,0 +1,5 @@
+[Name] KGuiAddons
+[Summary] KDE Frameworks 6 GUI addons
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kguiaddons
+[Description] KDE Frameworks 6 Tier 1: GUI helper addons (color schemes, kcolorutils, KCursor, etc).

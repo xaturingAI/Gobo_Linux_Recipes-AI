@@ -1,0 +1,5 @@
+[Name] kdecoration
+[Summary] Plasma 6 window decoration framework
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/kdecoration
+[Description] Plasma 6 window decoration plugin API. Required by kwin for titlebar/border rendering.

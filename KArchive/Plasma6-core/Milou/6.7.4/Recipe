@@ -1,0 +1,27 @@
+# Custom recipe for milou 6.7.4 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh.
+# Milou is the KRunner plasma widget (search box inside the shell): it plugs
+# the overview and Kickoff search together. Without it kwin logs
+#   Failed to load overview: module "org.kde.milou" is not installed
+# Build-time deps (all already in the stack, built before this in Phase C):
+# Qt6 (Core/Quick/Qml/DBus/Widgets), KF6 KRunner/KService/KConfig/KCoreAddons/
+# KI18n/KGuiAddons/KItemModels/KWidgetsAddons/KDeclarative/KPackage/KSvg,
+# plus LibPlasma (built above). No Plasma-Workspace build-time dep.
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/milou-6.7.4.tar.xz"
+file_size=50036
+file_md5=3060fbba5172818f9020cb58d4954ec4
+dir='milou-6.7.4'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

@@ -1,0 +1,5 @@
+[Name] KJobWidgets
+[Summary] KDE Frameworks 6 job progress UI
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kjobwidgets
+[Description] KDE Frameworks 6 Tier 2: progress UI widgets for KJob (KStatusBarJobTracker, etc).

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xfixes extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxfixes/libxfixes3_5.0.3-2_i386.deb"
+file_size=22580
+file_md5=ea3479bf2417cb2982378f58fab41853
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXfixes.so.3* "$target"/lib32/ || Die "Failed copying 32-bit libXfixes."
+}

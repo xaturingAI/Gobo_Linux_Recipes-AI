@@ -1,0 +1,5 @@
+[Name] kwayland
+[Summary] Plasma 6 Wayland protocol library
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/kwayland
+[Description] Plasma 6 Wayland protocol C++ bindings (KWayland::Client, KWayland::Server). Foundation of kwin.

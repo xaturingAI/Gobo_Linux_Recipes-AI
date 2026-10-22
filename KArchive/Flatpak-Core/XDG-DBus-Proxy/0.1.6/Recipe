@@ -1,0 +1,26 @@
+# Custom recipe for xdg-dbus-proxy 0.1.6 (autotools)
+#
+# Part of the Pantheon stack port (flatpak tier). Small D-Bus proxy that
+# flatpak uses to isolate a sandbox's session bus. Flatpak 1.16.2's
+# subprojects/dbus-proxy is a [wrap-git] (network git clone) that cannot
+# resolve in the offline chroot, so build it from the 0.1.6 release tarball
+# and point flatpak's -Dsystem_dbus_proxy at the installed binary instead.
+#
+# Deps: glib-2.0/gio-2.0/gio-unix-2.0 (all on ISO). Man pages auto-off (no
+# xsltproc -> enable_man=no). No pre-generated configure: autogen.sh runs
+# autoreconf --install, which uses the bundled m4/ macros (ax_code_coverage.m4,
+# glibtests.m4), so autoconf-archive is not required.
+#
+# file_md5 + file_size verified against the GitHub release tarball.
+# No pre-generated configure script in the release tarball (only configure.ac
+# + autogen.sh), so autogen_before_configure=yes makes Compile run
+# './autogen.sh' (autoreconf --force --install, using the bundled m4/) right
+# before PrepareProgram.
+
+compile_version=017-GIT
+url="https://github.com/flatpak/xdg-dbus-proxy/releases/download/0.1.6/xdg-dbus-proxy-0.1.6.tar.xz"
+file_size=48920
+file_md5=6d38a1b6bba80a3134270204558ba17e
+dir='xdg-dbus-proxy-0.1.6'
+recipe_type=configure
+autogen_before_configure=yes

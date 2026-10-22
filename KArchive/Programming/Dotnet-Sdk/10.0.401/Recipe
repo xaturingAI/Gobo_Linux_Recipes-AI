@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# .NET SDK 10.0.401 -- official Microsoft linux-x64 binary tarball.
+#
+# WHY: the Alien-Dotnet plugin (drives `sudo Alien --install Dotnet:<pkg>` ->
+# `dotnet add package` inside /System/Aliens/Dotnet/<pkg>) needs a real `dotnet`
+# CLI, and the AUR xivlauncher build wants a modern SDK. 10.0.x is the current
+# .NET LTS, so this recipe provides the DEFAULT `dotnet` on the ISO. The
+# versioned-SDK recipes (dotnet-sdk-6.0 / -8.0 / -9.0) install older majors
+# alongside it; built LAST by step_dotnet so 10.0 wins the /System/Index/bin
+# dotnet symlink.
+#
+# INSTALL / LAYOUT: the tarball unpacks straight into the standard
+# /usr/share/dotnet tree -- the `dotnet` muxer sits at the tree ROOT with
+# host/ hostfxr/ shared/ (runtimes) sdk/ packs/ templates/ as siblings. The
+# muxer derives its install root from the real path of its own binary, so it
+# MUST NOT be moved into prefix/bin. The manifest therefore keeps the root
+# layout inside the program prefix, and post_install wires the global command
+# as /System/Index/bin/dotnet -> <prefix>/dotnet (SymlinkProgram only scans
+# prefix/bin, so it cannot do this itself).
+#
+# The SDK bundles the matching runtime (shared/Microsoft.NETCore.App/10.0.x)
+# and the targeting packs (packs/), so dotnet-sdk alone is a complete install.
+# The separate dotnet-host / dotnet-runtime / dotnet-targeting-pack recipes
+# exist only so the Arch/AUR "splitting" package names resolve on this ISO.
+#
+# CHECKSUM: Microsoft publishes only SHA-512 (the .sha512 files). Gobo's
+# FetchArchive only supports md5/sha256, so this recipe pins file_size (the CDN
+# Content-Length, cross-checked against the official release-metadata JSON) and
+# records the official SHA-512 here for manual verification:
+#   sha512 = 51c8b999af9e8dd9998c9edc5944e19a90788862068acd38694e098889054ce8
+#            c23d4f0c5cccfa16bf187d044562359e5ee69a9f8ad0bbe913ba90311fbce25b
+#
+# SIZE: tarball 240 MB gzip; unpacks to ~700 MB (SDK + everything bundled).
+
+compile_version=017-GIT
+url="https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.401/dotnet-sdk-10.0.401-linux-x64.tar.gz"
+file_size=240059572
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "dotnet:dotnet"
+    "host:host"
+    "shared:shared"
+    "sdk:sdk"
+    "packs:packs"
+    "templates:templates"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${tarball}"
+    tar xzf "$tarball" || Die "cannot unpack the SDK tarball"
+}
+
+post_install() {
+    # Ship the license texts (tar has no top-level dir, and license names may
+    # drift between releases, so copy conditionally rather than in the manifest).
+    if [ -f LICENSE.txt ] || [ -f ThirdPartyNotices.txt ]
+    then
+        mkdir -p "$target/share/licenses/dotnet-sdk"
+        cp -a LICENSE.txt ThirdPartyNotices.txt "$target/share/licenses/dotnet-sdk/" 2>/dev/null
+    fi
+
+    # Expose the global `dotnet` command. SymlinkProgram already ran (it only
+    # follows prefix/bin), so link /System/Index/bin/dotnet the distro way,
+    # /usr/bin/dotnet -> /usr/share/dotnet/dotnet.
+    local idx="${goboSystem:-/System}/Index/bin"
+    mkdir -p "$idx"
+    ln -sfn "$target/dotnet" "$idx/dotnet"
+}

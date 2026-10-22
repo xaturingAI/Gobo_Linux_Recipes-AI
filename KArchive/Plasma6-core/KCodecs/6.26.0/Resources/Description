@@ -1,0 +1,5 @@
+[Name] KCodecs
+[Summary] KDE Frameworks 6 codec/text utilities
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kcodecs
+[Description] KDE Frameworks 6 Tier 1: text encoding, MIME type detection, codec conversions.

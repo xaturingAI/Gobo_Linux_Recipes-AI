@@ -1,0 +1,32 @@
+# Custom recipe for GnomeSession 45.0 (GNOME 45 era; meson)
+#
+# Part of the Pantheon stack port. Runs 'pantheon' and 'pantheon-wayland'
+# sessions via pantheon.session / pantheon-wayland.session (installed by
+# SessionSettings) using the legacy/fallback startup path on the sysvinit
+# ISO. 45.0 is pinned deliberately: 46+ hard-require libsystemd, 45 still
+# supports -Dsystemd=false -Dsystemd_session=disable (it falls back to the
+# non-systemd session manager). No systemd, no consolekit, no docs/man.
+#
+# Build AFTER GnomeDesktop 44.5 (gnome-desktop-3.0.pc) and BEFORE
+# SessionSettings.
+#
+# Era: GNOME 45 (Sep 2023; chosen for the no-systemd constraint).
+# file_md5 verified against download.gnome.org.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gnome-session/45/gnome-session-45.0.tar.xz"
+file_size=485992
+file_md5=6702feed0873bb1ded999970ffddd096
+dir='gnome-session-45.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemd=false
+    -Dsystemd_session=disable
+    -Dsystemd_journal=false
+    -Dconsolekit=false
+    -Ddocbook=false
+    -Dman=false
+    -Dsession_selector=false
+)

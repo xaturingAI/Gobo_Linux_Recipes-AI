@@ -1,0 +1,5 @@
+[Name] HarfBuzz
+[Summary] OpenType text shaping engine
+[Description] HarfBuzz is the text shaping library used by Pango and the GNOME stack. Bumped to 11.4.0 for the GNOME 48 stack. The ISO's harfbuzz is ~2.x -- insufficient for Pango 1.50+ FriBidi + HB-Shaper pipeline. Needs GLib >= 2.84 (built just before this in the foundation chain). Build BEFORE Pango. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] MIT
+[Homepage] https://github.com/harfbuzz/harfbuzz

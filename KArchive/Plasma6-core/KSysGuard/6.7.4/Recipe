@@ -1,0 +1,32 @@
+# Custom recipe for libksysguard 6.7.4 (cmake)
+# Provides the "KSysGuard" CMake package that plasma-workspace 6.7.4 requires
+# (CMakeLists.txt:75 find_package(KSysGuard 6.7.4 CONFIG), then marked TYPE
+# REQUIRED in set_package_properties so feature_summary() aborts, making it
+# build-order mandatory). The old plasma/ksysguard app repo is archived; the
+# library lives on under the name libksysguard in the Plasma 6.7.4 release
+# group and installs lib/cmake/KSysGuard/KSysGuardConfig.cmake.
+#
+# Build deps are all already on the ISO: Qt6 DBus/Network/Qml/Quick/Widgets
+# (QtBase + QtDeclarative), KF6 CoreAddons/Config/I18n/Auth/Service/Package/
+# NewStuff/Solid, ZLIB, and on Linux NL (LibNL), Sensors (LM-Sensors), Libdrm
+# (LibDRM), all found via libksysguard's bundled FindNL/FindSensors/
+# FindLibdrm cmake modules. libpcap (RECOMMENDED) and libcap/UDev (OPTIONAL)
+# may be skipped without breaking the build. Exports libksysguard (ksysguardd
+# replacement, delivers live process/sensor data to Plasma 6 monitors).
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/libksysguard-6.7.4.tar.xz"
+file_size=344340
+file_md5=190204011ed963eed51d1bde7a2fdf8f
+dir='libksysguard-6.7.4'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

@@ -1,0 +1,35 @@
+# Custom recipe for Sway 1.7 (meson)
+# gdk-pixbuf/tray are 'auto' features that would silently disable, and the
+# default wallpaper PNG is skipped; keep the tray off to avoid sd-bus deps
+# (no systemd/logind on Gobo). man-pages need scdoc (build first).
+# Requires wlroots 0.15.x (build first) with Xwayland support, plus the
+# Wayland stack, XKBcommon, LibInput, cairo, pango, json-c, libpcre.
+compile_version=017-GIT
+url="https://github.com/swaywm/sway/releases/download/1.7/sway-1.7.tar.gz"
+file_size=5559075
+file_md5=fa6316f217d869cf0859adece8c3f745
+dir='sway-1.7'
+recipe_type=meson
+meson_variables=(
+    -Dtray=disabled
+    -Dgdk-pixbuf=disabled
+    -Ddefault-wallpaper=false
+)
+# GCC 14's new -Werror diagnostics break sway 1.7 (two -Wstringop-truncation
+# in criteria.c/config.c, -Wswitch for libinput 1.26's
+# LIBINPUT_CONFIG_ACCEL_PROFILE_CUSTOM enum, etc.). Pass the -Wno flags via
+# env CFLAGS, NOT -Dc_args: Compile's BuildType_meson re-word-splits
+# meson_variables on whitespace, so multi-flag -Dc_args values are destroyed.
+# meson appends env CFLAGS after the project's -Werror, so these win.
+export CFLAGS="$CFLAGS -Wno-stringop-truncation -Wno-switch -Wno-format-overflow -Wno-format-truncation -Wno-dangling-pointer -Wno-use-after-free -Wno-array-bounds -Wno-address"
+
+pre_build() {
+    # GCC 14's -Werror=calloc-transposed-args rejects swaynag's old
+    # calloc(sizeof(X), 1) idiom; swap the argument order. Idempotent.
+    # NOTE: pre_build runs with CWD=$builddir (=$sourcedir/_build), so use
+    # $sourcedir (absolute) for any file references.
+    sed -i 's/calloc(sizeof(struct swaynag_button), 1)/calloc(1, sizeof(struct swaynag_button))/' \
+        "$sourcedir/swaynag/config.c"
+    sed -i 's/calloc(sizeof(struct swaynag_button), 1)/calloc(1, sizeof(struct swaynag_button))/' \
+        "$sourcedir/swaynag/main.c"
+}

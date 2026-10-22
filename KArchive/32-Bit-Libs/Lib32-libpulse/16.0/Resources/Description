@@ -1,0 +1,4 @@
+[Name] Lib32-libpulse
+[Summary] 32-bit PulseAudio client library for Wine/Proton
+[License] LGPL-2.1+
+[Homepage] https://www.freedesktop.org/wiki/Software/PulseAudio/

@@ -1,0 +1,5 @@
+[Name] KDeclarative
+[Summary] KDE Frameworks 6 QML/Plasma integration
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kdeclarative
+[Description] KDE Frameworks 6 Tier 3: QML/Plasma declarative bindings (KWindowSystem QML, PlasmaConfiguration).

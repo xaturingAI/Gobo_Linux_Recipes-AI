@@ -1,0 +1,5 @@
+[Name] kwin
+[Summary] Plasma 6 window manager/compositor
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/kwin
+[Description] KDE Plasma 6 window manager and compositor. Wayland-first, X11 kept for compat. Needs libinput, pipewire, seatd, elogind, libxkbcommon.

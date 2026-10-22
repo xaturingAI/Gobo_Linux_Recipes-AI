@@ -1,0 +1,26 @@
+# LibXxf86vm 1.1.4 (autotools) -- the source of xxf86vm.pc.
+#
+# Ported from the canonical GoboLinux recipe (LibXxf86vm/1.1.4) because Mesa
+# 25.3.6 wants it unconditionally for this option set:
+#   -Dglx=dri                    (recipe)
+#   + glx-direct default true + dri_platform=drm
+#   -> dep_xxf86vm = dependency('xxf86vm')   (no required:false -> hard error)
+# Without a recipe the dependency existed only as a preinstalled Program, so it
+# could not appear in the dependency graph or be rebuilt.
+#
+# Version 1.1.4 is the ISO's own version. The binary interface (libXxf86vm.so.1)
+# is stable and the headers are compile-time only, so this is a safe 1:1 pin.
+#
+# file_size / file_md5 verified against the tarball and match the upstream
+# GoboLinux recipe: 298b8fff82df17304dfdb5fe4066fe3a.
+compile_version=017-GIT
+url="https://xorg.freedesktop.org/archive/individual/lib/libXxf86vm-1.1.4.tar.bz2"
+file_size=295346
+file_md5=298b8fff82df17304dfdb5fe4066fe3a
+dir='libXxf86vm-1.1.4'
+recipe_type=configure
+part_of=Xorg-Lib
+
+# No configure_options: Compile's PrepareProgram already passes
+# --prefix=<index/target>, and the tarball ships a generated ./configure
+# (2015 vintage, no autoreconf needed).

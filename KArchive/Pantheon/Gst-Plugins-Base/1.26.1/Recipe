@@ -1,0 +1,28 @@
+# Custom recipe for GStreamer Plugins Base 1.26.1 (meson)
+#
+# Part of the Pantheon stack port (media tier). Provides gstreamer-plugins-base
+# (the plugin library, gstreamer-pbutils-1.0.pc) and the base set of plugins
+# (typefind, decodebin/playbin, ximagesink, alsasink, audiotestsrc, etc.).
+# Needs the GStreamer core (built right before) + orc (ISO 0.4.x, orc-0.4.pc)
+# for the audio/video convert plugins; most other plugin features auto-disable
+# when their deps are missing.
+#
+# file_md5 + file_size verified against gstreamer.freedesktop.org tarball.
+
+compile_version=017-GIT
+url="https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.26.1.tar.xz"
+file_size=2471276
+file_md5=0645e8c8bc4f3ee244dcf562999c7aff
+dir='gst-plugins-base-1.26.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dintrospection=disabled"
+    "-Dtools=enabled"
+    "-Dexamples=disabled"
+    "-Dtests=disabled"
+    "-Dorc=enabled"
+    "-Dnls=disabled"
+    "-Ddefault_library=shared"
+)

@@ -1,0 +1,5 @@
+[Name] GTK4
+[Summary] GTK 4 widget toolkit
+[Description] GTK 4 is the modern GTK toolkit used by the GNOME 48 desktop and the Pantheon stack. Bumped from the ISO's GTK3 3.24.13 to GTK 4.20.0 (chosen over the ROADMAP's 4.18.6 so libadwaita 1.8.0's GTK >= 4.19.4 hard requirement is satisfied without downgrading libadwaita). Build AFTER GLib 2.84 + Pango 1.56 + HarfBuzz 11 + Fribidi 1.0.16 + graphene 1.10.8 + GdkPixbuf 2.42 + JSON-GLib 1.10 + epoxy 1.5 (ISO) and BEFORE libadwaita 1.8 + Mutter. Track: ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-stack-port.md
+[License] GNU LGPL v2.1+
+[Homepage] https://gitlab.gnome.org/GNOME/gtk

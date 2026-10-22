@@ -1,0 +1,4 @@
+Build host must be able to produce i386 code (gcc -m32 / multilib) even though
+the resulting installation has no 32-bit Unix libraries. The chroot's GCC 14.2.0
+is new enough for Wine 11; confirm -m32 is functional before relying on this
+recipe. Vulkan needs the NVIDIA ICD (Nvidia package) for hardware acceleration.

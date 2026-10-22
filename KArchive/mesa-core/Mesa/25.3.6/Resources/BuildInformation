@@ -1,0 +1,41 @@
+Build type: meson
+Source: https://archive.mesa3d.org/mesa-25.3.6.tar.xz
+Build order: foundation, after LLVM 19.1.7 (+clang) and the CLC toolchain
+(SPIRV-Headers, SPIRV-Tools, SPIRV-LLVM-Translator, LibCLc) and LibGLVnd 1.7.0,
+before Mutter 48.7.
+Bump from ISO Mesa 19.3.3 (provides gbm.pc >= 21.3 for Mutter native backend).
+glvnd=enabled (requires LibGLVnd >= 1.3.2; NVIDIA glvnd ICDs preserved). LLVM via llvm-config (shared dylib).
+Drivers: llvmpipe + radeonsi + virgl + iris + zink; Vulkan drivers disabled (NVIDIA provides its own).
+iris (Intel) is in meson.build's with_driver_using_cl list, so with_clc=true and
+the build hard-requires the CLC toolchain: dependency('libclc') (meson.build:851,
+must expose pkgconfig var libexecdir with spirv-mesa3d-.spv / spirv64-mesa3d-.spv),
+LLVMSPIRVLib (SPIRV-LLVM-Translator, 19.1.x), SPIRV-Tools (>=2024.1) and clang
+(libclang-cpp + lib/clang/19/include, from the LLVM recipe). Without iris the
+Intel iGPU drops to llvmpipe (software) and the greeter comes up glitched.
+zink (OpenGL-over-Vulkan) is in -Dgallium-drivers to switch on the kmsro
+renderonly winsys. kmsro is NOT a legal value of -Dgallium-drivers (meson
+option enum, meson.options); meson.build:236 turns with_gallium_kmsro on by
+itself when system_has_kms_drm is true AND at least one of asahi, etnaviv,
+freedreno, lima, panfrost, v3d, vc4, zink is being built. Adding zink makes
+that gate true. Effect: src/gallium/targets/dril links libkmsrowinsys, whose
+compile_args -DGALLIUM_KMSRO activates the REAL kmsro_drm_screen_create()
+instead of the DRM_DRIVER_DESCRIPTOR_STUB(kmsro) fallback in
+src/gallium/auxiliary/target-helpers/drm_helper.h, which is what printed
+"kmsro: driver missing". The stub was reached via pipe_loader_drm.c
+get_driver_descriptor(): the NVIDIA proprietary driver reports
+"driver (null)", so the unknown-name fallback returns &kmsro_driver_descriptor.
+kmsro_drm_screen_create() has no nvidia/i915/xe branch and returns NULL
+quietly, so behaviour is unchanged - only the stderr noise goes away.
+zink needs <vulkan/vulkan_core.h> at compile time, resolved through
+/System/Index/include/vulkan -> /Programs/Vulkan-Headers/1.4.357.0/include
+(no meson dependency() call, hence Vulkan-Headers MUST be in Dependencies or
+configure+compile fail once zink is enabled). Vulkan-Loader (1.4.357.0) is the
+runtime ICD loader zink goes through.
+Other hard requirements from meson.build for this option set: libelf
+(ELFUtils, "Gallium driver radeonsi requires libelf"), xxf86vm (glx-direct
+default true + glx=dri + dri_platform=drm), xrandr (xlib-lease, true because
+platforms=x11 and KMS), zlib (shader cache needs compression), expat
+(xmlconfig), libdisplay-info (>=0.1.1, auto), libudev (Eudev, required:false
+-> HAVE_LIBUDEV), zstd (auto -> HAVE_ZSTD).
+Build-time: meson 1.11.2 + ninja + python-mako 1.4.1 come from Alien PIP 3.11
+(not Gobo recipes), plus flex, bison, python3 >= 3.9, libdrm >= 2.4.119.

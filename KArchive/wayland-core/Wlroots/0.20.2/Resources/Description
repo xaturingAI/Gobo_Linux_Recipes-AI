@@ -1,0 +1,4 @@
+[Name] Wlroots
+[Summary] Modular Wayland compositor library (drm/libinput/x11 backends)
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/wlroots/wlroots

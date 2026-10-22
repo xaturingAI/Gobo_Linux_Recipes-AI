@@ -1,0 +1,18 @@
+# Custom recipe for simple-mtpfs 0.4.0
+#
+# FUSE MTP filesystem bridge: this is the tool that actually MOUNTS the
+# Android phone at /Mount/phone (libmtp enumerates, simple-mtpfs mounts).
+# Skeleton mirrors Gpgme/1.24.0 (configure over libmtp0_ < libmtp-1.1.21).
+#
+# Hashes are REAL: computed from the actual v0.4.0 tarball fetched from
+# phatina's github this session.
+
+compile_version=017-GIT
+url="https://github.com/phatina/simple-mtpfs/archive/refs/tags/v0.4.0.tar.gz"
+file_size=36234
+file_md5=91306aef051c11cc0cf5f28855e42032
+dir='simple-mtpfs-0.4.0'
+recipe_type=configure
+autogen_before_configure=yes
+
+makefile='makefile'

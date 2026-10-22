@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# 32-bit X11 libraries extracted from Debian i386 packages for Steam/Wine gaming.
+# Includes libX11, libxcb, libXau, and libXdmcp.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libx11/libx11-6_1.8.12-1_i386.deb"
+file_size=838484
+file_md5=0ffbfeff6baf6dbc40e3e134f54aae9c
+recipe_type=manifest
+uncompress=no
+
+# Additional packages fetched during pre_install.
+x11xcb_url="https://deb.debian.org/debian/pool/main/libx/libx11/libx11-xcb1_1.8.12-1_i386.deb"
+x11xcb_md5=07177abddd12d5c14d978600e44dd935
+xcb_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb1_1.15-1_i386.deb"
+xcb_md5=c3775ebb4c646253013e1d548102bf22
+xcb_render_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-render0_1.15-1_i386.deb"
+xcb_render_md5=d2a08c316f4d65124c2018156807b8ba
+xcb_shm_url="https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-shm0_1.15-1_i386.deb"
+xcb_shm_md5=15aca008836ab93957dd81bde6bbfcd3
+xau_url="https://deb.debian.org/debian/pool/main/libx/libxau/libxau6_1.0.9-1_i386.deb"
+xau_md5=83d3e218833b75be83de2a4e0188e4cb
+xdmcp_url="https://deb.debian.org/debian/pool/main/libx/libxdmcp/libxdmcp6_1.1.5-1_i386.deb"
+xdmcp_md5=e0e411df13d62e3380fd6fe5c3b576cc
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libX11.so.6* "$target"/lib32/ || Die "Failed copying libX11."
+    cp -a libx11xcb/usr/lib/i386-linux-gnu/libX11-xcb.so.1* "$target"/lib32/ || Die "Failed copying libX11-xcb."
+    cp -a libxcb/usr/lib/i386-linux-gnu/libxcb.so.1* "$target"/lib32/ || Die "Failed copying libxcb."
+    cp -a libxcbrender/usr/lib/i386-linux-gnu/libxcb-render.so.0* "$target"/lib32/ || Die "Failed copying libxcb-render."
+    cp -a libxcbshm/usr/lib/i386-linux-gnu/libxcb-shm.so.0* "$target"/lib32/ || Die "Failed copying libxcb-shm."
+    cp -a libxau/usr/lib/i386-linux-gnu/libXau.so.6* "$target"/lib32/ || Die "Failed copying libXau."
+    cp -a libxdmcp/usr/lib/i386-linux-gnu/libXdmcp.so.6* "$target"/lib32/ || Die "Failed copying libXdmcp."
+}
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+
+    Log_Normal "Fetching libx11-xcb/libxcb/libxcb-render/libxcb-shm/libXau/libXdmcp 32-bit packages"
+    curl -sL -o x11xcb.deb "$x11xcb_url" || Die "Failed downloading libx11-xcb1 i386."
+    echo "$x11xcb_md5  x11xcb.deb" | md5sum -c - || Die "libx11-xcb1 i386 checksum mismatch."
+    curl -sL -o xcb.deb "$xcb_url" || Die "Failed downloading libxcb1 i386."
+    echo "$xcb_md5  xcb.deb" | md5sum -c - || Die "libxcb1 i386 checksum mismatch."
+    curl -sL -o xcb-render.deb "$xcb_render_url" || Die "Failed downloading libxcb-render0 i386."
+    echo "$xcb_render_md5  xcb-render.deb" | md5sum -c - || Die "libxcb-render0 i386 checksum mismatch."
+    curl -sL -o xcb-shm.deb "$xcb_shm_url" || Die "Failed downloading libxcb-shm0 i386."
+    echo "$xcb_shm_md5  xcb-shm.deb" | md5sum -c - || Die "libxcb-shm0 i386 checksum mismatch."
+    curl -sL -o xau.deb "$xau_url" || Die "Failed downloading libxau6 i386."
+    echo "$xau_md5  xau.deb" | md5sum -c - || Die "libxau6 i386 checksum mismatch."
+    curl -sL -o xdmcp.deb "$xdmcp_url" || Die "Failed downloading libxdmcp6 i386."
+    echo "$xdmcp_md5  xdmcp.deb" | md5sum -c - || Die "libxdmcp6 i386 checksum mismatch."
+    mkdir -p libx11xcb libxcb libxcbrender libxcbshm libxau libxdmcp
+    ar p x11xcb.deb data.tar.xz | tar xJf - -C libx11xcb
+    ar p xcb.deb data.tar.xz | tar xJf - -C libxcb
+    ar p xcb-render.deb data.tar.xz | tar xJf - -C libxcbrender
+    ar p xcb-shm.deb data.tar.xz | tar xJf - -C libxcbshm
+    ar p xau.deb data.tar.xz | tar xJf - -C libxau
+    ar p xdmcp.deb data.tar.xz | tar xJf - -C libxdmcp
+    rm -f x11xcb.deb xcb.deb xcb-render.deb xcb-shm.deb xau.deb xdmcp.deb
+}

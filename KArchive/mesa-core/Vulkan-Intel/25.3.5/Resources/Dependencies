@@ -1,0 +1,14 @@
+GCC
+Glibc
+LibDrm
+LibX11
+LibXCB
+LibXShmfence
+Wayland
+Libdisplay-Info
+Eudev
+Expat
+SPIRV-Tools
+Zstd
+ZLib
+Vulkan-Loader

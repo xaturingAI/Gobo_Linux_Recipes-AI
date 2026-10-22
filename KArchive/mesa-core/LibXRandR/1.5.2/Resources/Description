@@ -1,0 +1,5 @@
+[Name] LibXRandR
+[Summary] X11 RandR extension library (libXrandr + xrandr.pc)
+[Description] Client library for the X Resize, Rotate and Reflect extension. Required by Mesa 25.3.6 for this option set: with -Dplatforms=x11,wayland on a KMS system the 'xlib-lease' feature resolves to enabled, so meson.build does dependency('xrandr') without required:false. Note this is the library package (xrandr.pc); the xrandr command lives in the separate top-level Xrandr recipe. Pinned to the ISO's own version 1.5.2.
+[License] Modified MIT
+[Homepage] https://www.x.org/

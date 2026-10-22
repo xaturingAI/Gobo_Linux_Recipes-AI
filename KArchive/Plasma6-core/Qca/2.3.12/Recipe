@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Qca 2.3.12 (Qt Cryptographic Architecture; "Qca-qt6") for GoboLinux.
+# Part of the KDE Plasma 6.7 stack (GoboLinux 017): Prerequisite for
+# building KWallet with its ksecretd (Secret Service) daemon enabled --
+# ksecretd hard-requires Qca-qt6 >= 2.3.1, and KWallet's current Recipe has
+# BUILD_KSECRETD=OFF precisely because Qca was missing from the ISO. With a
+# Secret Service provider the desktop can serve org.freedesktop.secrets,
+# which Electron apps (Claude Desktop etc.) consult for their keyrings
+# instead of failing with "KWallet not installed".
+# Build order managed by step_plasma in build.sh (must precede KWallet).
+compile_version=017-GIT
+url="https://download.kde.org/stable/qca/2.3.12/qca-2.3.12.tar.xz"
+file_size=767372
+file_md5=fbb2e004918d12e704971cf096820dfe
+dir='qca-2.3.12'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+)

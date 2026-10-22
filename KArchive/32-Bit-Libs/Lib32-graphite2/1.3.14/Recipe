@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit Graphite2 smart-font shaping for HarfBuzz
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/g/graphite2/libgraphite2-3_1.3.14-2+deb13u1_i386.deb"
+file_size=77780
+file_md5=3f148066a706764d72c66c7f016b4076
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libgraphite2.so.3* "$target"/lib32/ || Die "Failed copying 32-bit libgraphite2.so.3."
+}
+

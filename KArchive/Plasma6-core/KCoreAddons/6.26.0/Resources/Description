@@ -1,0 +1,5 @@
+[Name] KCoreAddons
+[Summary] KDE Frameworks 6 core addon library
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kcoreaddons
+[Description] KDE Frameworks 6 Tier 1: core addon library (KJob, KAboutData, KRandom, MimeType, etc). First KF6 module to build.

@@ -1,0 +1,5 @@
+[Name] UPower
+[Summary] Power management D-Bus daemon + upower-glib
+[License] LGPL-2.1-or-later
+[Homepage] https://gitlab.freedesktop.org/upower/upower
+[Description] upower-glib.pc + org.freedesktop.UPower daemon (D-Bus activated) required by gnome-settings-daemon 48.1's power plugin. Uses Eudev.

@@ -1,0 +1,5 @@
+[Name] Libgweather4
+[Summary] Weather library (libgweather-4)
+[License] LGPL-2.1-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/libgweather
+[Description] libgweather-4.0.pc used by gnome-settings-daemon 48.1's datetime plugin and SwitchboardPlugDatetime.

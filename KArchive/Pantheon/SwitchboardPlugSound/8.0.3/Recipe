@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugSound 8.0.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-sound/archive/refs/tags/8.0.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-sound/archive/refs/tags/8.0.3.tar.gz"
+file="settings-sound-8.0.3.tar.gz"
+file_size=402927
+file_md5=80d16f045f2efa48867f5b8232ede4e1
+dir='settings-sound-8.0.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

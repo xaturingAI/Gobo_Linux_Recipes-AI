@@ -1,0 +1,15 @@
+# Custom recipe for hunspell 1.7.2 (autotools)
+# Spellcheck backend for Sonnet (KF6Sonnet); no other backend is available
+# on the ISO.  Once packaged, GoboLinux merges it into /System/Index so
+# Sonnet's pkg-config / ECM FindHUNSPELL picks it up automatically.
+compile_version=2.0
+url="https://github.com/hunspell/hunspell/releases/download/v1.7.2/hunspell-1.7.2.tar.gz"
+file_size=1536202
+file_md5=a68c45e3a3e8de6816d6801e4fff6e9a
+dir='hunspell-1.7.2'
+recipe_type=configure
+do_configuration() {
+    ./configure \
+        --prefix=/Programs/Hunspell/1.7.2 \
+        --disable-static
+}

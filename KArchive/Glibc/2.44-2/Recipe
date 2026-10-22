@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# 64-bit glibc 2.44-2 for GoboLinux, swapped in from the Debian libc6 package.
+#
+# The base GoboLinux 017.01 ISO ships glibc 2.30, which cannot run modern
+# third-party Linux binaries: FastFetch's official build needs GLIBC_2.34 and
+# ProtonPlus's bundled GTK4/Adwaita need up to GLIBC_2.44. Rather than compile
+# glibc from source (recipe_type=make -> a full bootstrap), this recipe clones
+# the INSTALLED glibc program tree (keeping locale-archive, headers, static
+# libs, crt objects, getconf, bin/, share/ and Resources/) and overlays the
+# 2.44-2 runtime files from Debian's libc6 package on top of lib/.
+#
+# Debian's 2.44 libc6 ships the runtime as real shared objects AT their SONAME
+# names (libc.so.6, ld-linux-x86-64.so.2, libpthread.so.0, libm.so.6, ...) with
+# no versioned-filename symlink dance, so a flat copy maps 1:1 onto Gobo's
+# single lib/ tree. The versioned 2.30 loaders (ld-2.30.so, libc-2.30.so) are
+# dropped so nothing resolves to the old ABI.
+#
+# glibc keeps backward symbol-version compatibility, so every base-ISO program
+# built against 2.30 keeps working on 2.44. The base linker scripts (libc.so,
+# libm.so) reference SONAMEs (/lib/libc.so.6, /lib/libm.so.6), not versioned
+# filenames, so they are still correct. SymlinkProgram with --conflict=overwrite
+# re-points /System/Index/lib/{libc.so.6,ld-linux-x86-64.so.2,libpthread.so.0,
+# libm.so.6,libdl.so.2,librt.so.1,libnss_*.so.2,gconv,...} onto this program;
+# /lib64 is a link to /System/Index/lib so the hard-coded PT_INTERP path
+# /lib64/ld-linux-x86-64.so.2 resolves to the new loader automatically.
+#
+# libcrypt: Debian removed libcrypt from glibc at 2.34 (moved to libxcrypt),
+# so libc6 2.44-2 provides NO libcrypt.so.1. The base 2.30 libcrypt-2.30.so
+# CANNOT be kept: it requires __snprintf@GLIBC_PRIVATE which libc 2.44 no
+# longer exports, so dlopen fails and Linux-PAM reports "Module is unknown" --
+# this killed the SDDM greeter (pam_unix -> libcrypt.so.1 -> openSession). The
+# ISO now ships the libxcrypt libcrypt1 package's libcrypt.so.1.1.0 instead
+# (SONAME libcrypt.so.1; needs only GLIBC_2.38, no GLIBC_PRIVATE).
+#
+# The build chroot's own index switches to this program at install time, so
+# subsequent builds in the same session (e.g. ProtonPlus) now run on glibc
+# 2.44 as well. refresh-merge.py installs the generated package into the merged
+# ISO rootfs with `SymlinkProgram -c overwrite`, upgrading the shipped image.
+
+compile_version=017-GIT
+urls=(
+    "https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.44-2_amd64.deb"
+    "https://deb.debian.org/debian/pool/main/libx/libxcrypt/libcrypt1_4.5.2+20251210-1_amd64.deb"
+)
+files=( "libc6_2.44-2_amd64.deb" "libcrypt1_4.5.2+20251210-1_amd64.deb" )
+file_sizes=( 1897792 100216 )
+file_md5s=( 59371a96a2fce9eeaa36d965f3ed43c6 e8662c3c1b738a0d114535d3b2d3431d )
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "stage/lib:lib"
+    "stage/bin:bin"
+    "stage/include:include"
+    "stage/share:share"
+    "stage/doc:doc"
+    "stage/Resources:Resources"
+)
+
+pre_install() {
+    Log_Normal "Preparing 64-bit glibc 2.44-2 overlay (clone of base 2.30 tree + Debian libc6/libxcrypt runtime)"
+    local deb="$compileArchivesDir/${files[0]}"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf - || Die "Failed extracting libc6 .deb."
+
+    # Clone the installed glibc program tree -- everything not supplied by the
+    # Debian runtime (locale-archive, headers, static archives, crt objects,
+    # getconf, bin, share, doc, Resources) is kept from the working 2.30 base.
+    mkdir -p stage
+    cp -a /Programs/Glibc/2.30/. stage/ || Die "Failed cloning base glibc tree."
+
+    # 2.44-2 runtime: real ELFs at SONAME names, replacing the 2.30 ones.
+    # --remove-destination is REQUIRED: cp -a will not clobber an already-shipped
+    # symlink (base libc.so.6 -> libc-2.30.so), which would leave the SONAME
+    # links pointing at dead 2.30 targets. The '*' glob covers the loader
+    # (ld-linux-x86-64.so.2), every SONAME/dev symlink and the versioned real
+    # ELFs (libc-2.44.so, ...) they resolve to.
+    cp -a --remove-destination usr/lib/x86_64-linux-gnu/*.so* stage/lib/ \
+        || Die "Failed copying runtime libs."
+
+    # gconv module set from 2.44 (gconv-modules + gconv-modules.cache replaced;
+    # 2.30's extra module .so files are dropped so nothing stale is loadable).
+    rm -rf stage/lib/gconv
+    cp -a usr/lib/x86_64-linux-gnu/gconv stage/lib/ || Die "Failed copying gconv modules."
+
+    # libcrypt: libc6 2.44-2 ships NONE, so the base clone still holds the
+    # 2.30 built-in. That one is UNLOADABLE under 2.44 (needs the removed
+    # __snprintf@GLIBC_PRIVATE; Linux-PAM then dies with "Module is unknown",
+    # which killed the SDDM greeter). Replace it with the libxcrypt module.
+    local cdeb="$compileArchivesDir/${files[1]}"
+    Log_Normal "Unpacking ${cdeb} (libxcrypt libcrypt.so.1 replacement)"
+    ar p "$cdeb" data.tar.xz | tar xJf - || Die "Failed extracting libcrypt1 .deb."
+    cp -a usr/lib/x86_64-linux-gnu/libcrypt.so.1.1.0 stage/lib/libcrypt.so.1.1.0 \
+        || Die "Failed installing libxcrypt libcrypt.so.1.1.0"
+    rm -f stage/lib/libcrypt-2.30.so stage/lib/libcrypt.so.1 stage/lib/libcrypt.so
+    ln -s libcrypt.so.1.1.0 stage/lib/libcrypt.so.1
+    ln -s libcrypt.so.1 stage/lib/libcrypt.so
+
+    # Drop the versioned 2.30 private libs whose SONAME links were just replaced
+    # so no pathname references the old ABI. Base-only legacy names (nis/nisplus,
+    # libnsl, libSegFault -- no 2.44 provider in libc6) are intentionally KEPT:
+    # their links are intact and their 2.30-built code still loads under 2.44.
+    rm -f stage/lib/ld-2.30.so stage/lib/libc-2.30.so stage/lib/libm-2.30.so \
+          stage/lib/libpthread-2.30.so stage/lib/libdl-2.30.so stage/lib/librt-2.30.so \
+          stage/lib/libresolv-2.30.so stage/lib/libutil-2.30.so stage/lib/libanl-2.30.so \
+          stage/lib/libthread_db-2.30.so stage/lib/libBrokenLocale-2.30.so \
+          stage/lib/libmvec-2.30.so stage/lib/libnss_compat-2.30.so \
+          stage/lib/libnss_dns-2.30.so stage/lib/libnss_files-2.30.so \
+          stage/lib/libnss_hesiod-2.30.so stage/lib/libc_malloc_debug-2.30.so \
+          stage/lib/libmemusage-2.30.so stage/lib/libpcprofile-2.30.so
+
+    # Drop the unpacked .deb container -- only the manually overlaid files above
+    # are kept (the manifest ignores it, but keep the builddir clean).
+    rm -rf usr
+
+    Log_Normal "glibc 2.44 runtime staged (lib/ now $(du -sh stage/lib | cut -f1))"
+}

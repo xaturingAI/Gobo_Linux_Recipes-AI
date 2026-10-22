@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# P7zip 26.00 -- 7-Zip command-line archive tool, exposing bin/7z (plus
+# compat aliases 7za/7zr) on the ISO's PATH.
+#
+# Runtime dependency of Lutris: it spawns `7z` to extract/repack emulation and
+# Windows-installer archives (e.g. .7z/.exe installers from GOG/Humble).
+# Lutris' docs call this "p7zip", hence the program name.
+#
+# Ships the OFFICIAL static 7-Zip 26.00 binary (7zzs) renamed to `7z`. The
+# static build links no external .so files, so it runs on the Live CD
+# regardless of the ISO's glibc. Same full format support as 7zz.
+
+compile_version=017-GIT
+url="https://www.7-zip.org/a/7z2600-linux-x64.tar.xz"
+file_size=1572504
+file_md5=e8ad00bc2b732b7f030949ffecd1dcc0
+recipe_type=manifest
+uncompress=no
+
+manifest=(
+    "bin/7z:bin/7z"
+    "bin/7za:bin/7za"
+    "bin/7zr:bin/7zr"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    tar xf "$tarball"
+    mkdir -p bin
+    install -m755 7zzs bin/7z
+    install -m755 7zzs bin/7za
+    install -m755 7zzs bin/7zr
+}

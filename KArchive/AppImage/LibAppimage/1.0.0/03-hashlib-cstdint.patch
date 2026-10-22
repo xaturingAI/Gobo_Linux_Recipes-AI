@@ -1,0 +1,10 @@
+--- a/src/libappimage/utils/hashlib.h
++++ b/src/libappimage/utils/hashlib.h
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ // system
++#include <cstdint>
+ #include <istream>
+ 
+ 

@@ -1,0 +1,4 @@
+[Name] Lib32-FLAC
+[Summary] 32-bit Free Lossless Audio Codec runtime library (libFLAC.so.12)
+[License] BSD-3-Clause / GPL-2.0+ / LGPL-2.1+
+[Homepage] https://xiph.org/flac/

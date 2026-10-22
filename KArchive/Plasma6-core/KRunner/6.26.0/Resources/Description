@@ -1,0 +1,5 @@
+[Name] KRunner
+[Summary] KDE Frameworks 6 runner/query framework
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/krunner
+[Description] KDE Frameworks 6 Tier 3: KRunner plugin framework (Alt+R launcher backend).

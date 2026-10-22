@@ -1,0 +1,32 @@
+# Custom recipe for PantheonSettingsDaemon 8.5.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-daemon/archive/refs/tags/8.5.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-daemon/archive/refs/tags/8.5.0.tar.gz"
+file_size=111150
+file_md5=8ed772b3edca79b8810e0054fd5398bd
+dir='settings-daemon-8.5.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dsystemduserunitdir=no
+    -Dsystemdsystemunitdir=no
+)
+
+# No accountsservice package on this ISO: upstream installs a dbus interface
+# XML and symlinks it into accountsservice's interfaces dir via
+# meson/create-symlink.sh (needs two args + dependency('accountsservice')).
+# Drop the dep, the interfacesdir var and the whole add_install_script block
+# (the src/ DBus code is generated from the project-local XML; the symlink
+# is documentation-only). pre_build is idempotent: it must also clean up
+# trees already stripped by an earlier bad do_patch attempt (which left a
+# one-arg script call -> '$2: unbound variable' at install time).
+# NOTE: Compile calls pre_build(), never do_patch().
+pre_build() {
+    sed -i -e '/^act_dep = dependency/d' \
+           -e '/^act_interfacesdir/d' \
+           -e '/^meson.add_install_script($/,/^)$/d' \
+        "$sourcedir/data/meson.build"
+}

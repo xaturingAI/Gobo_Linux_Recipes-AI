@@ -1,0 +1,44 @@
+# Custom recipe for SPIRV-Tools v2024.4 (cmake) -- part of the Mesa 25.3.6 CLC
+# toolchain for the Pantheon desktop stack.
+#
+# WHY THIS EXISTS: Mesa 25.3.6 turns on with_clc because the iris (Intel)
+# gallium driver is listed in with_driver_using_cl, and its meson.build does
+# `dependency('SPIRV-Tools', version '>= 2024.1')`. SPIRV-Tools also backs the
+# optional --spirv-tools-dis support inside SPIRV-LLVM-Translator. Built from
+# the v2024.4 release tag, whose DEPS file pins SPIRV-Headers to
+# 3f17b2af6784bfa2c5aa5dbb8e0e74a607dd8b3b.
+#
+# HOW IT FINDS SPIRV-Headers: the top-level CMakeLists never calls
+# find_package(SPIRV-Headers). external/CMakeLists.txt only looks at the
+# SPIRV-Headers_SOURCE_DIR cache variable (or a vendored external/spirv-headers
+# checkout) and then only uses <dir>/include. We therefore point it at the
+# INSTALLED headers tree /System/Index (which contains include/spirv after the
+# SPIRV-Headers recipe runs). Because SPIRV-Headers_SOURCE_DIR is defined, the
+# external dir is NOT added with add_subdirectory.
+#
+# pkg-config/CMake package: the build installs SPIRV-Tools.pc and
+# SPIRV-Tools-shared.pc into lib/pkgconfig (version read from CHANGES, i.e.
+# 2024.4.1) plus SPIRV-Tools{,Config,Targets}.cmake into lib/cmake/SPIRV-Tools,
+# so Meson's dependency() resolves via pkg-config. Tests and the CLI
+# executables are skipped (SPIRV_SKIP_EXECUTABLES implies SPIRV_SKIP_TESTS);
+# only the libraries + headers + .pc are needed by Mesa. -Werror is disabled so
+# the GCC 14 toolchain does not fail on new warnings. Shared libraries are
+# installed with the plain SPIRV-Tools naming (SPIRV_TOOLS_BUILD_STATIC=OFF
+# makes libSPIRV-Tools.so / -opt.so / -link.so, matching the .pc).
+compile_version=017-GIT
+url="https://github.com/KhronosGroup/SPIRV-Tools/archive/refs/tags/v2024.4.tar.gz"
+file="SPIRV-Tools-v2024.4.tar.gz"
+file_size=3200932
+file_md5=a77776932cdd406ac299944cbc8e3395
+dir='SPIRV-Tools-2024.4'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_SHARED_LIBS=ON
+    -DSPIRV_TOOLS_BUILD_STATIC=OFF
+    -DSPIRV-Headers_SOURCE_DIR=/System/Index
+    -DSPIRV_SKIP_TESTS=ON
+    -DSPIRV_SKIP_EXECUTABLES=ON
+    -DSPIRV_WERROR=OFF
+)

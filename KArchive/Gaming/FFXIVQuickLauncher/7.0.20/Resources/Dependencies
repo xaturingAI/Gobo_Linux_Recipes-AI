@@ -1,0 +1,16 @@
+Wine
+Wine-Lutris-GE
+DXVK
+Vkd3d-Proton
+P7zip
+# .NET toolchains (AUR xivlauncher's dotnet-sdk make-dep family). The
+# self-contained .NET 9 Windows build under Wine does NOT need these at runtime;
+# they are built so the ISO offers the SDKs/runtime the native build expects and
+# so `sudo Alien --install Dotnet:<pkg>` works out of the box.
+Dotnet-Sdk
+Dotnet-Sdk-6.0
+Dotnet-Sdk-8.0
+Dotnet-Sdk-9.0
+Dotnet-Host
+Dotnet-Runtime
+Dotnet-Targeting-Pack

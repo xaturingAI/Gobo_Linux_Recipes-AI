@@ -1,0 +1,16 @@
+# Custom recipe for Qrencode 4.1.1 (autotools)
+# QRCode encoder library; REQUIRED by Prison (find_package(QRencode)).
+# The git tag tarball has no generated configure, so bootstrap first.
+compile_version=017-GIT
+url="https://github.com/fukuchi/libqrencode/archive/refs/tags/v4.1.1.tar.gz"
+file_size=190419
+file_md5=486f879d1638d3fb58a4a5d45a88c600
+dir='libqrencode-4.1.1'
+recipe_type=configure
+do_configuration() {
+   yes "" | ./autogen.sh &&
+   ./configure \
+       --prefix=/Programs/Qrencode/4.1.1 \
+       --without-png \
+       --with-tools=no
+}

@@ -1,0 +1,5 @@
+[Name] KStatusNotifierItem
+[Summary] KDE Frameworks 6 system tray protocol
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kstatusnotifieritem
+[Description] KDE Frameworks 6 Tier 3: SNI system tray protocol implementation.

@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugUserAccounts 8.0.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-useraccounts/archive/refs/tags/8.0.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-useraccounts/archive/refs/tags/8.0.1.tar.gz"
+file="settings-useraccounts-8.0.1.tar.gz"
+file_size=313709
+file_md5=702809f2908b2d00b742631ab3402d2f
+dir='settings-useraccounts-8.0.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

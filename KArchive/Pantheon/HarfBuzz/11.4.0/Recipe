@@ -1,0 +1,41 @@
+# Custom recipe for HarfBuzz 11.4.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Bumped from the ISO's ~2.x to 12.2.0
+# for the GNOME 49 stack. Needs GLib 2.86 already installed (see
+# Recipes/GLib/2.86.3/). Build BEFORE Pango.
+#
+# Era: GNOME 49 (Sept 2025 Q3). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://github.com/harfbuzz/harfbuzz/releases/download/11.4.0/harfbuzz-11.4.0.tar.xz"
+file_size=18117460
+file_md5=111079ee0ad764c38ae69398247f381d
+dir='harfbuzz-11.4.0'
+recipe_type=meson
+
+# - benchmark/tests/docs/fuzzer: not shipped on the ISO, saves a cairo/
+#   googletest/freetype lookup.
+# - glib/gobject: needed for hb-glib (the only way Pango will pull it).
+# - introspection OFF until the full gobject-introspection recipe chain
+#   lands (requires GLib 2.86 which we now have, but consumes a lot of
+#   extra build time).
+# - ICU ENABLED: the original build disabled it ("ISO doesn't ship it" was
+#   wrong -- LibICU4C 65.1 ships icu-uc/icu-i18n pcs). WebKit's FindHarfBuzz
+#   hard-requires the ICU component (HarfBuzz::ICU); without harfbuzz-icu.pc
+#   in the 11.4.0 tree, pkg-config fell back to the stale ISO 2.6.4 pc
+#   (prefix=/usr, ABI mismatch) and WebKit died HarfBuzz_ICU_INCLUDE_DIR-
+#   NOTFOUND at the Generate step.
+meson_variables=(
+    --buildtype=release
+    "-Ddocs=disabled"
+    "-Dbenchmark=disabled"
+    "-Dtests=disabled"
+    "-Dfuzzer_ldflags="
+    "-Dintrospection=enabled"
+    "-Dglib=enabled"
+    "-Dgobject=enabled"
+    "-Dicu=enabled"
+    "-Dcairo=enabled"
+    "-Dfreetype=enabled"
+    "-Dexperimental_api=true"
+)

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.14.10-1~deb12u1_i386.deb"
+file_size=215128
+file_md5=1b72aa040d89ee0853c3e9141f5475cb
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a lib/i386-linux-gnu/libdbus-1.so.3* "$target"/lib32/ || Die "Failed copying 32-bit D-Bus."
+}

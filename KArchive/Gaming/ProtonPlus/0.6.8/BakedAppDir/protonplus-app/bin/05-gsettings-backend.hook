@@ -1,0 +1,4 @@
+# this forces GTK apps to use keyfile when using portable home/config mode
+if [ -d "$APPIMAGE".config ] || [ -d "$APPIMAGE".home ]; then
+        export GSETTINGS_BACKEND=keyfile
+fi

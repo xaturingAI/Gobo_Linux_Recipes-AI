@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# .NET SDK 8.0.425 -- .NET 8 (LTS) linux-x64 binary tarball.
+#
+# WHY: the AUR xivlauncher comment notes .NET 6/8-era SDKs build it cleanly, and
+# .NET 8 is the current LTS -- the sensible default for FFXIV.NET tooling that
+# has not moved to .NET 10 yet. Built by step_dotnet before dotnet-sdk (10.0),
+# which wins the /System/Index/bin/dotnet symlink by being built last.
+#
+# INSTALL / LAYOUT: standard /usr/share/dotnet tree -- muxer at the tree root
+# with host/ hostfxr/ shared/ sdk/ packs/ templates/ as siblings (root derived
+# from the muxer's own binary path, so it stays put).
+#
+# CHECKSUM: Microsoft publishes only SHA-512 (FetchArchive supports md5/sha256),
+# so file_size is pinned (CDN Content-Length) with the official SHA-512 recorded
+# here for manual verification:
+#   sha512 = 934b8060a7190e5909ad1fd0785db542f487b3bbf6cdd14826b02095fdd0d039
+#            4298b1634085eff302928fccc33f7c1a7253e9b87df555fc36fce819bcd2e798
+#
+# SIZE: tarball 217 MB gzip; unpacks to ~650 MB.
+
+compile_version=017-GIT
+url="https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.425/dotnet-sdk-8.0.425-linux-x64.tar.gz"
+file_size=216833108
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "dotnet:dotnet"
+    "host:host"
+    "shared:shared"
+    "sdk:sdk"
+    "packs:packs"
+    "templates:templates"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${tarball}"
+    tar xzf "$tarball" || Die "cannot unpack the SDK tarball"
+}
+
+post_install() {
+    if [ -f LICENSE.txt ] || [ -f ThirdPartyNotices.txt ]
+    then
+        mkdir -p "$target/share/licenses/dotnet-sdk"
+        cp -a LICENSE.txt ThirdPartyNotices.txt "$target/share/licenses/dotnet-sdk/" 2>/dev/null
+    fi
+
+    local idx="${goboSystem:-/System}/Index/bin"
+    mkdir -p "$idx"
+    ln -sfn "$target/dotnet" "$idx/dotnet"
+}

@@ -1,0 +1,4 @@
+[Name] Lib32-LAME
+[Summary] 32-bit LAME MP3 encoder runtime library (libmp3lame.so.0)
+[License] LGPL-2.0+
+[Homepage] https://lame.sourceforge.io/

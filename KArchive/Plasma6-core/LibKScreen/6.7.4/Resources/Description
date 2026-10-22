@@ -1,0 +1,5 @@
+[Name] libkscreen
+[Summary] Plasma 6 screen management library
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/plasma/libkscreen
+[Description] Plasma 6 screen/output management library. Wraps KWayland output management.

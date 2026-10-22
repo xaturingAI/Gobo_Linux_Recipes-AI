@@ -1,0 +1,5 @@
+[Name] Linux
+[Summary] Linux 7.2.5 CachyOS kernel (github.com/CachyOS/linux).
+[License] GNU General Public License (GPL)
+[Description] CachyOS Enhanced Kernel based on Linux 7.2.5 (EEVDF scheduler, BBR3, MGLRU and other performance-focused patches). This Gobo recipe pins the cachyos-7.2.5-1 release tarball and ships the CachyOS dot-config (XFS/ZFS/OpenZFS-friendly, GCC build with clang LTO and RUST disabled).
+[Homepage] https://github.com/CachyOS/linux-cachyos

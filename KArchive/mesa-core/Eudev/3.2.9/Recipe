@@ -1,0 +1,74 @@
+# Eudev 3.2.9 (autotools) -- the source of libudev.pc.
+#
+# Ported from the canonical GoboLinux recipe (Eudev/3.2.9) because Mesa 25.3.6
+# probes libudev:
+#   src/vulkan/wsi/meson.build -> dep_libudev = dependency('libudev',
+#   required: false) -> HAVE_LIBUDEV
+# With zink enabled the Vulkan WSI code is part of the build, so an accurate
+# dependency graph needs a recipe for it. libudev is optional in Mesa, so a
+# missing recipe does not break the build today -- it just means the dependency
+# is invisible to `CheckDependencies` and can never be rebuilt from scratch.
+#
+# Version 3.2.9 is the ISO's own version (see Resources/BuildInformation); this
+# recipe completes the graph, it is not an upgrade.
+#
+# file_size / file_md5 verified against the tarball and match the upstream
+# GoboLinux recipe: dedfb1964f6098fe9320de827957331f.
+compile_version=017-GIT
+url="https://dev.gentoo.org/~blueness/eudev/eudev-3.2.9.tar.gz"
+file_size=1959836
+file_md5=dedfb1964f6098fe9320de827957331f
+dir='eudev-3.2.9'
+recipe_type=configure
+
+# Upstream GoboLinux configure options: udevd and udevadm go in ../sbin of the
+# install tree, libraries in ../lib, and the udev configuration (udev.conf,
+# rules.d, hwdb.d) is written to the package Settings dir instead of the
+# immutable /Programs tree -- the same split /Programs/Eudev/3.2.9 on the ISO
+# shows (bin/ + lib/ only, no share/).
+#
+# --sysconfdir must be the *system* Settings dir ($goboSettings = /System/Settings),
+# NOT $settings_target (the package's own Resources/Defaults/Settings).
+#
+# eudev compiles its configuration directory into the binaries as
+# $sysconfdir/udev (configure.ac: AC_SUBST([udevconfdir],[${sysconfdir}/udev]),
+# src/udev/udev-rules.c: rules_dirs[] starts with UDEV_CONF_DIR "/rules.d"),
+# and at runtime that directory has to be the one the live system exposes as
+# /etc/udev -- on the ISO /etc is a symlink to System/Settings, so
+# $goboSettings/udev == /etc/udev.
+#
+# The build system already passes --sysconfdir=$goboSettings by default
+# (PrepareProgram: configuresettings="$goboSettings" in programs mode), but
+# configure takes the LAST --sysconfdir, so a --sysconfdir=$settings_target
+# in this list silently overrides it.  With that value the compiled-in
+# confdir becomes
+# /Programs/Eudev/3.2.9/Resources/Defaults/Settings/udev, udev never scans
+# /etc/udev/rules.d, and two things break on the live ISO:
+#   * GoboLinux's own /etc/udev/rules.d (11-dm.rules, 59-*/61-persistent-*)
+#     is never loaded;
+#   * dracut's runtime-generated /etc/udev/rules.d/99-live-squash.rules is
+#     never applied, so dmsquash-live-root never runs, /dev/root never
+#     appears and the live CD hangs in dracut's check_finished loop with
+#     '"/dev/root" does not exist' and no other visible error.
+# The stock 017.01 ISO's udevd has /System/Settings/udev/rules.d compiled in;
+# that is the reference for this option.
+#
+# The install step needs the package dir instead: the files (udev.conf,
+# hwdb.d, hwdb.bin) belong to /Programs/Eudev/3.2.9/Resources/Defaults/
+# Settings/udev, and /System/Settings/udev only holds symlinks to them
+# (created by the build system's Settings step).  bin/Compile only forces
+# sysconfdir=$settings_target on the make install line when the build host has
+# no fuse, which is not reliable, so force it here instead.
+configure_options=(
+    --prefix=$target
+    --bindir=$target/sbin
+    --sbindir=$target/sbin
+    --libdir=$target/lib
+    --sysconfdir=$goboSettings
+    --libexecdir=$target/lib
+    --with-rootprefix=
+    --with-rootlibdir=$target/lib
+)
+install_variables=(
+    "sysconfdir=$settings_target"
+)

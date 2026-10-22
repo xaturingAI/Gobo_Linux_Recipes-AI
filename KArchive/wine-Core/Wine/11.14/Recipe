@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Wine 11.14, the default working Wine on this CD. This is the Kron4ek
+# prebuilt vanilla (new-WoW64) tarball, packaged as-is (no source build):
+# the monolithic bin/ lib/ share/ tree drops straight into the program
+# layout, and its binaries only NEED libc (wine GLIBC_2.14, wineserver
+# GLIBC_2.17) so they run on the CD's glibc 2.30. No multilib toolchain or
+# i686-w64-mingw32 cross compiler is required to ship it.
+#
+# The 32-bit Windows side lives in the x86_64-windows/unix dirs (new WoW64);
+# there are no 32-bit Unix libraries to provide. The source-build alternative
+# is available as the Wine-Source recipe (documented, not on the default ISO).
+#
+# wine-mono (NET) and wine-gecko (Gecko) MSIs are baked into
+# share/wine/{mono,gecko} so WineBootstrapper has them offline.
+# Mono is ONLY the -x86.msi even on 64-bit: Wine 11.14's
+# dlls/appwiz.cpl/addons.c sets MONO_ARCH "x86" for both i386 and x86_64
+# (wine-mono >= 9 is a single AnyCPU MSI), while GECKO_ARCH is x86_64 on
+# x86_64 builds. dl.winehq.org no longer hosts a wine-mono-*-x86_64.msi for
+# 11.2.0 (404), so the recipe must NOT list it.
+# Upstream verification: sha256sums.txt next to the release on GitHub;
+# sha256 0c1082b9... / md5 356b8658274f3b3de06c1ec409eb71bc.
+compile_version=017-GIT
+urls=(
+    "https://github.com/Kron4ek/Wine-Builds/releases/download/11.14/wine-11.14-amd64.tar.xz"
+    "https://dl.winehq.org/wine/wine-mono/11.2.0/wine-mono-11.2.0-x86.msi"
+    "https://dl.winehq.org/wine/wine-gecko/2.47.4/wine-gecko-2.47.4-x86.msi"
+    "https://dl.winehq.org/wine/wine-gecko/2.47.4/wine-gecko-2.47.4-x86_64.msi"
+)
+files=(
+    "wine-11.14-amd64.tar.xz"
+    "wine-mono-11.2.0-x86.msi"
+    "wine-gecko-2.47.4-x86.msi"
+    "wine-gecko-2.47.4-x86_64.msi"
+)
+file_sizes=(
+    100892320
+    83324416
+    55187968
+    53898752
+)
+file_md5s=(
+    356b8658274f3b3de06c1ec409eb71bc
+    49aa6ff8814904be38f43e7f199db910
+    f61c2a0065301ce329aa390342e70f14
+    8cc7018079a8db70e822320b69185515
+)
+dir='wine-11.14-amd64'
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "bin:bin"
+    "lib:lib"
+    "share:share"
+)
+
+pre_install() {
+    local wine_archive="$compileArchivesDir/wine-11.14-amd64.tar.xz"
+    Log_Normal "Unpacking ${wine_archive}"
+    # uncompress=no only copies the archive into the source dir; the manifest
+    # srcs (bin/lib/share) are resolved BARE against the build CWD (its
+    # basename equals dir's), so strip the tarball's wine-11.14-amd64/ top dir
+    # instead of keeping it (keeping it silently leaves bin/lib uninstalled).
+    tar xJf "$wine_archive" --strip-components=1
+    mkdir -p share/wine/mono share/wine/gecko
+    cp -a "$compileArchivesDir"/wine-mono-*.msi share/wine/mono/
+    cp -a "$compileArchivesDir"/wine-gecko-*.msi share/wine/gecko/
+}

@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugPrinters 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-printers/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-printers/archive/refs/tags/8.0.2.tar.gz"
+file="settings-printers-8.0.2.tar.gz"
+file_size=482581
+file_md5=0d95c10e755697b4bf6e67deb829ddc3
+dir='settings-printers-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

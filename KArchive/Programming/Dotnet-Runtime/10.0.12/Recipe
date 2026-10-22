@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# .NET Runtime 10.0.12 -- official Microsoft linux-x64 runtime tarball.
+#
+# WHY: provides a self-contained, runnable .NET runtime WITHOUT the SDK (the
+# Arch split semantics): the muxer + hostfxr + shared/Microsoft.NETCore.App.
+# Useful for running framework-dependent apps on the ISO without SDK bloat.
+# The SDK recipes bundle the equivalent runtime anyway, so this only adds the
+# standalone component name; it also wires /System/Index/bin/dotnet so this
+# runtime is directly usable if no SDK is installed.
+#
+# INSTALL / LAYOUT: standard /usr/share/dotnet tree -- muxer at the tree root
+# with host/ hostfxr/ shared/ as siblings (root derived from the muxer's own
+# binary path, so it stays put).
+#
+# CHECKSUM: Microsoft publishes only SHA-512 (FetchArchive supports md5/sha256),
+# so file_size is pinned (CDN Content-Length) with the official SHA-512 recorded
+# here for manual verification:
+#   sha512 = 58388fdde4f13bd703c7a6f7defb3300b17e42ba5fe8bca50066f80f64ac7406
+#            620dcdfb4acc1eff7992750c8cc5cff8369dd12d09730c8a9e8760d6032f7f6e
+#
+# SIZE: tarball 37 MB gzip; unpacks to ~110 MB (runtime only).
+
+compile_version=017-GIT
+url="https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.12/dotnet-runtime-10.0.12-linux-x64.tar.gz"
+file_size=36638192
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "dotnet:dotnet"
+    "host:host"
+    "shared:shared"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${tarball}"
+    tar xzf "$tarball" || Die "cannot unpack the runtime tarball"
+}
+
+post_install() {
+    if [ -f LICENSE.txt ] || [ -f ThirdPartyNotices.txt ]
+    then
+        mkdir -p "$target/share/licenses/dotnet-runtime"
+        cp -a LICENSE.txt ThirdPartyNotices.txt "$target/share/licenses/dotnet-runtime/" 2>/dev/null
+    fi
+
+    local idx="${goboSystem:-/System}/Index/bin"
+    mkdir -p "$idx"
+    ln -sfn "$target/dotnet" "$idx/dotnet"
+}

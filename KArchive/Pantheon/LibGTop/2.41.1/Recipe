@@ -1,0 +1,16 @@
+# Custom recipe for LibGTop 2.41.1 (autotools)
+#
+# Part of the Pantheon stack port. System-monitor stats (CPU/mem/net)
+# for WingpanelIndicatorPower and SwitchboardPlugAbout.
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libgtop/2.41/libgtop-2.41.1.tar.xz"
+file_size=751820
+file_md5=e63027486cc9cec56738ab6103773eb3
+dir='libgtop-2.41.1'
+recipe_type=configure
+
+do_configuration() {
+    ./configure --prefix="$target" \
+        --disable-static \
+        --disable-silent-rules
+}

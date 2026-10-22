@@ -1,0 +1,101 @@
+# Custom recipe for ATK 2.36.0 (final standalone ATK release; meson)
+#
+# Part of the Pantheon stack port. The ISO ships ATK 2.34.1, but GTK+ 3.24.43's
+# meson build hard-requires `atk >= 2.35.1` (atk_req in meson.build). With only
+# 2.34.1 on the index, meson silently fell back to the bundled `atk` subproject
+# and stringified the internal dependency as `dep<id>` into the generated
+# gtk+-3.0.pc `Requires:` line, breaking every downstream pkg-config consumer
+# (VTE, Wingpanel, ...). Building 2.36.0 makes GTK+ use the system atk.pc and
+# emit a clean gtk+-3.0.pc.
+#
+# Must be built BEFORE GTK+ 3.24.43 (which does the atk version check at
+# configure time). ATK is the successor-name of GTK3's accessibility toolkit;
+# after the merge step the index repoints atk.pc / libatk-1.0 to 2.36.0.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/atk/2.36/atk-2.36.0.tar.xz"
+file_size=299100
+file_md5=01aa5ec5138f5f8c9b3a4e3196ed2900
+dir='atk-2.36.0'
+recipe_type=meson
+
+# - introspection ON: gobject-introspection 1.84 is on the index and the GTK3
+#   stack keeps Atk-1.0 gir/typelib continuity.
+# - docs OFF (default): no gtk-doc on the ISO.
+meson_variables=(
+    --buildtype=release
+    -Dintrospection=true
+    -Ddocs=false
+)
+
+# Ship GLib autoptr support that standalone ATK never had (merged into
+# at-spi2-core only after 2.53). Mutter 48's clutter headers do
+# G_DECLARE_DERIVABLE_TYPE(ClutterActorAccessible, ..., AtkGObjectAccessible),
+# whose autoptr chainup needs glib_autoptr_clear_AtkGObjectAccessible.
+# An earlier Mutter pre_build added these to the 2.34.1 tree, but installing
+# 2.36.0 recreated atk.h unpatched and broke Gala consumers again. Own the
+# patch here so every ATK (re)install carries it. Idempotent.
+pre_build() {
+    local atkinc="$sourcedir/atk"
+    if [ ! -f "$atkinc/atk-autocleanups.h" ]
+    then
+        Log_Normal "Patching ATK: shipping atk-autocleanups.h"
+        cat > "$atkinc/atk-autocleanups.h" <<'EOF'
+/* ATK - Accessibility Toolkit
+ * Copyright 2020 GNOME Foundation
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ */
+
+#if !defined (__ATK_H_INSIDE__) && !defined (ATK_COMPILATION)
+#error "Only <atk/atk.h> can be included directly."
+#endif
+
+#ifndef __GI_SCANNER__
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkAction, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkComponent, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkDocument, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkEditableText, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkGObjectAccessible, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkHyperlink, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkHyperlinkImpl, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkHypertext, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkImage, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkImplementor, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkMisc, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkNoOpObjectFactory, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkNoOpObject, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkObjectFactory, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkObject, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkPlug, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkRegistry, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkRelationSet, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkRelation, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkSelection, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkSocket, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkStateSet, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkStreamableContent, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkTableCell, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkTable, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkText, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkUtil, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkValue, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkWindow, g_object_unref)
+
+#endif /* __GI_SCANNER__ */
+EOF
+    fi
+    if grep -q "atk-autocleanups" "$atkinc/atk.h"
+    then
+        Log_Normal "atk.h already includes atk-autocleanups.h"
+    else
+        Log_Normal "Patching atk.h: pulling in atk-autocleanups.h"
+        sed -i 's|^#undef __ATK_H_INSIDE__$|#include <atk/atk-autocleanups.h>\n#undef __ATK_H_INSIDE__|' "$atkinc/atk.h"
+    fi
+}

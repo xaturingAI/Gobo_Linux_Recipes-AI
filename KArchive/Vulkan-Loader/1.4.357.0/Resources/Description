@@ -1,0 +1,4 @@
+[Name] Vulkan-Loader
+[Summary] Vulkan Installable Client Driver (ICD) Loader
+[License] Apache-2.0
+[Homepage] https://github.com/KhronosGroup/vulkan-loader

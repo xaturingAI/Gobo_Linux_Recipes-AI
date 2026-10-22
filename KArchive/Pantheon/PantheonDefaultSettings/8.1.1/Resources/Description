@@ -1,0 +1,5 @@
+[Name] PantheonDefaultSettings
+[Summary] Default GSettings overrides + defaults
+[License] LGPL-3.0-or-later
+[Homepage] https://elementary.io
+[Description] Default GSettings overrides + defaults. Data package.

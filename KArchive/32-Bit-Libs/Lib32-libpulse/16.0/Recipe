@@ -1,0 +1,32 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/p/pulseaudio/libpulse0_16.1+dfsg1-2+b1_i386.deb"
+file_size=274716
+file_md5=9d958677eeb5f6153e402acc9a21f2c9
+recipe_type=manifest
+uncompress=no
+
+mainloop_url="https://deb.debian.org/debian/pool/main/p/pulseaudio/libpulse-mainloop-glib0_16.1+dfsg1-2+b1_i386.deb"
+mainloop_md5=51cb621f45e3e9b36be790f04173c77d
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+
+    Log_Normal "Fetching libpulse-mainloop-glib i386"
+    curl -sL -o mainloop.deb "$mainloop_url" || Die "Failed downloading libpulse-mainloop-glib0 i386."
+    echo "$mainloop_md5  mainloop.deb" | md5sum -c - || Die "libpulse-mainloop-glib0 i386 checksum mismatch."
+    mkdir -p libpulse-mainloop-glib
+    ar p mainloop.deb data.tar.xz | tar xJf - -C libpulse-mainloop-glib
+    rm -f mainloop.deb
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libpulse.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libpulse."
+    cp -a usr/lib/i386-linux-gnu/libpulse-simple.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libpulse-simple."
+    cp -a libpulse-mainloop-glib/usr/lib/i386-linux-gnu/libpulse-mainloop-glib.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libpulse-mainloop-glib."
+    cp -a usr/lib/i386-linux-gnu/pulseaudio/libpulsecommon-16.1.so "$target"/lib32/ || Die "Failed copying 32-bit libpulsecommon."
+}

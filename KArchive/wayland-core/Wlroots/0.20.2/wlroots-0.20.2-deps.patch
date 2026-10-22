@@ -1,0 +1,84 @@
+Make wlroots 0.20.2 compile against the libraries this system may have.
+
+Upstream requires xkbcommon >= 1.8.0 and pixman-1 >= 0.46.0, and the build
+system now installs the real xkbcommon 1.8.0 and pixman 0.46.4 before this
+recipe.  These changes make the source work with the older libraries too, so
+a failed dependency upgrade costs one small feature instead of the whole
+build.  With the new libraries installed, every hunk below is a no-op.
+
+ 1. xkbcommon: upstream wants >= 1.8.0, the system may still have 1.7.0.
+    wlroots 0.20.2 only uses xkb_context_new(), xkb_keymap_new_from_names(),
+    xkb_keymap_new_from_buffer(), xkb_keymap_get_as_string(),
+    xkb_state_*, xkb_map_* and xkb_keymap_ref/unref() - all of which exist in
+    libxkbcommon 1.7.0.  The 1.8.0 requirement comes from the upstream
+    "NoSymbol is dropped in multi-keysyms levels" API break, which wlroots
+    0.20.2 does not rely on.
+
+ 2. pixman-1: upstream wants >= 0.46.0 in render/pixman/meson.build (the
+    top-level meson.build only asks for >= 0.43.0), the system may still have
+    0.44.2.  pixman 0.44.2 provides every pixman API wlroots 0.20.2 uses -
+    including pixman_region32_intersect_rect(), pixman_region32_union_rect()
+    and pixman_region32_contains_point(), implemented exactly like the newer
+    pixman (a single-rectangle region is "data == NULL + extents") - with
+    one exception: PIXMAN_a16b16g16r16 (16 bits per component) only exists
+    from pixman 0.46.0 on.  Hence the guarded format entry below: with
+    pixman >= 0.46 the 64bpp format is advertised exactly like upstream
+    does, with an older pixman it is simply not offered (it is a niche
+    HDR/wide-gamut format, not needed for normal operation).
+
+ 3. xkbcommon: XKB_LED_NAME_COMPOSE and XKB_LED_NAME_KANA only exist from
+    xkbcommon 1.8.0 on (1.7.0 has NUM/CAPS/SCROLL only).  The LED names
+    themselves are stable XKB names, so spelling them out works with both
+    versions and behaves identically.
+
+--- a/meson.build
++++ b/meson.build
+@@ -106,7 +106,7 @@
+ 	],
+ )
+ xkbcommon = dependency('xkbcommon',
+-	version: '>=1.8.0',
++	version: '>=1.7.0',
+ 	fallback: 'libxkbcommon',
+ 	default_options: [
+ 		'enable-tools=false',
+--- a/render/pixman/meson.build
++++ b/render/pixman/meson.build
+@@ -1,4 +1,4 @@
+-pixman = dependency('pixman-1', version: '>=0.46.0')
++pixman = dependency('pixman-1', version: '>=0.44.0')
+ 
+ wlr_deps += pixman
+ 
+--- a/render/pixman/pixel_format.c
++++ b/render/pixman/pixel_format.c
+@@ -96,11 +96,14 @@
+ 		.drm_format = DRM_FORMAT_XBGR2101010,
+ 		.pixman_format = PIXMAN_x2b10g10r10,
+ 	},
++#if PIXMAN_VERSION_MAJOR > 0 || PIXMAN_VERSION_MINOR >= 46
++	// 16 bits per component formats were introduced in pixman 0.46.0.
+ 	{
+ 		.drm_format = DRM_FORMAT_ABGR16161616,
+ 		.pixman_format = PIXMAN_a16b16g16r16,
+ 	},
+ #endif
++#endif
+ };
+ 
+ pixman_format_code_t get_pixman_format_from_drm(uint32_t fmt) {
+--- a/types/wlr_keyboard.c
++++ b/types/wlr_keyboard.c
+@@ -245,8 +245,10 @@
+ 		XKB_LED_NAME_NUM,
+ 		XKB_LED_NAME_CAPS,
+ 		XKB_LED_NAME_SCROLL,
+-		XKB_LED_NAME_COMPOSE,
+-		XKB_LED_NAME_KANA,
++		// XKB_LED_NAME_COMPOSE / XKB_LED_NAME_KANA only exist from
++		// xkbcommon 1.8.0 on; the LED names themselves are stable.
++		"Compose",
++		"Kana",
+ 	};
+ 	for (size_t i = 0; i < WLR_LED_COUNT; ++i) {
+ 		kb->led_indexes[i] = xkb_map_led_get_index(kb->keymap, led_names[i]);

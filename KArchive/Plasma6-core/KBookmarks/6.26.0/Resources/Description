@@ -1,0 +1,5 @@
+[Name] KBookmarks
+[Summary] KDE Frameworks 6 bookmark management
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kbookmarks
+[Description] KDE Frameworks 6 Tier 2: bookmark management (KBookmarkManager, XBEL format). Used by Dolphin.

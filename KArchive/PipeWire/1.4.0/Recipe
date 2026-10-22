@@ -1,0 +1,76 @@
+# Custom recipe for PipeWire 1.4.0 (meson) -- the FULL media server
+#
+# Part of the live audio stack.  The ISO previously shipped only LibPipewire
+# (client library for Mutter screen-cast); this recipe adds the actual
+# `pipewire` daemon, the `pipewire-pulse` PulseAudio protocol server and the
+# pipewire-alsa ALSA plug-in so one system-wide daemon can serve ALSA-only AND
+# Pulse-only apps.  It coexists with the still-installed client-only
+# LibPipewire 1.4.0 (same release from the same source tarball -> identical
+# libs; this recipe only adds the daemon/tools/integration pieces).
+#
+# There is NO systemd on the ISO, so all systemd integration is off.  The
+# legacy media-session is NOT built here (`-Dsession-managers=`); WirePlumber
+# 0.5.17 is the session manager and is built as a separate recipe right after
+# elsewhere in this stack.  Bluetooth/Jack/ffmpeg/libcamera/v4l2 etc. are all
+# disabled.
+#
+# System-wide startup is done by the Gobo init system via the
+# Resources/Tasks/PipeWire task (symlinked into /System/Tasks by
+# SymlinkProgram); BootUp/StartLiveCD wiring is added by apply-live-fixes.sh
+# section 40.  -Dlogind is off because the daemon runs as root system-wide,
+# not inside a user session.
+#
+# Era: GNOME 48 / PipeWire 1.4.0.  file_size/file_md5 match the 1.4.0 tag
+# tarball (same archive the client-only LibPipewire recipe already fetched).
+
+compile_version=017-GIT
+url="https://github.com/PipeWire/pipewire/archive/refs/tags/1.4.0.tar.gz"
+file_size=2556081
+file_md5=875810a2d0c83c01c21f599f26c341ef
+dir='pipewire-1.4.0'
+recipe_type=meson
+
+# udevrulesdir relocated under /usr (Elogind pattern) so the unionfs sandbox
+# captures the udev rules into the program tree instead of discarding them.
+meson_variables=(
+    --buildtype=release
+    "-Ddocs=disabled"
+    "-Dman=disabled"
+    "-Dtests=disabled"
+    "-Dinstalled_tests=disabled"
+    "-Dexamples=disabled"
+    "-Dgstreamer=disabled"
+    "-Dgstreamer-device-provider=disabled"
+    "-Dsession-managers="
+    "-Dsystemd=disabled"
+    "-Dsystemd-system-service=disabled"
+    "-Dsystemd-user-service=disabled"
+    "-Dlogind=disabled"
+    "-Dlogind-provider=libelogind"
+    "-Dbluez5=disabled"
+    "-Djack=disabled"
+    "-Dpipewire-jack=disabled"
+    "-Dpipewire-v4l2=disabled"
+    "-Dv4l2=disabled"
+    "-Dlibcamera=disabled"
+    "-Dffmpeg=disabled"
+    "-Ddbus=enabled"
+    "-Dpipewire-alsa=enabled"
+    "-Dudevrulesdir=/usr/lib/udev/rules.d"
+    "-Dpw-cat=enabled"
+    "-Dlegacy-rtkit=false"
+    "-Drlimits-install=false"
+    "-Dpam-defaults-install=false"
+    "-Dlibpulse=disabled"
+    "-Dflatpak=disabled"
+    "-Dcompress-offload=disabled"
+    "-Dlv2=disabled"
+    "-Dlibmysofa=disabled"
+    "-Droc=disabled"
+    "-Davahi=disabled"
+    "-Dlibusb=disabled"
+    "-Dsdl2=disabled"
+    "-Dopus=disabled"
+    "-Dgsettings=disabled"
+    "-Dgsettings-pulse-schema=disabled"
+)

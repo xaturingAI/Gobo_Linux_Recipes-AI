@@ -1,0 +1,15 @@
+# Custom recipe for PantheonScreenshot 8.0.4 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/screenshot/archive/refs/tags/8.0.4.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/screenshot/archive/refs/tags/8.0.4.tar.gz"
+file_size=248582
+file_md5=048e2cb702fc6d4b3af8abb33eb2607e
+dir='screenshot-8.0.4'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

@@ -1,0 +1,4 @@
+[Name] EGL-Wayland
+[Summary] NVIDIA EGL external platform for Wayland (libnvidia-egl-wayland)
+[License] MIT
+[Homepage] https://github.com/NVIDIA/egl-wayland

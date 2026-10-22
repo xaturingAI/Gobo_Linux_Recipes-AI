@@ -1,0 +1,15 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://github.com/NVIDIA/libglvnd/archive/refs/tags/v1.7.0.tar.gz"
+file_size=839809
+file_md5=bbfdc3e1a2cd33a4a3d3a46498248376
+dir="libglvnd-1.7.0"
+recipe_type=meson
+
+meson_options=(
+    --buildtype=release
+    -Degl=true
+    -Dgles1=true
+    -Dgles2=true
+)

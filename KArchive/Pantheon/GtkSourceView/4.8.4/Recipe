@@ -1,0 +1,27 @@
+# Custom recipe for GtkSourceView 4.8.4 (meson)
+#
+# Part of the Pantheon stack port. Source code editing widget for GTK+ 3.
+# Required by PantheonCode 8.3.2: dependency('gtksourceview-4').
+#
+# Builds on gtk+-3.0 (3.24.43), glib/gobject/gio, libxml-2.0 (syntax
+# highlighting engine) and libpcre2 (ISO index). gir + vapi ON (Code's vala
+# code binds gtksourceview via gir/vapi); glade catalog, installed tests and
+# gtk-doc off.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/gtksourceview/4.8/gtksourceview-4.8.4.tar.xz"
+file_size=1159636
+file_md5=2bf056caaae27654ec3a5930dd5597d3
+dir='gtksourceview-4.8.4'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dgir=true"
+    "-Dvapi=true"
+    "-Dgtk_doc=false"
+    "-Dglade_catalog=false"
+    "-Dinstall_tests=false"
+)

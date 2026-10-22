@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Discord 1.0.152 for GoboLinux, packaged from the official Linux tarball.
+# This is the new self-updating client: 'discord' is a small POSIX launcher and
+# 'updater_bootstrap' a glibc-only ELF (NEEDED: gcc_s/pthread/m/dl/c only).
+# On first run the launcher downloads the real client into ~/.config/discord/
+# (network required once). The launcher finds updater_bootstrap via `dirname $0`,
+# so both go into bin/. postinst.sh (apparmor/systemctl) is .deb-only, ignored.
+#
+# pre_install stages the launcher's .desktop/.png under usr/share/ in the
+# staging dir; installing them into the program tree (share/applications +
+# share/pixmaps) makes Gobo's install rule auto-link the .desktop into both
+# /usr/share/applications and /System/Index/share/applications, so the menu
+# entry appears on any rebuilt ISO (apply-live-fixes 14b is runtime-only
+# belt-and-braces for ISOs merged from the pre-fix package).
+compile_version=017-GIT
+url="https://dl.discordapp.net/apps/linux/1.0.152/discord-1.0.152.tar.gz"
+file_size=2189492
+file_md5=fe0b46f86d41eaa0f7d3a8e5dd139aff
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "Discord/discord:bin/discord"
+    "Discord/updater_bootstrap:bin/updater_bootstrap"
+    "usr/share/applications/discord.desktop:share/applications/discord.desktop"
+    "usr/share/pixmaps/discord.png:share/pixmaps/discord.png"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    tar xzf "$tarball"
+    mkdir -p usr/share/applications usr/share/pixmaps
+    cp -a Discord/discord.desktop usr/share/applications/
+    cp -a Discord/discord.png usr/share/pixmaps/
+}

@@ -1,0 +1,23 @@
+# LMDB (Lightning Memory-Mapped Database) 0.9.31
+# Plain-Makefile C library; REQUIRED by Baloo's indexer (FindLMDB wants
+# lmdb.h + liblmdb.so).  Its Makefile sits in libraries/liblmdb and its
+# rules only resolve relative files from that dir, so -C is used here.
+compile_version=017-GIT
+url="https://github.com/LMDB/lmdb/archive/refs/tags/LMDB_0.9.31.tar.gz"
+file_size=145208
+file_md5=9d7f059b1624d0a4d4b2f1781d08d600
+dir='lmdb-LMDB_0.9.31'
+recipe_type=makefile
+build_target="all"
+install_target="install"
+install_variables=(
+   prefix="$target"
+)
+
+do_build() {
+   $make -C libraries/liblmdb $build_target ${buildmerged:+"${buildmerged[@]}"}
+}
+
+do_install() {
+   SandboxInstall $verbose ${unmanagedlist:+--unmanaged-files "${unmanagedlist}"} ${sandboxopts:+"${sandboxopts[@]}"} --make "make -C libraries/liblmdb" --target "$install_target" "$1" "$2" -- "${installmerged[@]}"
+}

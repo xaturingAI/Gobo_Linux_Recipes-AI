@@ -1,0 +1,4 @@
+[Name] SPIRV-Headers
+[Summary] SPIR-V registry headers (build dep for SPIRV-Tools + SPIRV-LLVM-Translator)
+[License] MIT (Khronos)
+[Homepage] https://github.com/KhronosGroup/SPIRV-Headers

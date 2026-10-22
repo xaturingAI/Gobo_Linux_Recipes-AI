@@ -1,0 +1,16 @@
+# Build-time dependencies for Qt 5.15.2, mirroring the base Qt 5.14.1 package.
+# Gobo CheckDependencies format: "Package Name >= version" on its own line.
+CUPS >= 2.3.1
+DBus >= 1.12.16
+Fontconfig >= 2.13.1
+FreeType >= 2.10.1
+GCC >= 9.2.0
+GLib >= 2.63.5
+GLibc >= 2.30
+LibMNG >= 2.0.3
+LibPNG >= 1.6.37
+LibXML2 >= 2.9.10
+OpenSSL >= 1.1.1d
+SQLite >= 3.36.0
+TIFF >= 4.1.0
+ZLib >= 1.2.11

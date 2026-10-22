@@ -1,0 +1,23 @@
+Build type: configure (autotools, ships a generated ./configure from 2015)
+Source: https://xorg.freedesktop.org/archive/individual/lib/libXxf86vm-1.1.4.tar.bz2
+        file_size=295346 file_md5=298b8fff82df17304dfdb5fe4066fe3a
+Build order: X libraries, before Mesa 25.3.6 (mesa-core/Mesa). Nothing else in
+this repo depends on it (Lib32-xxf86vm is the unrelated 32-bit Debian manifest).
+Ported from the canonical GoboLinux recipe LibXxf86vm/1.1.4 (Lucas C. Villa
+Real, 30 Jul 2016). URL, file_size and file_md5 are identical to upstream and to
+the tarball behind the ISO's /Programs/LibXxf86vm/1.1.4.
+Why it is needed: Mesa 25.3.6 builds GLX from the DRI platform
+(-Dglx=dri, glx-direct defaults to true, dri_platform=drm) and then does
+  dep_xxf86vm = dependency('xxf86vm')
+with no required:false, so a missing xxf86vm.pc aborts the configure step.
+The upstream URL form was rewritten from
+https://x.org/archive/individual/lib/... to
+https://xorg.freedesktop.org/archive/individual/lib/... because the old
+www.x.org/releases/individual/lib/ path now 404s for the 1.1.4 tarball
+(verified 2026-10-18; the xorg.freedesktop.org archive copy returns 200).
+Build deps: xf86vidmodeproto.pc (from XorgProto) is what xxf86vm.pc declares in
+`Requires:`; libX11/libXext are the `Requires.private:` set -- all four are
+installed Programs on the ISO.
+Output: lib/libXxf86vm.so.1.x.y (+ libXxf86vm.so.1, libXxf86vm.so),
+include/X11/extensions/xf86vmode.h, lib/pkgconfig/xxf86vm.pc,
+share/man/man3/*.

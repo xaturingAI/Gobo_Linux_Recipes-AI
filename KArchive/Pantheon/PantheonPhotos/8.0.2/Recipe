@@ -1,0 +1,15 @@
+# Custom recipe for PantheonPhotos 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/photos/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/photos/archive/refs/tags/8.0.2.tar.gz"
+file_size=5999764
+file_md5=9edbb7144fa60292bfb5e4a2241aa93a
+dir='photos-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

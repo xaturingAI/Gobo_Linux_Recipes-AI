@@ -1,0 +1,30 @@
+# LibXRandR 1.5.2 (autotools) -- the source of xrandr.pc.
+#
+# Ported from the canonical GoboLinux recipe (LibXRandR/1.5.2) because Mesa
+# 25.3.6 probes xrandr here:
+#   with_xlib_lease = get_option('xlib-lease').require(with_platform_x11 and
+#                     (system_has_kms_drm or ...)).allowed()
+#   if with_xlib_lease
+#     dep_xrandr = dependency('xrandr')     (no required:false)
+# and our recipe builds with -Dplatforms=x11,wayland on a KMS system, so the
+# condition is true and the dependency is required. Without a recipe it was only
+# a preinstalled Program, invisible to CheckDependencies.
+#
+# Beware the name: this is the *library* (libXrandr.so.2 + xrandr.pc), and the
+# separate top-level Recipes/Xrandr is the xrandr *client* program, which links
+# against this one.
+#
+# Version 1.5.2 is the ISO's own version; libXrandr.so.2 is the frozen soname.
+#
+# file_size / file_md5 verified against the tarball and match the upstream
+# GoboLinux recipe: 18f3b20d522f45e4dadd34afb5bea048.
+compile_version=017-GIT
+url="https://xorg.freedesktop.org/archive/individual/lib/libXrandr-1.5.2.tar.bz2"
+file_size=330726
+file_md5=18f3b20d522f45e4dadd34afb5bea048
+dir='libXrandr-1.5.2'
+recipe_type=configure
+part_of=Xorg-Lib
+
+# No configure_options: Compile's PrepareProgram already passes
+# --prefix=<index/target>; the tarball ships a generated ./configure.

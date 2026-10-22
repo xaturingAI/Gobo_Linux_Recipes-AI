@@ -1,0 +1,30 @@
+# Custom recipe for kpipewire 6.7.4 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh.
+#
+# KPipeWireRecord hard-requires a modern FFmpeg (libavcodec/codec.h, >= 5.0);
+# the ISO's FFmpeg 4.2.2 lacks it. FFmpeg6 6.1.1 (built before this in
+# step_plasma) supplies libavcodec 60 under /Programs/FFmpeg6/6.1.1. Prepend
+# its lib/pkgconfig so pkg_check_modules(AVCodec...) resolves the modern
+# headers/libs via absolute -I/-L paths; the /System/Index .pc files still
+# point at 4.2.2.
+environment=(
+    "PKG_CONFIG_PATH=/Programs/FFmpeg6/6.1.1/lib/pkgconfig:/System/Index/lib/pkgconfig"
+)
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/kpipewire-6.7.4.tar.xz"
+file_size=156264
+file_md5=4d1b0c26f8b55e117388ccf8c48a6f14
+dir='kpipewire-6.7.4'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

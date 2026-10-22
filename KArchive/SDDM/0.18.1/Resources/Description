@@ -1,0 +1,5 @@
+[Name] SDDM
+[Summary] QML-based X11 and Wayland display manager
+[License] GPL-2.0-or-later
+[Description] Modern display manager using QML for its greeter. Build with systemd support disabled for Gobo; configured later to auto-login into the Awesome (X11) or Sway (Wayland) session.
+[Homepage] https://github.com/sddm/sddm

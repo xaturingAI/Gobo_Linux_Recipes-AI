@@ -1,0 +1,29 @@
+# Custom recipe for libmbim 1.30.0 (meson)
+#
+# glib-based library for talking MBIM (Mobile Broadband Interface Model) to
+# modems over USB.  ModemManager links it for its MBIM-capable devices; it is
+# built BEFORE ModemManager (and independently of libqmi).
+#
+# Depends only on GLib/GObject/GIO (already on the base ISO, 2.84).  QRTR is a
+# hard meson option in 1.30? No -- 1.30 has no qrtr switch and simply drops the
+# QRTR path when libqrtr-glib is not found, which is the case here.  gtk-doc,
+# gobject-introspection, help2man man pages and bash-completion are disabled to
+# keep the build self-contained.
+#
+# Installs libmbim-glib.so + pkg-config + the mbimcli/mbim-network tools and the
+# udev rule that grants access to MBIM devices.
+
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/mobile-broadband/libmbim/-/archive/1.30.0/libmbim-1.30.0.tar.gz"
+file_size=285095
+file_md5=6b73bbec19410e872f6d9744929da0fb
+dir='libmbim-1.30.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dintrospection=false"
+    "-Dgtk_doc=false"
+    "-Dman=false"
+    "-Dbash_completion=false"
+)

@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugNetwork 8.2.0 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-network/archive/refs/tags/8.2.0.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-network/archive/refs/tags/8.2.0.tar.gz"
+file="settings-network-8.2.0.tar.gz"
+file_size=465357
+file_md5=aeaf7d0e96337314ab697b82778df111
+dir='settings-network-8.2.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

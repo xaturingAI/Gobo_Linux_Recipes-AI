@@ -1,0 +1,20 @@
+# Custom recipe for Extra-CMake-Modules 5.115.0 (cmake)
+# KDE's cmake module collection. SDDM 0.18.x does find_package(ECM REQUIRED).
+# Pure cmake modules, no Qt needed to build. Docs/tests off.
+# Install lands in $target/share/ECM, symlinked into /System/Index/share/ECM,
+# which CMake finds via the <prefix>/share/<name>*/(cmake|CMake)/ search path.
+compile_version=017-GIT
+url="https://github.com/KDE/extra-cmake-modules/archive/refs/tags/v5.115.0.tar.gz"
+file_size=394909
+file_md5=7f0957670905859cddb32d1932e61f51
+dir='extra-cmake-modules-5.115.0'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_PREFIX_PATH=/System/Index
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DCMAKE_SKIP_RPATH=True
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+)

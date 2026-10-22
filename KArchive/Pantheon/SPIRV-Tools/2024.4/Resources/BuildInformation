@@ -1,0 +1,14 @@
+Build type: cmake
+Source: https://github.com/KhronosGroup/SPIRV-Tools/archive/refs/tags/v2024.4.tar.gz
+Installs include/spirv-tools/{libspirv.h,libspirv.hpp,optimizer.hpp,linker.hpp};
+lib/libSPIRV-Tools.so, libSPIRV-Tools-opt.so, libSPIRV-Tools-link.so, libSPIRV-Tools-shared.so;
+lib/pkgconfig/SPIRV-Tools.pc + SPIRV-Tools-shared.pc (Version: 2024.4.1); and
+lib/cmake/SPIRV-Tools/SPIRV-Tools{,Config,Targets}.cmake (no version file -> Meson
+resolves it through pkg-config, which does carry the version).
+SPIRV-Headers is located via the SPIRV-Headers_SOURCE_DIR CMake variable (no
+find_package(SPIRV-Headers) exists upstream); it is set to /System/Index, the
+installed headers tree that provides include/spirv.
+SPIRV_SKIP_EXECUTABLES=ON (implies SPIRV_SKIP_TESTS=ON) builds/installs only
+libraries, headers and pkg-config; no CLI tools or test suites. SPIRV_WERROR=OFF
+keeps GCC 14 warning handling from breaking the build.
+Build order: after SPIRV-Headers, before SPIRV-LLVM-Translator and Mesa 25.3.6.

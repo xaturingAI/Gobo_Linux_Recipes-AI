@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# fzf 0.74.4 for GoboLinux -- the general-purpose command-line fuzzy finder.
+#
+# Built from the official git tag tarball (github.com/junegunn/fzf) with the
+# ISO's own Go 1.27.1 toolchain (/Programs/Go/1.27.1/bin/go). go.mod declares
+# `go 1.23.0`, so 1.27.1 is comfortably newer and builds it in module mode.
+#
+# WHY WE BUILD IT INSTEAD OF USING fzf's OWN `install` SCRIPT:
+# fzf's install.sh downloads a PREBUILT binary from the releases page and puts
+# it in ~/.fzf/bin. That is not reproducible for an ISO and would silently
+# depend on network access at "install" time, so we compile from source.
+#
+# Ships: the fzf binary, its man page, and the shell integrations
+# (bash/zsh/fish key-bindings + completions). The key-binding scripts are
+# SOURCED by the user's shell rc, so they are installed under
+# share/fzf/ (the layout fzf's own `install` uses) and wired up by
+# apply-live-fixes.sh for the default user's shell.
+#
+# CGO: left at the Go default. fzf works fine as a pure-Go binary and this
+# keeps it portable; the optional libcgo fast-path is not needed for an
+# interactive fuzzy finder on a live ISO.
+#
+# file_md5 + file_size verified against the github.com tag tarball.
+
+compile_version=017-GIT
+url="https://github.com/junegunn/fzf/archive/refs/tags/v0.74.4.tar.gz"
+file_size=484612
+file_md5=3b33d624e0ed6b712cd55ae592c8fe03
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+# The GitHub tag tarball unpacks to this directory; every manifest path and the
+# in-recipe build both hang off it.
+FZF='fzf-0.74.4'
+
+manifest=(
+    "fzf-0.74.4/bin/fzf:bin/fzf"
+    "fzf-0.74.4/man/man1/fzf.1:share/man/man1/fzf.1"
+    "fzf-0.74.4/man/man1/fzf-tmux.1:share/man/man1/fzf-tmux.1"
+    "fzf-0.74.4/shell/key-bindings.bash:share/fzf/key-bindings.bash"
+    "fzf-0.74.4/shell/completion.bash:share/fzf/completion.bash"
+    "fzf-0.74.4/shell/key-bindings.zsh:share/fzf/key-bindings.zsh"
+    "fzf-0.74.4/shell/completion.zsh:share/fzf/completion.zsh"
+    "fzf-0.74.4/shell/key-bindings.fish:share/fzf/key-bindings.fish"
+    "fzf-0.74.4/shell/completion.fish:share/fzf/completion.fish"
+    "fzf-0.74.4/LICENSE:share/licenses/fzf/LICENSE"
+    "fzf-0.74.4/README.md:share/licenses/fzf/README.md"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    [ -f "$tarball" ] || Die "fzf tarball not found: $tarball"
+    tar xzf "$tarball" || Die "failed to extract fzf tarball"
+
+    # The Go toolchain lives in its own Program tree; make sure it wins over
+    # anything else on PATH, and keep the module/build caches inside the build
+    # tree so we don't need (or dirty) a writable HOME in the chroot.
+    export PATH="/Programs/Go/1.27.1/bin:/System/Index/bin:$PATH"
+    export GOFLAGS="-mod=mod"
+    export GO111MODULE="on"
+    export CGO_ENABLED="${CGO_ENABLED:-0}"
+
+    go version >/dev/null 2>&1 || Die "go toolchain not found on PATH"
+
+    # The GitHub tag tarball unpacks to fzf-0.74.4/ -- the go.mod lives THERE,
+    # not in the unpack root, so the build has to happen inside it. Everything
+    # runs in a subshell so the cwd is back at the unpack root afterwards, which
+    # is what the manifest= paths above are resolved against.
+    (
+        cd "$FZF" || exit 1
+        export GOPATH="$PWD/.gopath"
+        export GOCACHE="$PWD/.gocache"
+
+        # Build straight into the manifest-expected bin/ location.
+        mkdir -p bin || exit 1
+        go build -trimpath \
+            -ldflags "-s -w -X main.version=0.74.4" \
+            -o bin/fzf . || { echo "go build of fzf failed"; exit 1; }
+
+        [ -x bin/fzf ] || { echo "fzf binary was not produced"; exit 1; }
+
+        # The shell/* scripts are shipped as-is; for a from-source install they
+        # work unmodified (they call `fzf` via PATH). Just make them readable.
+        chmod 0644 shell/*.bash shell/*.zsh shell/*.fish 2>/dev/null || true
+
+        echo "built fzf 0.74.4 ($(du -h bin/fzf | cut -f1))"
+    ) || Die "failed to build fzf"
+
+    # Final guard: the manifest below cannot install a file that is not there,
+    # so check the handful of paths that matter before handing back.
+    local m
+    for m in bin/fzf man/man1/fzf.1 shell/key-bindings.bash shell/completion.bash LICENSE; do
+        [ -e "$FZF/$m" ] || Die "manifest source missing: fzf-0.74.4/$m"
+    done
+}

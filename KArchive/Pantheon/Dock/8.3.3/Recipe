@@ -1,0 +1,24 @@
+# Custom recipe for Dock 8.3.3 (elementary's new GTK4 dock; meson)
+#
+# elementary OS 8 replaced Plank with this dock (io.elementary.dock), written
+# for the secure session; Plank only works in the classic session, so this is
+# THE dock for the ISO. Talks to Gala via its Wayland protocols
+# (PantheonWayland provides pantheon-wayland-1).
+#
+# Deps at build time: gtk4 (+girs), libadwaita-1, granite-7, wayland-client,
+# x11 - all built earlier in step_pantheon.
+# NOTE: it also does dependency('gtk4-wayland')/('gtk4-x11'); those thin vapis
+# are NOT shipped by our GTK4 build, so build.sh generates them from the
+# GdkWayland/GdkX11 GIRs with vapigen before this compiles.
+
+compile_version=017-GIT
+url="https://github.com/elementary/dock/archive/refs/tags/8.3.3.tar.gz"
+file="dock-8.3.3.tar.gz"
+file_size=110016
+file_md5=f6c62cc835a0078e1c59c524298ac018
+dir='dock-8.3.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+)

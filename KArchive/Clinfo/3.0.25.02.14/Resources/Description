@@ -1,0 +1,5 @@
+[Name] Clinfo
+[Summary] OpenCL platform/device query tool (ICD diagnostic)
+[License] MIT
+[Homepage] https://github.com/Oblomov/clinfo
+[Description] clinfo dumps the OpenCL platforms and devices visible through the OpenCL ICD loader, including the NVIDIA driver's CL device info. Useful to verify the NVIDIA OpenCL stack (libOpenCL.so.1 + nvidia.icd -> libnvidia-opencl.so.1) is wired up on the Live CD.

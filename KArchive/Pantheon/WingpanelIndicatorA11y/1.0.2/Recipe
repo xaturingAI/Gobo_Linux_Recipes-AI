@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorA11y 1.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/wingpanel-indicator-a11y/archive/refs/tags/1.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/wingpanel-indicator-a11y/archive/refs/tags/1.0.2.tar.gz"
+file_size=98302
+file_md5=eb09d46d9c1bae61b933115d9c54d553
+dir='wingpanel-indicator-a11y-1.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

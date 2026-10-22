@@ -1,0 +1,32 @@
+Build type: makefile (plain GNU Make, no ./configure)
+Source: https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz
+        file_size=1948426 file_md5=487f7ee1562dee7c1c8adf85e2a63df9
+Build order: foundation, before Mesa 25.3.6 (mesa-core/Mesa). No other package
+in this repo declares it.
+No upstream GoboLinux recipe exists for Zstd (checked the gobolinux/Recipes
+tree: no Zstd/ELFUtils-style entry), so this recipe was written for this repo
+from the tag tarball. The version is the ISO's own 1.4.4 -- the recipe exists to
+put libzstd.pc in the dependency graph, not to upgrade it.
+Mesa side: meson.options has 'zstd' as a feature (auto). meson.build then does
+dependency('libzstd') and defines HAVE_ZSTD, used by the gallium shader cache
+for compressed entries. Because the feature is auto, a missing recipe/libtool
+did not break the build before -- it just left the dependency undocumented.
+Build: `make` with no explicit target runs Makefile's default rule
+       `default: lib-release zstd-release`, i.e. the shared+static library
+       (lib/Makefile) and the zstd CLI (programs/Makefile). The heavy
+       `all: allmost examples manual contrib` target is deliberately NOT used
+       (it needs asciidoctor and builds the contrib dictionaries/packages).
+Install: `make install` -> `make -C lib install` (install-pc, install-static,
+       install-shared, install-includes) and `make -C programs install`
+       (zstd + zstdcat/unzstd/zstdmt symlinks, zstdless/zstdgrep, man pages).
+PREFIX is the only variable needed: lib/Makefile computes
+LIBDIR=$(exec_prefix)/lib, INCLUDEDIR=$(PREFIX)/include,
+PKGCONFIGDIR=$(LIBDIR)/pkgconfig and programs/Makefile computes
+BINDIR=$(exec_prefix)/bin, so PREFIX=$target reproduces the installed layout
+exactly:
+  bin/{zstd,zstdcat,zstdgrep,zstdless,zstdmt,unzstd}
+  lib/libzstd.so.1.x.y + libzstd.so.1 + libzstd.so + libzstd.a
+  lib/pkgconfig/libzstd.pc
+  include/{zstd.h,zstd_errors.h,zbuff.h,zdict.h}
+  share/man/man1/zstd.1 + zstdcat.1/unzstd.1/zstdless.1 symlinks
+No ldconfig call in either install rule, so SandboxInstall is not disturbed.

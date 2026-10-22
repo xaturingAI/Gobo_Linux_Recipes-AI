@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorSession 2.3.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/wingpanel-indicator-session/archive/refs/tags/2.3.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/wingpanel-indicator-session/archive/refs/tags/2.3.1.tar.gz"
+file_size=147005
+file_md5=5af70bdb665ddedaf5a242c1f9a4c052
+dir='wingpanel-indicator-session-2.3.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

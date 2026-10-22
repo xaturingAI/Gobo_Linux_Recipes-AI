@@ -1,0 +1,15 @@
+# Custom recipe for PantheonTasks 6.3.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/tasks/archive/refs/tags/6.3.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/tasks/archive/refs/tags/6.3.3.tar.gz"
+file_size=249886
+file_md5=d038aea83eb4c073431e70df73277532
+dir='tasks-6.3.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

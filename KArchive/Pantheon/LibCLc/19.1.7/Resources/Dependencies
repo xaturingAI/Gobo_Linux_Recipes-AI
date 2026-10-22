@@ -1,0 +1,5 @@
+LLVM = 19.1.7
+SPIRV-LLVM-Translator = 19.1.7
+CMake
+GCC
+Python

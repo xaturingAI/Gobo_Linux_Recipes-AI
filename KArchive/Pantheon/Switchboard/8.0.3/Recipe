@@ -1,0 +1,15 @@
+# Custom recipe for Switchboard 8.0.3 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings/archive/refs/tags/8.0.3.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings/archive/refs/tags/8.0.3.tar.gz"
+file_size=328060
+file_md5=3d2694966278d425c3ee078a127ada31
+dir='settings-8.0.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dexample=false
+)

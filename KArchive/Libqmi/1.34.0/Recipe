@@ -1,0 +1,30 @@
+# Custom recipe for libqmi 1.34.0 (meson)
+#
+# glib-based library for talking QMI (Qualcomm MSM Interface) to modems over
+# USB.  ModemManager links it for its QMI-capable devices (the majority of
+# Qualcomm-based 4G/5G sticks).  Built BEFORE ModemManager.
+#
+# Depends on GLib/GObject/GIO (base ISO 2.84) and gudev (LibGudev 238).
+# qrtr is disabled (no libqrtr-glib on the ISO).  udev support stays ON
+# (installs the udev rule granting access to QMI devices) which meson asserts
+# requires firmware_update, so qmi-firmware-update is built too (its mbim
+# backend is satisfied since Libmbim builds first in step_network).
+# gtk-doc/introspection/help2man/bash-completion off.
+#
+# Installs libqmi-glib.so + pkg-config + qmicli and the udev QMI rule.
+
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/mobile-broadband/libqmi/-/archive/1.34.0/libqmi-1.34.0.tar.gz"
+file_size=4376971
+file_md5=34d4b54b0b8819d8f0844ceac47635df
+dir='libqmi-1.34.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dqrtr=false"
+    "-Dintrospection=false"
+    "-Dgtk_doc=false"
+    "-Dman=false"
+    "-Dbash_completion=false"
+)

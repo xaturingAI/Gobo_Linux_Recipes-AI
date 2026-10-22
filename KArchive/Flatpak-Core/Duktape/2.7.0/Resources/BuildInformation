@@ -1,0 +1,3 @@
+Build type: makefile (upstream Makefile.sharedlibrary)
+Source: https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz
+Build order: build BEFORE Polkit (polkitd needs libduktape); part of the Pantheon session stack (see Recipes/pantheon-recipes.md).

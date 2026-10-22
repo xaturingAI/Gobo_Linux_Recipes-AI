@@ -1,0 +1,28 @@
+# Custom recipe for kauth 6.26.0 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh.
+# The auth backend is pinned to PolkitQt6-1 (NOT the CMake auto-probe):
+# with no explicit KAUTH_BACKEND_NAME, KAuth runs find_package(PolkitQt6-1)
+# and silently falls back to the FAKE backend when polkit-qt-1 is absent,
+# which compiles NO kauth_backend_plugin.so -> runtime FakeBackend -> every
+# KAuth::Action fails with "The backend does not specify how to authorize"
+# (the pre-2026-10-08 SDDM-KCM theme-install bug). step_plasma MUST build
+# Polkit-Qt-1 0.201.1 before this recipe or the pin itself re-falls back.
+compile_version=017-GIT
+url="https://download.kde.org/stable/frameworks/6.26/kauth-6.26.0.tar.xz"
+file_size=2273432
+file_md5=5b9b6e3e5e67b266cf2c44171ee24e6b
+dir='kauth-6.26.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DKAUTH_BACKEND_NAME=PolkitQt6-1
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

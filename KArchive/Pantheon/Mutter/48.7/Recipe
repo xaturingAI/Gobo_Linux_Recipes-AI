@@ -1,0 +1,240 @@
+# Custom recipe for Mutter 48.7 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port (gala -> libmutter) onto the GoboLinux 017.01
+# gaming ISO. Mutter is a *long* chain: it requires GLib >= 2.76, GTK4,
+# graphene >= 1.10.2, libei >= 1.3.901, libdisplay-info >= 0.2,
+# gsettings-desktop-schemas >= 40, libwacom, libxkbcommon, libinput >= 1.27,
+# wayland-protocols >= 1.41, colord, lcms2, libpipewire >= 1.2 (remote_desktop),
+# gnome-desktop-4, libgudev, sysprof-capture >= 3.40.1, meson >= 1.3.
+# See ~/.claude/projects/-home-nohearth-Projects-BuildLiveCD/memory/pantheon-
+# stack-port.md and Recipes/pantheon-recipes.md for the full tracker.
+#
+# This recipe is a *marker*: the foundation chain has to compile first. Once
+# GLib 2.84, Pango 1.50, HarfBuzz 11, graphene, libei, libdisplay-info,
+# gsettings-desktop-schemas 48, gnome-desktop-4, libwacom, colord, lcms2,
+# JSON-GLib, libpipewire, sysprof-capture, GTK 4.18, libadwaita 1.8 are all
+# on the ISO (and the in-chroot meson is >= 1.3 via Alien-PIP3), this recipe
+# should compile cleanly with the pre_build patches below.
+#
+# Era: GNOME 48 (Mar 2025). Source tarball at the GNOME GitLab archive;
+# file_md5 is a placeholder that the next session will verify by downloading.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/mutter/48/mutter-48.7.tar.xz"
+file_size=8386684
+file_md5=9795e6ee5431ec82e12e9fdd3ac07aed
+dir='mutter-48.7'
+recipe_type=meson
+
+# - The libgnome_desktop / remote_desktop toggles need gnome-desktop-4 and
+#   libpipewire respectively, neither built yet -> leave at default (false).
+# - The tests/docs toggles need gtk-doc + dbus-daemon + python-dbusmock +
+#   xvfb-run etc., none on the ISO.
+# - egl backend is mandatory for the Wayland/native backend; GL backend is
+#   not built because the ISO ships no GLX headers we can use.
+# - libwacom is now provided by LibWacom 2.16.0 (>= 0.13 required), so tablet
+#   support is enabled.
+# - default_library=shared so the libmutter.so is dlopen()-able by gala.
+# - introspection OFF until we have a full gobject-introspection chain.
+meson_variables=(
+    --buildtype=release
+    "-Dtests=disabled"
+    "-Ddocs=false"
+    "-Dintrospection=false"
+    "-Dprofiler=false"
+    "-Dlibwacom=true"
+    "-Dlibgnome_desktop=false"
+    "-Dremote_desktop=false"
+    "-Dsound_player=false"
+    "-Dstartup_notification=false"
+    "-Dxwayland_path=/Programs/XWayland/Current/bin/Xwayland"
+    "-Dudev_dir=/System/Index/lib/udev"
+    # -Dbash_completion=false skips the tools/ block that does
+    # find_program('register-python-argcomplete') (argcomplete is not on the
+    # ISO and gdctl completions are non-essential).
+    "-Dbash_completion=false"
+)
+
+pre_build() {
+    # GCC 14's -Werror=calloc-transposed-args rejects Mutter's old
+    # calloc(sizeof(X), N) idiom.  Swap the argument order across src/.
+    # The list of occurrences will be discovered during the first compile;
+    # we'll iterate to fix all of them in this recipe.
+    #
+    # Idempotent: only swaps if the old form is present.
+    Log_Normal "Patching GCC 14 calloc-transposed-args in mutter source"
+    find "$sourcedir/src" -name '*.c' -o -name '*.h' | \
+        xargs grep -l 'calloc(sizeof(' 2>/dev/null | while read f
+    do
+        # Replace calloc(sizeof(T), N) -> calloc(N, sizeof(T)) only where the
+        # second argument is a literal integer / integer macro.
+        sed -i -E 's/calloc\(sizeof\(([A-Za-z0-9_ *]+)\),\s*([0-9]+)\)/calloc(\2, sizeof(\1))/g' "$f"
+    done
+
+    # The ISO's 2020-era EGL headers (already patched in Wlroots' recipe)
+    # add EGL_WL_bind_wayland_display and EGL_NV_stream_consumer_eglimage;
+    # Mutter's EGL backend additionally wants EGL_EXT_platform_device
+    # (PFNEGLQUERYDEVICESEXT) which is *not* in the chroot headers.  Append
+    # it idempotently so Mutter's EGL backend can dlopen()-probe at runtime.
+    local eglext=/System/Index/include/EGL/eglext.h
+    if grep -q 'EGL_EXT_platform_device' "$eglext"
+    then
+        Log_Normal "eglext.h already has EGL_EXT_platform_device"
+    else
+        Log_Normal "Patching $eglext: adding EGL_EXT_platform_device"
+        cat >> "$eglext" <<'EOF'
+
+#ifndef EGL_EXT_platform_device
+#define EGL_EXT_platform_device 1
+#define EGL_PLATFORM_DEVICE_EXT     0x313F
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYDEVICESEXT) (EGLDisplay dpy, EGLint max_devices, EGLDeviceEXT *devices, EGLint *num_devices);
+typedef EGLDisplay (EGLAPIENTRYP PFNEGLQUERYDEVICEATTRIBEXT) (EGLDeviceEXT device, EGLint attribute, EGLAttrib *value);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglQueryDevicesEXT (EGLDisplay dpy, EGLint max_devices, EGLDeviceEXT *devices, EGLint *num_devices);
+EGLAPI EGLDisplay EGLAPIENTRY eglQueryDeviceAttribEXT (EGLDeviceEXT device, EGLint attribute, EGLAttrib *value);
+#endif
+#endif /* EGL_EXT_platform_device */
+EOF
+    fi
+
+    # ATK 2.34.1 (ISO) predates atk-autocleanups.h (added in ATK 2.38.0), so
+    # g_autoptr (AtkObject)/(AtkStateSet) and G_DECLARE_DERIVABLE_TYPE
+    # chainups rooted at ATK types (ClutterActorAccessible -> AtkGObjectAccessible)
+    # fail with "glib_autoptr_clear_AtkGObjectAccessible undeclared". Ship the
+    # upstream atk-autocleanups.h and pull it in from atk.h (identical to what
+    # ATK 2.38.0 installs). Header-only: only defines inline cleanup funcs /
+    # typedefs at compile time, no runtime ABI impact. Idempotent.
+    local atkinc=/System/Index/include/atk-1.0/atk
+    if [ ! -f "$atkinc/atk-autocleanups.h" ]
+    then
+        Log_Normal "Patching ATK headers: adding atk-autocleanups.h"
+        cat > "$atkinc/atk-autocleanups.h" <<'EOF'
+/* ATK - Accessibility Toolkit
+ * Copyright 2020 GNOME Foundation
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ */
+
+#if !defined (__ATK_H_INSIDE__) && !defined (ATK_COMPILATION)
+#error "Only <atk/atk.h> can be included directly."
+#endif
+
+#ifndef __GI_SCANNER__
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkAction, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkComponent, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkDocument, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkEditableText, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkGObjectAccessible, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkHyperlink, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkHyperlinkImpl, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkHypertext, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkImage, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkImplementor, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkMisc, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkNoOpObjectFactory, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkNoOpObject, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkObjectFactory, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkObject, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkPlug, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkRegistry, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkRelationSet, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkRelation, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkSelection, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkSocket, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkStateSet, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkStreamableContent, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkTableCell, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkTable, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkText, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkUtil, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkValue, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (AtkWindow, g_object_unref)
+
+#endif /* __GI_SCANNER__ */
+EOF
+    else
+        Log_Normal "atk-autocleanups.h already present"
+    fi
+    if grep -q "atk-autocleanups" "$atkinc/atk.h"
+    then
+        Log_Normal "atk.h already includes atk-autocleanups.h"
+    else
+        Log_Normal "Patching atk.h: pulling in atk-autocleanups.h"
+        sed -i 's|^#undef __ATK_H_INSIDE__$|#include <atk/atk-autocleanups.h>\n#undef __ATK_H_INSIDE__|' "$atkinc/atk.h"
+    fi
+
+    # ATK 2.34.1 (ISO) also predates the AtkLive enum (added in ATK 2.50) used
+    # by mutter's workspace a11y notification (src/core/workspace.c uses
+    # ATK_LIVE_POLITE). Insert it after AtkLayer in atkobject.h, byte-identical
+    # to upstream at-spi2-core. Idempotent.
+    if grep -q "ATK_LIVE_POLITE" "$atkinc/atkobject.h"
+    then
+        Log_Normal "atkobject.h already has AtkLive enum"
+    else
+        Log_Normal "Patching atkobject.h: adding AtkLive enum (ATK >= 2.50)"
+        sed -i '/^} AtkLayer;$/a\
+\
+/**\
+ * AtkLive:\
+ * @ATK_LIVE_NONE: No live region.\
+ * @ATK_LIVE_POLITE: This live region should be considered polite.\
+ * @ATK_LIVE_ASSERTIVE: This live region should be considered assertive.\
+ *\
+ * Enumeration used to indicate a type of live region and how assertive it\
+ * should be in terms of speaking notifications. Currently, this is only used\
+ * for "notification" events, but it may be used for additional purposes in the\
+ * future.\
+ *\
+ * Since: 2.50\
+ */\
+typedef enum\
+{\
+  ATK_LIVE_NONE,\
+  ATK_LIVE_POLITE,\
+  ATK_LIVE_ASSERTIVE\
+} AtkLive;' "$atkinc/atkobject.h"
+    fi
+
+    # The ISO's glibc 2.30 keeps dlopen/dlsym in libdl (merged into libc only
+    # in glibc 2.34), but Mutter only adds -ldl when wayland_eglstream is
+    # enabled. meta-renderdoc.c uses dlopen/dlsym unconditionally, so the
+    # final link of libmutter fails with "undefined reference to dlopen/dlsym".
+    # Define dl_dep always (top-level) and link it into libmutter always
+    # (src/meson.build). Idempotent.
+    local topmeson="$sourcedir/meson.build"
+    local srcmeson="$sourcedir/src/meson.build"
+    if grep -qE '^  dl_dep = cc\.find_library' "$topmeson"
+    then
+        Log_Normal "Patching meson.build: link libdl always"
+        perl -0pi -e 's/if have_wayland_eglstream\n  wayland_eglstream_protocols_dep = dependency\('\''wayland-eglstream-protocols'\''\)\n  dl_dep = cc.find_library\('\''dl'\'', required: true\)\n/dl_dep = cc.find_library('\''dl'\'', required: true)\nif have_wayland_eglstream\n  wayland_eglstream_protocols_dep = dependency('\''wayland-eglstream-protocols'\'')\n/' "$topmeson"
+        perl -0pi -e 's/if have_wayland_eglstream\n  mutter_lib_deps \+= \[\n    dl_dep,\n  \]\n  mutter_pkg_private_deps \+= \[\n/mutter_lib_deps += [\n  dl_dep,\n]\nif have_wayland_eglstream\n  mutter_pkg_private_deps += [\n/' "$srcmeson"
+    else
+        Log_Normal "meson.build already links libdl unconditionally"
+    fi
+
+    # gdctl.1 man page generation needs rst2man (python-docutils), which is
+    # not on the ISO. Drop the find_program + custom_target so doc/man only
+    # installs the prebuilt mutter.1. Idempotent.
+    local manbuild="$sourcedir/doc/man/meson.build"
+    if grep -q "find_program('rst2man')" "$manbuild"
+    then
+        Log_Normal "Patching doc/man/meson.build: dropping gdctl.1 (needs rst2man)"
+        sed -i "/find_program('rst2man')/d; /custom_target('gdctl.1'/,/^)/d" "$manbuild"
+    fi
+
+    # wayland-protocols requirement is >= 1.41 (verified in mutter-48.7
+    # meson.build); the chroot's Wayland-Protocols 1.44 satisfies it.
+    # Note: an earlier note claimed 1.48 was needed for pointer-constraints/
+    # relative-pointer — that was wrong; the version req in the 48.7
+    # meson.build is `>= 1.41`.
+    if pkg-config --atleast-version=1.41 wayland-protocols 2>/dev/null
+    then
+        Log_Normal "wayland-protocols >= 1.41 present"
+    else
+        Log_Normal "WARNING: wayland-protocols < 1.41; bump the Wayland-Protocols recipe before mutter build"
+    fi
+}

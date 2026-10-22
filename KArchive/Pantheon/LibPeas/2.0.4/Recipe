@@ -1,0 +1,28 @@
+# Custom recipe for LibPeas 2.0.4 (meson)
+#
+# Part of the Pantheon stack port. GObject plugin framework. Required by
+# PantheonCode 8.3.2: dependency('libpeas-2') (the Code plugins loader).
+#
+# libpeas 2.0.4 is pure GLib (no gtk3 dependency; the old libpeas-gtk library
+# is gone in the 2.x series). Builds on glib/gobject/gio/gmodule. Language
+# loaders (gjs/mozjs, lua51, python3-embed) disabled — the ISO carries none
+# and Code only needs the C loader. introspection + vapi ON, gtk-doc off.
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libpeas/2.0/libpeas-2.0.4.tar.xz"
+file_size=156456
+file_md5=2d0396588fd7cedad78718f9b787bb51
+dir='libpeas-2.0.4'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dgjs=false"
+    "-Dlua51=false"
+    "-Dpython3=false"
+    "-Dintrospection=true"
+    "-Dvapi=true"
+    "-Dgtk_doc=false"
+)

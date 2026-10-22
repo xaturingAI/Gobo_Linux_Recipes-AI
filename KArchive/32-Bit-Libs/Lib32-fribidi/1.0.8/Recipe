@@ -1,0 +1,19 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/f/fribidi/libfribidi0_1.0.8-2.1_i386.deb"
+file_size=65568
+file_md5=4426370b262d54bf2dd9f0b1459bcebe
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libfribidi.so.0* "$target"/lib32/ || Die "Failed copying 32-bit fribidi."
+}

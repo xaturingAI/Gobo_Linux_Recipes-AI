@@ -1,0 +1,5 @@
+[Name] kdeplasma-addons
+[Summary] Plasma 6 additional applets and addons
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/kdeplasma-addons
+[Description] Plasma 6 additional applets: binary clock, konsole profile, weather, etc.

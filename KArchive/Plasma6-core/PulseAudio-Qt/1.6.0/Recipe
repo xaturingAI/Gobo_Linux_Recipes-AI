@@ -1,0 +1,22 @@
+# Custom recipe for pulseaudio-qt 1.6.0 (cmake)
+# Qt-style wrapper around libpulse (used by plasma-pa/kdeconnect). Provides
+# the KF6PulseAudioQt CMake package that plasma-pa 6.7.4 requires
+# (find_package(KF6PulseAudioQt 1.6.0), plasma-pa/CMakeLists.txt:62).
+# QT_MAJOR_VERSION=6 selects the KF6 build (the project can otherwise also
+# emit a KF5 variant); only Qt6 Core/Gui/DBus are REQUIRED (Test/Qml/Quick
+# optional). libpulse + libpulse-mainloop-glib come from the ISO's PulseAudio
+# program.
+compile_version=017-GIT
+url="https://download.kde.org/stable/pulseaudio-qt/pulseaudio-qt-1.6.0.tar.xz"
+file_size=37232
+file_md5=8ee2c7b62e82dbf60425bb6496dbbc8e
+dir='pulseaudio-qt-1.6.0'
+recipe_type=cmake
+cmake_options=(
+    -DQT_MAJOR_VERSION=6
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_QCH=OFF
+)

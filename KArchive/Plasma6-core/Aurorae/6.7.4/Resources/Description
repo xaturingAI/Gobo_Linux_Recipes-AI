@@ -1,0 +1,9 @@
+[Name] aurorae
+[Summary] KWin 6 window decoration engine (Aurorae)
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/aurorae
+[Description] Themeable window decoration engine for KWin 6. Renders Aurorae
+themes that users download from the KDE store via the Window Decorations KCM
+('Get New Window Decorations'); the shipped aurorae.knsrc provides the store
+provider and installs chosen themes into aurorae/themes. No themes are baked
+into the image.

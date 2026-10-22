@@ -1,0 +1,4 @@
+[Name] SPIRV-LLVM-Translator
+[Summary] LLVM/SPIR-V bi-directional translator library (LLVMSPIRVLib) for Mesa clc
+[License] NCSA (LLVM)
+[Homepage] https://github.com/KhronosGroup/SPIRV-LLVM-Translator

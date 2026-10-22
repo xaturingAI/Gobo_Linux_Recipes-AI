@@ -1,0 +1,72 @@
+# Custom recipe for WebKit2GTK 2.46.5 (GTK3 API 4.1; cmake, introspection ON)
+#
+# Standalone WebKitGTK for the Gaming/Lutris stack on the Plasma ISO. The
+# GTK3 4.1 engine is what Lutris' WebConnectDialog drives for service logins:
+#   lutris/gui/dialogs/webconnect_dialog.py does
+#       gi.require_version("WebKit2", "4.1"); from gi.repository import WebKit2
+# That is PyGObject, so introspection MUST be on: the build has to emit
+# WebKit2-4.1.gir + WebKit2-4.1.typelib (into lib/girepository-1.0), which is
+# why this recipe differs from the Pantheon port's WebKit2GTK 2.46.5
+# (ENABLE_INTROSPECTION=OFF -- PantheonMail only links the pcs).
+#
+# Same webkitgtk-2.46.5 tarball as the Pantheon 4.1/6.0 pair; USE_GTK4=OFF
+# yields the 4.1 API (soup3, so the 4.1 infix is correct, not 4.0). The two
+# separate port builds (4.1 here, 6.0 in Pantheon) install distinct program
+# trees (webkit2gtk-4.1.pc vs webkitgtk-6.0.pc) and coexist on the index.
+#
+# Build environment (assembled by build.sh step_webkit, see there):
+#   step_core foundation (GLib 2.84 + gobject-introspection 1.84, GdkPixbuf,
+#     JSON-GLib, elogind, LibSeccomp, Bubblewrap) then, from Recipes/Pantheon/:
+#     HarfBuzz 11.4.0 (ICU-enabled), Fribidi, FreeType, Fontconfig, Pixman,
+#     Cairo, Pango 1.56.1 (introspection), LCMS2, ATK 2.36.0, GTK+ 3.24.43,
+#     LibNghttp2, Libsoup3, GStreamer 1.26.1, Gst-Plugins-Base, Ruby 3.3.12,
+#     LibHyphen, Unifdef.
+#
+# Flags mirror the Pantheon 4.1 build: USE_GBM=OFF (no libgbm.pc),
+# ENABLE_GAMEPAD=OFF, ENABLE_DOCUMENTATION=OFF, ENABLE_MINIBROWSER=OFF,
+# ENABLE_SPELLCHECK=OFF (no enchant-2), ENABLE_PDFJS=OFF (pdf.js not bundled;
+# chroot offline), USE_JPEGXL/USE_AVIF/USE_WOFF2/USE_LIBBACKTRACE=OFF (libs
+# not on the ISO), USE_GSTREAMER_TRANSCODER=OFF (gst-transcoder not built).
+# The GTK3 girs needed to generate WebKit2-4.1.gir (Gtk-3.0/Gdk-3.0/
+# Pango-1.0/Soup-3.0/...) ship in the dep chain above. USE_LCMS (LCMS2) and
+# ENABLE_BUBBLEWRAP_SANDBOX stay ON.
+#
+# ENABLE_JOURNALD_LOG=OFF: the GTK port defaults it to ON and then
+# Assertions.h/Logger.h compile #include <systemd/sd-journal.h> plus
+# sd_journal_send*() calls. elogind (a systemd drop-in, not journald) does
+# not expose that header through /usr/include in the build chroot, so every
+# WebCoreTestSupport object died with "fatal error: systemd/sd-journal.h:
+# No such file or directory", sinking the whole build at 93% (the 6 failing
+# testing/*.cpp get compiled right before the final "all" target). The
+# desktop ISO runs no journal daemon, so the feature is dead weight here;
+# turning it OFF removes the include and the calls entirely.
+# X11 + Wayland targets stay ON (GTK+ rebuild supports both); TLS at runtime
+# comes from glib-networking (Gio TLS backend), HTTPS login pages need it.
+#
+# file_md5 + file_size verified against the webkitgtk.org release tarball.
+
+compile_version=017-GIT
+url="https://webkitgtk.org/releases/webkitgtk-2.46.5.tar.xz"
+file_size=42898600
+file_md5=095d7f72acb300839c9879a4f95bf941
+dir='webkitgtk-2.46.5'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DPORT=GTK
+    -DUSE_GTK4=OFF
+    -DUSE_GBM=OFF
+    -DENABLE_GAMEPAD=OFF
+    -DENABLE_INTROSPECTION=ON
+    -DENABLE_DOCUMENTATION=OFF
+    -DENABLE_MINIBROWSER=OFF
+    -DENABLE_SPELLCHECK=OFF
+    -DENABLE_PDFJS=OFF
+    -DENABLE_JOURNALD_LOG=OFF
+    -DUSE_JPEGXL=OFF
+    -DUSE_AVIF=OFF
+    -DUSE_WOFF2=OFF
+    -DUSE_LIBBACKTRACE=OFF
+    -DUSE_GSTREAMER_TRANSCODER=OFF
+)

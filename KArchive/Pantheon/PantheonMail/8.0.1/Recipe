@@ -1,0 +1,15 @@
+# Custom recipe for PantheonMail 8.0.1 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/mail/archive/refs/tags/8.0.1.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/mail/archive/refs/tags/8.0.1.tar.gz"
+file_size=1390314
+file_md5=32b9dcf6b00fb24190c27f795abf6e75
+dir='mail-8.0.1'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

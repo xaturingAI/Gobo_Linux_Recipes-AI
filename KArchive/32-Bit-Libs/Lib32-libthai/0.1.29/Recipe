@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit Thai language support for Pango/Steam
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libt/libthai/libthai0_0.1.29-2+b1_i386.deb"
+file_size=50332
+file_md5=c72de4297a6a596b1da61d166bd8ab76
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libthai.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libthai.so.0."
+}
+

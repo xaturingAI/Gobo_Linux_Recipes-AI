@@ -1,0 +1,39 @@
+# Custom recipe for Libmtp 1.1.23 (autotools)
+#
+# Part of the phone/MTP tier (step_devices).  libmtp is the Media Transfer
+# Protocol stack: it enumerates Android phones over USB and is what
+# simple-mtpfs (the FUSE driver that mounts the phone at /Mount/phone) talks
+# to.  Without it no phone can be mounted at all.
+#
+# Upgraded from 1.1.21: the SourceForge mirror URL is a redirect that has
+# been flaky, and 1.1.23 is the current upstream release (Feb 2026).  The
+# libtool versioning is unchanged (CURRENT=13 AGE=4 REVISION=0 ->
+# libmtp.so.9.4.0), so simple-mtpfs and the rest of the stack keep working
+# against the new library without a rebuild.
+#
+# Needs libusb-1.0 (built right before it in step_devices) for the USB
+# transport, and glibc's iconv for the UTF-16 <-> UTF-8 conversions libmtp
+# does on every filename it reads.  MTPZ (Zune) support is disabled: it
+# would pull in libgcrypt for no benefit on a phone.
+#
+# The udev rules (69-libmtp.rules) and the USB-ID hwdb (69-libmtp.hwdb) land
+# in /usr/lib/udev/{rules.d,hwdb.d} -> /System/Index/lib/udev/..., which udev
+# reads.  That is what tags the phone with ID_MTP_DEVICE=1, so the
+# /System/Tasks/MtpPhone automount task can pick it up (apply-live-fixes
+# section 43).  The UTF-16LE gconv module libmtp needs lives in
+# /System/Index/lib/gconv - apply-live-fixes section 14f1 links glibc's
+# expected /usr/lib/x86_64-linux-gnu/gconv path to it.
+#
+# file_md5 + file_size verified from the actual GitHub release tarball.
+
+compile_version=017-GIT
+url="https://github.com/libmtp/libmtp/releases/download/v1.1.23/libmtp-1.1.23.tar.gz"
+file_size=920281
+file_md5=2258eb7cc7f32d417d72863c0d3c3cad
+dir='libmtp-1.1.23'
+recipe_type=configure
+
+configure_options=(
+    --disable-mtpz
+    --with-udev=/usr/lib/udev
+)

@@ -1,0 +1,5 @@
+[Name] GweatherLocations
+[Summary] Weather location data (Locations.bin)
+[License] LGPL-2.1-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/gweather-locations
+[Description] gweather-locations.pc consumed by libgweather 4.6.0; pure data + python build.

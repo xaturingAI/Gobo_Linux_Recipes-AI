@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# .NET Targeting Pack 10.0.12 -- packs/ reference assemblies only.
+#
+# WHY: dotnet-targeting-pack is another Arch/AUR split name (Ref packs used to
+# COMPILE against an API surface regardless of the runtime installed). Comes
+# straight out of the SDK tarball's packs/ dir (packs/Microsoft.NETCore.App.Ref
+# and Microsoft.NETCore.App.Host.*), matching the version of the runtime the
+# SDK 10.0.401 bundles (10.0.12).
+#
+# NOTE: this duplicates the packs/ the dotnet-sdk recipe already installs into
+# its own prefix (~180 MB extra on the ISO) purely so the component NAME exists.
+#
+# CHECKSUM: Microsoft publishes only SHA-512 (FetchArchive supports md5/sha256),
+# so file_size is pinned (CDN Content-Length) with the official SHA-512 recorded
+# here for manual verification:
+#   sha512 = 51c8b999af9e8dd9998c9edc5944e19a90788862068acd38694e098889054ce8
+#            c23d4f0c5cccfa16bf187d044562359e5ee69a9f8ad0bbe913ba90311fbce25b
+
+compile_version=017-GIT
+url="https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.401/dotnet-sdk-10.0.401-linux-x64.tar.gz"
+file_size=240059572
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "packs:packs"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Extracting ${tarball}"
+    tar xzf "$tarball" || Die "cannot unpack the SDK tarball"
+}
+
+post_install() {
+    if [ -f ThirdPartyNotices.txt ]
+    then
+        mkdir -p "$target/share/licenses/dotnet-targeting-pack"
+        cp -a ThirdPartyNotices.txt "$target/share/licenses/dotnet-targeting-pack/" 2>/dev/null
+    fi
+}

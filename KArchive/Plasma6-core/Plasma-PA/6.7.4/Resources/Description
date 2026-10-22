@@ -1,0 +1,5 @@
+[Name] plasma-pa
+[Summary] Plasma 6 PulseAudio/PipeWire volume control
+[License] GPL-2.0-or-later
+[Homepage] https://invent.kde.org/plasma/plasma-pa
+[Description] Plasma 6 audio volume control applet (PulseAudio/PipeWire sink/source management).

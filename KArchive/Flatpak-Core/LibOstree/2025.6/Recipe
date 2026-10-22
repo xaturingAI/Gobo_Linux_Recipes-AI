@@ -1,0 +1,39 @@
+# Custom recipe for libostree 2025.6 (autotools)
+#
+# Part of the Pantheon stack port (flatpak tier). OSTree -- content-addressed
+# OS/bundle storage library. Hard prereq of Flatpak 1.16.2. Nothing OSTree
+# exists on the ISO.
+#
+# Required deps: glib/gio-unix, libcurl (ISO, --with-curl), libarchive (ISO),
+# lzma (ISO), zlib (ISO) + gpgme (built right before). selinux / libmount /
+# composefs / avahi / systemd-and-libmount are all auto-detected and gracefully
+# skipped when absent (selinux & libmount are not on the ISO). libsystemd comes
+# from elogind but the combined systemd+libmount feature stays off without
+# libmount.
+#
+# HTTP backend: explicitly --with-curl and --without-soup{3} so libostree
+# builds against the ISO's libcurl and does NOT require libsoup3 (a Pantheon
+# desktop pack). This is what lets the Flatpak chain build standalone, with no
+# Pantheon dependency. (libcurl only needs libsoup for the test trivial-httpd
+# helper; docs/man/tests are off here.)
+#
+# Checksums: default --with-crypto=glib (no OpenSSL/gnutls needed).
+#
+# Bundled libglnx is built in-tree. Docs/man off.
+#
+# file_md5 + file_size verified against the ostreedev GitHub release tarball.
+
+compile_version=017-GIT
+url="https://github.com/ostreedev/ostree/releases/download/v2025.6/libostree-2025.6.tar.xz"
+file_size=2133732
+file_md5=f1f23c887bd8b638d70bce6f0a38691f
+dir='libostree-2025.6'
+recipe_type=configure
+
+configure_options=(
+    --disable-gtk-doc
+    --disable-man
+    --with-curl
+    --without-soup3
+    --without-soup
+)

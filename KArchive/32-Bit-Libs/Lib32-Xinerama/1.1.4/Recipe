@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit Xinerama extracted from Debian i386 packages for Steam/Wine gaming.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libx/libxinerama/libxinerama1_1.1.4-3+b4_i386.deb"
+file_size=16240
+file_md5=ca90ddc98babc9bec7581230b2f5e842
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libXinerama.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libXinerama."
+}

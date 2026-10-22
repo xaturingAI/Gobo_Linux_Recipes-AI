@@ -1,0 +1,38 @@
+nvidia-settings 610.57.04 for the Gaming Live CD - the NVIDIA X Server
+Settings control panel, split out of the main Nvidia driver package (Arch
+"nvidia-settings").
+
+Built from NVIDIA's standalone nvidia-settings source tarball, not from the
+driver .run. It is a hand-rolled recursive Makefile project (no autotools
+configure); PREFIX ?= /usr/local in utils.mk feeds BINDIR/LIBDIR/MANDIR, so
+the recipe passes PREFIX=$target (and MANDIR, which utils.mk would otherwise
+put under share/man/man1 where Gobo's man path never looks).
+
+Installed to /Programs/Nvidia-Settings:
+- bin/nvidia-settings  the control panel CLI + GUI
+- lib/libnvidia-gtk2.so.<ver>, lib/libnvidia-gtk3.so.<ver>,
+  lib/libnvidia-wayland-client.so.<ver>  helper libraries the panel dlopens
+  for its GTK and Wayland code paths
+- man/man1/nvidia-settings.1
+- share/applications/nvidia-settings.desktop + share/pixmaps/nvidia-settings.png
+  (the source tarball ships both WITHOUT them being installed by any make
+  target, and with placeholder tokens; post_install substitutes __UTILS_PATH__
+  with /Programs/Nvidia-Settings/Current/bin and __NVIDIA_SETTINGS_DESKTOP_CATEGORIES__
+  with Settings;HardwareSettings;). They go into share/ -- not a "Shared/" dir --
+  because SymlinkProgram links share/ into /System/Index/share, which is what
+  puts the launcher in /usr/share/applications and the icon in
+  /usr/share/pixmaps where "Icon=nvidia-settings" is looked up.
+
+Dependencies: GTK+ (3.x), LibX11, LibXext, LibXxf86vm, Wayland. jansson is
+bundled in the tarball (NV_USE_BUNDLED_LIBJANSSON ?= 1) so the system Jansson
+is not needed.
+
+Ownership: kernel modules, the Xorg DDX, nvidia-settings' runtime enablement
+files and the GSP/ucode firmware come from the Nvidia recipe; the 64-bit/32-bit
+libraries, tools, Vulkan ICDs and glvnd EGL vendor JSONs from Nvidia-Utils.
+This recipe compiles nothing that needs the NVIDIA kernel sources - nvidia-settings
+reaches the driver at runtime through the NVCtrl X extension the DDX provides.
+
+Version: the rest of the stack is 615.71.09 while this is 610.57.04 (requested
+that way). nvidia-settings-615.71.09.tar.bz2 exists upstream if a matched pair
+is preferred later; the NVCtrl ABI is stable across these branches.

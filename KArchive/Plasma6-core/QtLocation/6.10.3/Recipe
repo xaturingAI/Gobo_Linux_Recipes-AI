@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# QtLocation 6.10.3 (maps/QML module, builds src/location + OSM geoservices).
+# Needed by Plasma-Workspace (find_package(Qt6 COMPONENTS Location) at line 54
+# of its CMakeLists).  We dropped this earlier because qtlocation has no
+# in-tree positioning sources -- but Plasma needs the Location C++ / QML
+# module itself, built from src/location/.  QtPositioning (the separate repo)
+# supplies the Positioning + PositioningQuick targets; its recipe must be
+# compiled first so the assertTargets() in this repo passes.
+#
+# configure.cmake enables OSM geoservices by default; esri/mapbox/nokia are
+# CONDITION FALSE.  OSM needs Qt::Positioning + Qt::Network (both present).
+compile_version=017-GIT
+url="https://download.qt.io/official_releases/qt/6.10/6.10.3/submodules/qtlocation-everywhere-src-6.10.3.tar.xz"
+file_size=3151672
+file_md5=4e3f32336c0fd8a82dc4aeaf344d347f
+dir='qtlocation-everywhere-src-6.10.3'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_PREFIX=/Programs/QtLocation/6.10.3
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtPositioning/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtPositioning/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DQT_BUILD_TESTS=OFF
+    -DQT_BUILD_EXAMPLES=OFF
+    -DQT_BUILD_BENCHMARKS=OFF
+)

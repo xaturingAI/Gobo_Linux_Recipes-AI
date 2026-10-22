@@ -1,0 +1,65 @@
+# Custom recipe for GLib 2.84.4 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Replaces the ISO's 2.63.5 -- every other
+# GNOME library on the chain will link this. Build this BEFORE HarfBuzz,
+# Fribidi, Pango, JSON-GLib, gdk-pixbuf, graphene, gtk4, libadwaita,
+# gsettings-desktop-schemas, gnome-desktop, libwacom, colord, libpipewire,
+# libcanberra, mutter, gala, wingpanel, switchboard, etc.
+#
+# Era: GNOME 49 (Sept 2025 Q3). file_md5 is a placeholder that the next
+# session will verify by downloading the tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/glib/2.84/glib-2.84.4.tar.xz"
+file_size=5618200
+file_md5=5655d0ff809b98dd77c02490609fadde
+dir='glib-2.84.4'
+recipe_type=meson
+
+# - libelf: ISO has no libelf -- the elf-kill-symbols build feature for
+#   stripping ELF sections on release builds is disabled.
+# - libmount: ISO has no libmount -- mount monitor uses getmntent() instead.
+# - dtrace/systemtap: no probes on the ISO.
+# - oss_fuzz: build-time fuzzer entrypoints, irrelevant.
+# - glib_debug: prints internal state, useful for debugging only.
+# - man pages: not shipped on the ISO; users read upstream docs online.
+# Introspection is driven externally (GLIB_INTROSPECTION exported by build.sh):
+#   pass 1 before GObject-Introspection is built uses disabled; pass 2 (after
+#   GI 1.84) uses enabled so glib emits its own .gir / .typelib files that the
+#   rest of the stack (GTK4, Pango, ...) and Lutris' PyGObject need.
+introspection="${GLIB_INTROSPECTION:-disabled}"
+meson_variables=(
+    --buildtype=release
+    "-Dlibelf=disabled"
+    "-Dlibmount=disabled"
+    "-Ddtrace=disabled"
+    "-Dsystemtap=disabled"
+    "-Doss_fuzz=disabled"
+    "-Dglib_debug=disabled"
+    "-Dman-pages=disabled"
+    "-Ddocumentation=false"
+    "-Dtests=false"
+    "-Dinstalled_tests=false"
+    "-Dnls=disabled"
+    "-Dselinux=disabled"
+    "-Dintrospection=$introspection"
+    "-Ddefault_library=shared"
+)
+
+# GLib 2.44-2 glibc on this ISO kept the 2.30-era dev headers (no C23 decls
+# for free_sized/free_aligned_sized, no CLOSE_RANGE_CLOEXEC, no strlcpy), but
+# the 2.44 libc EXPORTS those symbols. Meson's link-only has_function() probes
+# therefore pass and glib emits -Werror=implicit-function-declaration because
+# it calls them without a declaration. Compile re-unpacks the tarball on every
+# run, so source edits get wiped; this hook (Run_Hook pre_build, fires after
+# do_unpack and before meson setup) re-applies the disable every time.
+pre_build() {
+    [ -n "$sourcedir" ] || return 0
+    sed -i \
+        -e "/^ *'close_range',$/d" \
+        -e "/^ *'free_aligned_sized',$/d" \
+        -e "/^ *'free_sized',$/d" \
+        -e "s/^glibconfig_conf.set('G_HAVE_FREE_SIZED', .*)\$/glibconfig_conf.set('G_HAVE_FREE_SIZED', false)/" \
+        -e "s/^if cc.has_function('strlcpy')\$/if false/" \
+        "$sourcedir/meson.build" || Die "pre_build: meson.build patch failed"
+}

@@ -1,0 +1,15 @@
+# Custom recipe for WingpanelIndicatorPower 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/panel-power/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/panel-power/archive/refs/tags/8.0.2.tar.gz"
+file_size=200208
+file_md5=90b075f589b13c5d040df742f6b7dea6
+dir='panel-power-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

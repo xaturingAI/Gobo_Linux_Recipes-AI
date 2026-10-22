@@ -1,0 +1,20 @@
+# Custom recipe for LCMS2 2.19.1 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Color management engine used by colord and
+# GTK4. Bumped from the ISO's 2.9. Build BEFORE colord + GTK 4.18.
+#
+# Era: GNOME 48 (Mar 2025). Note: 2.17.0 has no GitHub release asset; the
+# GitHub "latest" release is 2.19.1, which we pin here (same liblcms2.so.2).
+
+compile_version=017-GIT
+url="https://github.com/mm2/Little-CMS/releases/download/lcms2.19.1/lcms2-2.19.1.tar.gz"
+file_size=5728743
+file_md5=541978f73749499e9e0277bfe5a3c868
+dir='lcms2-2.19.1'
+recipe_type=meson
+
+# - tests: not shipped on the ISO.
+meson_variables=(
+    --buildtype=release
+    "-Dtests=disabled"
+)

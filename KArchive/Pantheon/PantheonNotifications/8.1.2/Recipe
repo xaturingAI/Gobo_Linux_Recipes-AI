@@ -1,0 +1,15 @@
+# Custom recipe for PantheonNotifications 8.1.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/notifications/archive/refs/tags/8.1.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/notifications/archive/refs/tags/8.1.2.tar.gz"
+file_size=56427
+file_md5=924722ace66eb886bf321a89bdb11d5d
+dir='notifications-8.1.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

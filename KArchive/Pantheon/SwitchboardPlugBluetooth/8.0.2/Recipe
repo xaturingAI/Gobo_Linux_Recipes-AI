@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugBluetooth 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-bluetooth/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-bluetooth/archive/refs/tags/8.0.2.tar.gz"
+file="settings-bluetooth-8.0.2.tar.gz"
+file_size=239794
+file_md5=d1995a9408e2e060dc88fb08aba75e79
+dir='settings-bluetooth-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

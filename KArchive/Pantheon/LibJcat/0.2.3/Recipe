@@ -1,0 +1,32 @@
+# Custom recipe for LibJcat 0.2.3 (meson)
+#
+# Part of the Pantheon stack port. Signed metadata library (GPG + PKCS#7)
+# used by fwupd for firmware signature verification. fwupd 1.9.27 requires
+# jcat >= 0.1.4.
+#
+# Builds on glib/gio, json-glib (ISO), gnutls (PKCS#7 + GPG, ISO) and gpgme
+# (built in the flatpak chain: LibGpg-Error 1.52 + Gpgme 1.24.0 precede this).
+# ed25519 needs libsodium (absent) -> disabled; introspection/vapi/tests/man/
+# gtk-doc off; the jcat CLI tool stays on.
+#
+# file_md5 + file_size verified against the github 0.2.3 tag tarball.
+
+compile_version=017-GIT
+url="https://github.com/hughsie/libjcat/archive/refs/tags/0.2.3.tar.gz"
+file_size=79178
+file_md5=0c566a4a9421e42143e90a3e575353f4
+dir='libjcat-0.2.3'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dgpg=true"
+    "-Dpkcs7=true"
+    "-Ded25519=false"
+    "-Dintrospection=false"
+    "-Dvapi=false"
+    "-Dgtkdoc=false"
+    "-Dtests=false"
+    "-Dman=false"
+    "-Dcli=true"
+)

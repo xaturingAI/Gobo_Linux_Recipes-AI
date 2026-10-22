@@ -1,0 +1,5 @@
+Meson recipe. meson_do_build appends --prefix=$target (rewritten to
+$goboIndex) and ninja install runs under SandboxInstall, so the compiled
+_cairo module lands in the package's own lib/python3.11/site-packages and is
+linked into /System/Index at merge time. Build AFTER Python 3.11.12.
+sha256 1ee72b035b21a475e1ed648e26541b04e5d7e753d75ca79de8c583b25785531b.

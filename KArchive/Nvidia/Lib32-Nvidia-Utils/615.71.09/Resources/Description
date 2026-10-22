@@ -1,0 +1,4 @@
+[Name] Lib32-Nvidia-Utils
+[Summary] NVIDIA 32-bit userspace libraries (Arch-style lib32-nvidia-utils) for Steam/Proton/Wine
+[License] NVIDIA
+[Homepage] https://www.nvidia.com/object/unix.html

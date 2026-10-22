@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit SELinux policy library for libmount
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libs/libselinux/libselinux1_3.8.1-1_i386.deb"
+file_size=88288
+file_md5=9c5e938d38e681688112879abb48c5d0
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libselinux.so.1* "$target"/lib32/ || Die "Failed copying 32-bit libselinux.so.1."
+}
+

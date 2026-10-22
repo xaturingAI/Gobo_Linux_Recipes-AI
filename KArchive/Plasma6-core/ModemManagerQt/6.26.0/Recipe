@@ -1,0 +1,27 @@
+# Custom recipe for ModemManagerQt 6.26.0 (cmake, KF6)
+# KF6ModemManagerQt is a REQUIRED find of plasma-nm 6.7.4 (find_package(KF6
+# ... ModemManagerQt)). This is a KF6 *framework* release (6.26.0, NOT part of
+# the plasma/6.7.4 group) even though the KDE tarball URI lives under the
+# plasma URL family on download.kde.org.
+#
+# Build deps: Qt6 Core/DBus/Xml (QtBase), ECM 6.26 (System/Index) and the
+# ModemManager daemon recipe MUST already be installed because the bundled
+# cmake/FindModemManager.cmake does pkg_search_module(MODEMANAGER REQUIRED
+# IMPORTED_TARGET ModemManager) -- f.ed the ModemManager.pc + headers that the
+# 1.24.2 daemon installs. Land right after the ModemManager line in step_plasma.
+# Installs KF6ModemManagerQtConfig.cmake (lib/cmake/KF6ModemManagerQt).
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/modemmanager-qt-6.26.0.tar.xz"
+file_size=119104
+file_md5=ee52712f76323ba6081951ef5389e636
+dir='modemmanager-qt-6.26.0'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_EXAMPLES=OFF
+)

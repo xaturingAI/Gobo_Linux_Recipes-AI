@@ -1,0 +1,51 @@
+# Custom recipe for SDDM 0.18.1 (cmake)
+#
+# QML-based display manager (KDE's Simple Desktop Display Manager). This is the
+# LAST 0.18.x series release and the fallback/migration recipe: kept so the
+# build can still produce a DPMS-capable greeter against the ORIGINAL base Qt
+# (5.14.1) if the Qt 5.15.2 migration tree is ever unavailable.
+#
+# Why not 0.19.x: 0.19.0 (and all 0.18.x) hard-code XorgDisplayServer
+# (Display.cpp:54) -- only SDDM >= 0.20.0 can host the greeter natively on
+# Wayland. So on this ISO:
+#   - 0.20.0 is the default (native Wayland greeter, weston-hosted);
+#   - 0.18.1 remains as an X11-greeter fallback and reference build.
+#
+# Qt requirement: this series happily builds against Qt 5.14.1 (it predates
+# the 5.15 gating added in CMakeLists for 0.19/0.20). Pinned via -DQt5_DIR.
+#
+# Build-time deps:
+#   ECM (Extra-CMake-Modules)  find_package(ECM)
+#   PAM headers                /System/Index/include/security (Linux-PAM)
+#   libxau (LIBXAU), libxcb, xkbcommon (all on the ISO / wayland stack)
+#   Qt 5.14.1 (Core/DBus/Gui/Qml/Quick/LinguistTools)
+#
+# Differences vs the 0.20.0 recipe:
+#   - Qt5_DIR pinned to 5.14.1 (not 5.15.2);
+#   - USE_ELOGIND=OFF: 0.18.x's elogind path is untested on this ISO and the
+#     greeter runs under X11; seat tracking is handled by seatd at runtime.
+#     (0.20.0 turns it ON for its Wayland display server.)
+compile_version=017-GIT
+url="https://github.com/sddm/sddm/releases/download/v0.18.1/sddm-0.18.1.tar.xz"
+file_size=3402972
+file_md5=c1ca638a3faf76c526df3049cbc9668a
+dir='sddm-0.18.1'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_PREFIX_PATH=/System/Index
+    # Gobo keeps libraries in /lib (no /lib64); must match other recipes.
+    -DCMAKE_INSTALL_LIBDIR=lib
+    # Never let the build bake RPATHs pointing at the compile sandbox.
+    -DCMAKE_SKIP_RPATH=True
+    # Resolve Qt against the base 5.14.1 tree (see header).
+    -DQt5_DIR=/Programs/Qt/5.14.1/lib/cmake/Qt5
+    # No systemd/logind on the ISO; this series keeps its own seat handling.
+    -DNO_SYSTEMD=ON
+    -DUSE_ELOGIND=OFF
+    -DENABLE_JOURNALD=OFF
+    -DBUILD_MAN_PAGES=OFF
+    # PAM auth backend is used (see header note).
+    -DENABLE_PAM=ON
+)

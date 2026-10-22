@@ -1,0 +1,5 @@
+[Name] XIVLauncher
+[Summary] Final Fantasy XIV Quick Launcher
+[License] LGPL-3.0
+[Homepage] https://github.com/goatcorp/FFXIVQuickLauncher
+[Description] XIVLauncher (FFXIVQuickLauncher) is the community launcher for Final Fantasy XIV. This package ships the official Windows build (7.0.20) from the Squirrel full.nupkg, running as a self-contained .NET 9 / WPF application under the bundled Wine 11.14 / Wine-Lutris-GE staging build. The nupkg bundles the app's own .NET runtime (coreclr, DirectWriteForwarder, etc.) plus aria2c-xl for game downloads, so no additional dotnet/Winetricks setup is needed -- on first run the launcher creates its own Wine prefix and offers the full XIVLauncher feature set: game install/patches, Dalamud plugin framework, Mare Synchronos and account handling. Configure launcher options (XLUOptions) into a prefix before game install for best results.

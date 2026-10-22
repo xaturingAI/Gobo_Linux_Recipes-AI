@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# OpenSSL 1.1.1w for GoboLinux (replaces the ISO's 1.1.1d). Purpose: provide
+# the development headers + a current 1.1.1 LTS library so Python 3.11.12 can
+# build its _ssl/_hashlib modules. The ISO's OpenSSL/1.1.1d shipped runtime
+# libs only (no include/openssl), so Python's configure finds no openssl.
+#
+# OpenSSL uses a Perl-based Configure, not autoconf. PrepareProgram would
+# auto-detect '--prefix' and also inject --sysconfdir/--libexecdir, which
+# Configure rejects ("Unknown option"). override_default_options bypasses the
+# auto options; explicit ones are passed instead. --prefix=$target is
+# rewritten to /System/Index by PrepareProgram; --openssldir follows the
+# ISO's layout (Programs/OpenSSL/Settings/ssl, linked at /System/Settings/ssl).
+#
+# install_sw skips the man page install (pod2man), keeping the package lean.
+# symlink_options --conflict=overwrite lets the 1.1.1w index symlinks (bin,
+# lib/libssl.so.1.1, lib/libcrypto.so.1.1, include/openssl, ssl dir) replace
+# the old 1.1.1d ones.
+compile_version=017-GIT
+url="https://www.openssl.org/source/openssl-1.1.1w.tar.gz"
+file_size=9893384
+file_md5=3f76825f195e52d4b10c70040681a275
+recipe_type=configure
+configure=Configure
+override_default_options=yes
+
+configure_options=(
+    "linux-x86_64"
+    "shared"
+    "--prefix=$target"
+    "--openssldir=$goboSettings/ssl"
+)
+
+install_target="install_sw"
+
+symlink_options=(
+    "--conflict=overwrite"
+)

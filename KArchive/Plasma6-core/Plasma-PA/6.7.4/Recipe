@@ -1,0 +1,43 @@
+# Custom recipe for plasma-pa 6.7.4 (cmake)
+# Part of the KDE Plasma 6.7 desktop stack (GoboLinux 017).
+# Build order managed by step_plasma in build.sh.
+compile_version=017-GIT
+url="https://download.kde.org/stable/plasma/6.7.4/plasma-pa-6.7.4.tar.xz"
+file_size=216812
+file_md5=7060baf2c23ac660cfd410dd1966199f
+dir='plasma-pa-6.7.4'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/PulseAudio-Qt/1.6.0;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)
+
+# pre_link: the volume applet is a plugin-less QML module, so
+# ecm_finalize_qml_module bails and 'make install' skips the QML module AND its
+# plasmoid data package (same quirk as plasma-workspace's applets). cmake still
+# copies the module to $builddir; copy it into $target and fabricate the
+# plasma/plasmoids/org.kde.plasma.volume package so the shell sees the volume
+# (sound) applet. This is a duplicate of the on-disc live-apply in
+# apply-live-fixes.sh §54/§56, kept so a plasma-pa rebuild is self-contained.
+pre_link() {
+    [ -d "$builddir" ] || return 0
+    moddir=$(find "$builddir" -type d -path "*plasma/applet/org/kde/plasma/volume" 2>/dev/null)
+    [ -n "$moddir" ] || return 0
+    local suffix="org/kde/plasma/volume" id="org.kde.plasma.volume"
+    if [ ! -e "$target/lib/qml/plasma/applet/org/kde/plasma/volume" ]; then
+        mkdir -p "$target/lib/qml/plasma/applet/org/kde/plasma"
+        cp -a "$moddir" "$target/lib/qml/plasma/applet/org/kde/plasma/volume"
+    fi
+    local pkg="$target/share/plasma/plasmoids/$id"
+    [ -e "$pkg/metadata.json" ] && return
+    mkdir -p "$pkg"
+    printf '{\n    "KPackageStructure": "Plasma/Applet",\n    "KPlugin": {\n        "Id": "%s",\n        "Name": "Sound",\n        "Description": "Plasma widget",\n        "Icon": "audio-volume-high"\n    },\n    "X-Plasma-API-Minimum-Version": "6.0"\n}\n' "$id" > "$pkg/metadata.json"
+    ln -s "../../../../lib/qml/plasma/applet/$suffix" "$pkg/contents"
+}

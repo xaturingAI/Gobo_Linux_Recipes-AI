@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Lib32-libpulsecommon 16.1 - 32-bit PulseAudio common library (needed by Steam)
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/p/pulseaudio/libpulse0_16.1+dfsg1-2+b1_i386.deb"
+file_size=274716
+file_md5=9d958677eeb5f6153e402acc9a21f2c9
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf - || Die "Failed unpacking ${deb}."
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/pulseaudio/libpulsecommon-16.1.so "$target"/lib32/ || Die "Failed copying 32-bit libpulsecommon."
+}

@@ -1,0 +1,4 @@
+[Name] LibInput
+[Summary] Input device handling library (libinput 1.31.3) for Wayland/compositors
+[License] MIT
+[Homepage] https://gitlab.freedesktop.org/libinput/libinput

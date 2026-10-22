@@ -1,0 +1,40 @@
+# Custom recipe for SPIRV-LLVM-Translator v19.1.7 (cmake) -- part of the Mesa
+# 25.3.6 CLC toolchain for the Pantheon desktop stack.
+#
+# WHY THIS EXISTS: Mesa 25.3.6 turns on with_clc because the iris (Intel)
+# gallium driver is listed in with_driver_using_cl. Its meson.build does
+# `dependency('LLVMSPIRVLib', version [ '>=15.0.0.0', '>=19.1', '<19.2' ])`,
+# and libclc additionally needs the llvm-spirv executable. v19.1.7 matches the
+# installed LLVM 19.1.7 and produces LLVM_SPIRV_VERSION = BASE_LLVM_VERSION
+# (19.1.0) + ".0" = 19.1.0.0, which is inside Mesa's required range.
+#
+# NOTES:
+#  * LLVM_DIR points at the shared LLVM 19.1.7 in /Programs via
+#    /System/Index/lib/cmake/llvm. LLVMConfig computes its tool paths relative
+#    to itself (get_filename_component), so LLVM_TOOLS_BINARY_DIR resolves to
+#    /System/Index/bin and all LLVM tools/libs are found.
+#  * LLVM_EXTERNAL_SPIRV_HEADERS_SOURCE_DIR is set to the INSTALLED headers
+#    tree /System/Index; without it the build would FetchContent-download
+#    SPIRV-Headers and require network access.
+#  * There is NO upstream option to build the library without the tool:
+#    tools/llvm-spirv is added unconditionally. That is fine here, because
+#    libclc locates llvm-spirv through LLVM_TOOLS_BINARY_DIR
+#    (/System/Index/bin), so the tool is actually wanted.
+#  * It installs only a pkg-config file (LLVMSPIRVLib.pc) -- there is no
+#    LLVMSPIRVLib CMake package config -- which is what Meson consumes. The
+#    library installs to ${prefix}/lib${LLVM_LIBDIR_SUFFIX} (lib).
+compile_version=017-GIT
+url="https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/refs/tags/v19.1.7.tar.gz"
+file="SPIRV-LLVM-Translator-v19.1.7.tar.gz"
+file_size=1771026
+file_md5=88dcadd7de6f06e064d49f2295986d00
+dir='SPIRV-LLVM-Translator-19.1.7'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DBUILD_SHARED_LIBS=ON
+    -DLLVM_DIR=/Programs/LLVM/19.1.7/lib/cmake/llvm
+    -DLLVM_EXTERNAL_SPIRV_HEADERS_SOURCE_DIR=/System/Index
+    -DLLVM_SPIRV_INCLUDE_TESTS=OFF
+)

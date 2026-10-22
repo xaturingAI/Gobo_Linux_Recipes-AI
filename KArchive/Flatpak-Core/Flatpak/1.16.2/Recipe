@@ -1,0 +1,54 @@
+# Custom recipe for Flatpak 1.16.2 (meson)
+#
+# Part of the Flatpak-Core stack (shared "core" foundation, independent from
+# the Pantheon desktop; also consumed by PantheonSideload 6.3.1 /
+# dependency('flatpak', version: '>=1.1.2')). Application sandboxing framework.
+#
+# Hard deps (verified against meson.build):
+#   libostree  (ostree-1 >= 2020.8, built right before)
+#   gpgme      (>= 1.8.0)
+#   glib/gio/gio-unix (>= 2.66-era, is 2.84.4)
+#   json-glib-1.0                         (core)
+#   libcurl    (http_backend=curl; >= 7.29, ISO Curl)
+#   appstream  (>= 0.12.0, unconditional in meson.build)  (core, built earlier)
+#   gdk-pixbuf-2.0  (required by the flatpak-validate-icon libexec helper)  (core)
+#   libxml-2.0 (ISO), libzstd (ISO)
+#   libseccomp (built; -Dseccomp=enabled)
+#   polkit-agent-1 (>= 0.98) -- build_system_helper is ON by default; the
+#       system helper (flatpak-system-helper) authorizes system installs via
+#       polkit, so polkitd must exist at runtime too.
+#   bubblewrap (built; system_bubblewrap is a STRING option: path to bwrap, or
+#       empty to fetch the [wrap-git] subproject -- set to the pre-built
+#       bwrap 0.11.0, no network needed)
+#   xdg-dbus-proxy (built; system_dbus_proxy likewise takes a path, since the
+#       dbus-proxy subproject is a [wrap-git] that cannot resolve offline)
+#   fuse/fusermount (ISO Fuse 3.16.2; flatpak resolves it via PATH)
+#   wayland-client (+scanner/protocols) -- auto, satisfies wayland_security_context
+#   dconf / libmalcontent / dbus-broker -- absent -> auto-off
+#
+# systemd bits are auto (elogind's libsystemd shim satisfies them); docs/man/
+# tests off; pyparsing is staged offline (see build.sh step_core). file_md5 +
+# file_size verified against the flatpak GitHub release.
+
+compile_version=017-GIT
+url="https://github.com/flatpak/flatpak/releases/download/1.16.2/flatpak-1.16.2.tar.xz"
+file_size=1226688
+file_md5=5537c4e9a06e7080c4bc85106c08544b
+dir='flatpak-1.16.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Ddconf=disabled"
+    "-Ddocbook_docs=disabled"
+    "-Dgtkdoc=disabled"
+    "-Dman=disabled"
+    "-Dtests=false"
+    "-Dinstalled_tests=false"
+    "-Dmalcontent=disabled"
+    "-Dseccomp=enabled"
+    "-Dsystem_bubblewrap=/System/Index/bin/bwrap"
+    "-Dsystem_dbus_proxy=/System/Index/bin/xdg-dbus-proxy"
+    "-Dhttp_backend=curl"
+    "-Ddefault_library=shared"
+)

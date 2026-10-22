@@ -1,0 +1,15 @@
+NVIDIA proprietary graphics driver 580.159.04 (R580 driver branch) for the
+Gaming Live CD. Ships the full userspace stack (OpenGL, Vulkan ICD, OpenCL
+ICD, CUDA, NVENC/NVDEC, GSP firmware) in both 64-bit and 32-bit form, plus
+kernel modules built against the Linux 7.1.5 kernel that ships on the CD.
+
+Install notes:
+- The kernel modules are compiled during the recipe build against
+  /System/Kernel/Modules/Current/build, so the Linux package must be
+  installed on the build system first.
+- nouveau is blacklisted and nvidia-drm modeset is enabled via
+  /etc/modprobe.d/nvidia.conf.
+- An Xorg Device section using the nvidia driver is installed via
+  /etc/X11/xorg.conf.d/10-nvidia.conf.
+- A udev rule manages /dev/nvidia* permissions.
+- Vulkan apps get the NVIDIA ICD automatically via the Vulkan-Loader.

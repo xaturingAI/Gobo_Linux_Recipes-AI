@@ -1,0 +1,16 @@
+# Custom recipe for SwitchboardPlugOnlineAccounts 8.0.2 (elementary OS 8 era; meson)
+#
+# Part of the Pantheon desktop stack port. Source: https://github.com/elementary/settings-onlineaccounts/archive/refs/tags/8.0.2.tar.gz
+
+compile_version=017-GIT
+url="https://github.com/elementary/settings-onlineaccounts/archive/refs/tags/8.0.2.tar.gz"
+file="settings-onlineaccounts-8.0.2.tar.gz"
+file_size=251447
+file_md5=54fbb579d375462a48312756c14400b3
+dir='settings-onlineaccounts-8.0.2'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+
+)

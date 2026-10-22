@@ -1,0 +1,5 @@
+[Name] GnomeSettingsDaemon
+[Summary] GNOME settings daemon (session components)
+[License] GPL-2.0-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/gnome-settings-daemon
+[Description] org.gnome.SettingsDaemon.* autostart components for the pantheon.session; ships gnome-settings-daemon.pc. Built systemd-free with rfkill/NetworkManager/smartcard/usb-protection/wwan/wayland disabled.

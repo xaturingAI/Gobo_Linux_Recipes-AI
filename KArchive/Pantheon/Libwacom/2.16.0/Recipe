@@ -1,0 +1,28 @@
+# Custom recipe for libwacom 2.16.0 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Tablet input library; Mutter links it for
+# tablet-aware input routing (SwitchboardPlugWacom consumes its API too).
+#
+# Build AFTER GLib 2.84 + LibGudev 238, BEFORE Mutter and LibInput 1.31.3.
+#
+# Note: libwacom 2.16's meson.build unconditionally does
+#   dependency('gudev-1.0')   # meson.build:55 — no fallback, not gated
+# so LibGudev MUST be installed into /System/Index (pkg-config gudev-1.0)
+# before this recipe runs. step_pantheon in build.sh orders them accordingly.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 verified against the GitHub release.
+
+compile_version=017-GIT
+url="https://github.com/linuxwacom/libwacom/releases/download/libwacom-2.16.0/libwacom-2.16.0.tar.xz"
+file_size=174900
+file_md5=3dc0275e610e39dd8630f97cf50a30d2
+dir='libwacom-2.16.0'
+recipe_type=meson
+
+# - tests: not shipped on the ISO.
+# - documentation: not shipped on the ISO (option is a feature).
+meson_variables=(
+    --buildtype=release
+    "-Ddocumentation=disabled"
+    "-Dtests=disabled"
+)

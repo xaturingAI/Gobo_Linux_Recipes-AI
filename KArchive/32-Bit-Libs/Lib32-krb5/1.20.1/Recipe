@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# 32-bit Kerberos 5 stack extracted from Debian i386 packages for Steam/Proton.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/k/krb5/libkrb5-3_1.20.1-2+deb12u5_i386.deb"
+url2="https://deb.debian.org/debian/pool/main/k/krb5/libgssapi-krb5-2_1.20.1-2+deb12u5_i386.deb"
+url3="https://deb.debian.org/debian/pool/main/k/krb5/libk5crypto3_1.20.1-2+deb12u5_i386.deb"
+url4="https://deb.debian.org/debian/pool/main/e/e2fsprogs/libcom-err2_1.47.0-2+b2_i386.deb"
+file_size=360440
+file_md5=e1ad5d9c96a6ae5a98f4fb05e96d3704
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    for u in "$url" "$url2" "$url3" "$url4"; do
+        local deb="$compileArchivesDir/$(basename $u)"
+        [ -f "$deb" ] || wget -q "$u" -O "$deb"
+        Log_Normal "Unpacking ${deb}"
+        ar p "$deb" data.tar.xz | tar xJf -
+    done
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libkrb5.so.3* "$target"/lib32/ || Die "Failed copying libkrb5."
+    cp -a usr/lib/i386-linux-gnu/libgssapi_krb5.so.2* "$target"/lib32/ || Die "Failed copying libgssapi_krb5."
+    cp -a usr/lib/i386-linux-gnu/libk5crypto.so.3* "$target"/lib32/ || Die "Failed copying libk5crypto."
+    cp -a lib/i386-linux-gnu/libcom_err.so.2* "$target"/lib32/ || Die "Failed copying libcom_err."
+}

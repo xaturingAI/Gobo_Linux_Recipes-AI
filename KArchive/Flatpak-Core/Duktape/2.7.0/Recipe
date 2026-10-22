@@ -1,0 +1,46 @@
+# Custom recipe for Duktape 2.7.0 (amalgamation, Makefile.sharedlibrary)
+#
+# Part of the Pantheon stack port.  polkit 126's polkitd backend
+# (polkitbackendduktapeauthority.c) is a JavaScript engine: it embeds duktape
+# as the rules interpreter.  Until now the Polkit recipe was forced to
+# `-Dlibs-only=true` (no polkitd) precisely because duktape was not on the ISO.
+# This recipe provides the shared libduktape + duktape.h + duktape.pc that
+# polkit's meson `dependency('duktape', ...)` / `cc.find_library('duktape',
+# has_headers:['duktape.h'])` needs, unlocking a full polkitd build.
+#
+# polkit 126 requires duktape >= 2.2.0; 2.7.0 satisfies that.  Build BEFORE
+# Polkit (and, transitively, before anything that consumes polkitd).
+#
+# The upstream Makefile.sharedlibrary compiles src/duktape.c(-amalgamation)
+# into libduktape.so.<soname> and installs it to INSTALL_PREFIX/LIBDIR, the
+# two headers to INSTALL_PREFIX/include, and a duktape.pc to LIBDIR/pkgconfig.
+# Gobo's compile makefile handler runs `make -f Makefile.sharedlibrary install`
+# with the variables below, so everything lands under $target/lib + $target/
+# include + $target/lib/pkgconfig and is indexed into /System/Index.
+#
+# file_size/file_md5 verified against github.com/svaarala/duktape v2.7.0 release.
+
+compile_version=017-GIT
+url="https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz"
+file_size=1026524
+file_md5=b3200b02ab80125b694bae887d7c1ca6
+file="duktape-2.7.0.tar.xz"
+dir='duktape-2.7.0'
+recipe_type=makefile
+makefile='Makefile.sharedlibrary'
+
+# NOTE: Do NOT pass CC/CFLAGS/LDFLAGS here.  The Makefile already defaults them
+# (`CC ?= gcc`, no CFLAGS) and hardcodes -Os/-fPIC.  Earlier this recipe carried
+# `make_variables=("CC=$CC" "CFLAGS=$CFLAGS" ...)`; in the chroot those expanded
+# to an empty CC and a mangled CFLAGS (leading `-` stripped -> "O2 ..."), so the
+# `$(CC)` recipe line ran `O2 -fomit-frame-pointer ...` as if O2 were the
+# compiler.  Rely on the Makefile defaults like the Unifdef/Wlr-Protocols recipes.
+
+# Install-time flags: Gobo's makefile handler installs into the $target sandbox
+# and then overlays it onto the Program tree.  INSTALL_PREFIX=$target +
+# LIBDIR=/lib yields $target/lib/libduktape.so*, $target/lib/pkgconfig/duktape.pc
+# and $target/include/duktape.h + duk_config.h, which is the exact Gobo layout.
+install_variables=(
+    "INSTALL_PREFIX=$target"
+    "LIBDIR=/lib"
+)

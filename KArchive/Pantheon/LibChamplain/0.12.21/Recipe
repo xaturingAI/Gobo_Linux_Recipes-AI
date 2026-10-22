@@ -1,0 +1,31 @@
+# Custom recipe for LibChamplain 0.12.21 (meson)
+#
+# Part of the Pantheon stack port. Clutter-based map widget used by the
+# elementary Calendar (champlain-0.12 + champlain-gtk-0.12) and Tasks
+# (champlain-0.12 + champlain-gtk-0.12) location pickers.
+#
+# Builds on Clutter 1.26.4 + ClutterGtk 1.8.4 (widgetry), gdk-pixbuf, cairo,
+# sqlite3 (tile cache), glib/gio, and libsoup-3.0 (libsoup3=true -> tile
+# downloading uses soup3). Memphis raster-tile rendering is disabled (not
+# needed for the widget's tile sources); demos/gtk-doc off; introspection +
+# vapi ON (vala apps bind champlain's gir/vapi).
+#
+# file_md5 + file_size verified against the download.gnome.org tarball.
+
+compile_version=017-GIT
+url="https://download.gnome.org/sources/libchamplain/0.12/libchamplain-0.12.21.tar.xz"
+file_size=223748
+file_md5=2b17ba53d88840f73f22ead3a905f475
+dir='libchamplain-0.12.21'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    "-Dlibsoup3=true"
+    "-Dwidgetry=true"
+    "-Dintrospection=true"
+    "-Dvapi=true"
+    "-Dgtk_doc=false"
+    "-Ddemos=false"
+    "-Dmemphis=false"
+)

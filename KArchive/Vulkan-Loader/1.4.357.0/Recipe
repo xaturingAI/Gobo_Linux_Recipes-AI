@@ -1,0 +1,17 @@
+# Vulkan Installable Client Driver (ICD) Loader 1.4.357.0.
+url="https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz"
+file_size=1820868
+file_md5=ce35f16bee47e9faf0a50d682a2db77d
+file="Vulkan-Loader-vulkan-sdk-1.4.357.0.tar.gz"
+dir="Vulkan-Loader-vulkan-sdk-1.4.357.0"
+recipe_type=cmake
+cmake_options=(
+   -DCMAKE_BUILD_TYPE=Release
+   -DCMAKE_SKIP_RPATH=True
+   -DCMAKE_PREFIX_PATH=/System/Index
+   -DBUILD_TESTS=OFF
+   -DBUILD_LOADER=ON
+   -DBUILD_WSI_XCB_SUPPORT=ON
+   -DBUILD_WSI_XLIB_SUPPORT=ON
+   -DBUILD_WSI_WAYLAND_SUPPORT=ON
+)

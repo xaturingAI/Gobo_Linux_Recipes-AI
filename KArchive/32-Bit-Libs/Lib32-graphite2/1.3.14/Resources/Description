@@ -1,0 +1,4 @@
+[Name] Lib32-graphite2
+[Summary] 32-bit Graphite2 smart-font shaping for HarfBuzz
+[License] LGPL-2.1-or-later
+[Homepage] https://github.com/silnrsi/graphite

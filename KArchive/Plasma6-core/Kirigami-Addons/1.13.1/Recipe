@@ -1,0 +1,21 @@
+# Custom recipe for kirigami-addons 1.13.1 (cmake)
+# Independent KDE project (own versioning); needed by plasma-workspace
+# (find_package(KF6KirigamiAddons >= 0.10.0 CONFIG)).
+compile_version=017-GIT
+url="https://download.kde.org/stable/kirigami-addons/kirigami-addons-1.13.1.tar.xz"
+file_size=3023492
+file_md5=d3a1944cb0dddcea3f441f04ee54c0d0
+dir='kirigami-addons-1.13.1'
+recipe_type=cmake
+cmake_options=(
+    -DBUILD_WITH_QT6=ON
+    -DCMAKE_BUILD_TYPE=Release
+    "-DCMAKE_PREFIX_PATH=/Programs/QtBase/6.10.3;/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/System/Index"
+    "-DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=/Programs/QtShaderTools/6.10.3;/Programs/QtDeclarative/6.10.3;/Programs/Qt5Compat/6.10.3;/Programs/QtSVG/6.10.3;/Programs/QtWayland/6.10.3;/Programs/QtTools/6.10.3;/Programs/Qtimageformats/6.10.3;/Programs/QtMultimedia/6.10.3"
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DKDE_INSTALL_QMLDIR=qml
+    -DBUILD_TESTING=OFF
+    -DBUILD_HTML_DOCS=OFF
+    -DBUILD_MAN_DOCS=OFF
+    -DBUILD_QCH=OFF
+)

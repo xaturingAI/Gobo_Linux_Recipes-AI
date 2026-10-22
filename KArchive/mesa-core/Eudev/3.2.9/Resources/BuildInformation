@@ -1,0 +1,38 @@
+Build type: configure (autotools, ships a generated ./configure)
+Source: https://dev.gentoo.org/~blueness/eudev/eudev-3.2.9.tar.gz
+        file_size=1959836 file_md5=dedfb1964f6098fe9320de827957331f
+Build order: foundation, before Mesa 25.3.6 (mesa-core/Mesa). LibInput also
+depends on Eudev, so it must exist before the input stack.
+Ported from the canonical GoboLinux recipe Eudev/3.2.9 (Lucas C. Villa Real,
+22 Feb 2020); URL, file_size and file_md5 are identical to upstream and to the
+tarball used for the ISO's /Programs/Eudev/3.2.9.
+Version pinned to 3.2.9 on purpose: the ISO ships 3.2.9 and the base system
+keeps using it. Mesa only needs libudev.pc to exist for
+`dependency('libudev', required: false)` to resolve to HAVE_LIBUDEV; the
+version is irrelevant to the Mesa build.
+Why the recipe exists at all: there was none in this repo, so Eudev was only
+ever visible to the build as a preinstalled Program. That works, but
+`CheckDependencies --types=recipe` cannot see it, so it is neither validated
+nor rebuildable and does not appear in the dependency graph.
+configure_options (verbatim from upstream GoboLinux):
+ --prefix/--bindir/--sbindir/--libdir   install into $target (udevd + udevadm
+                                        land in $target/sbin, libudev in
+                                        $target/lib)
+ --sysconfdir=$settings_target          udev.conf / rules.d / hwdb.d go to the
+                                        package Settings dir, not /Programs
+ --libexecdir=$target/lib               udev helper binaries next to the libs
+ --with-rootprefix=                     empty root prefix (GoboLinux layout)
+ --with-rootlibdir=$target/lib
+Unset options keep eudev's autodetect: blkid (Util-Linux), kmod (Kmod),
+selinux (absent -> disabled), hwdb, manpages. The installed udevadm links
+libblkid.so.1 + libkmod.so.2 + liblzma.so.5 + libz.so.1, which matches the
+autodetected build; SELinux is not installed so it is skipped.
+NOT shipped here: the upstream recipe also carries
+Resources/Defaults/Settings/udev/{udev.conf,hwdb.d/*} -- ~6.6 MB of generated
+hardware database (20-OUI.hwdb, 20-pci-vendor-model.hwdb, ...). Those are
+runtime data that the live ISO already provides from its own /etc/udev tree;
+this repo is an overlay and does not carry them, so `compile Eudev` installs
+the programs and libraries but does not refresh hwdb. Resources/Tasks/Udev
+(the Gobo task that starts udevd and coldplugs /sys) IS carried.
+Output: sbin/udevd, sbin/udevadm, lib/libudev.so.1 (+ lib/pkgconfig/libudev.pc
+and udev.pc).

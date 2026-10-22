@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# MinGW-w64 cross toolchain (x86_64-w64-mingw32), built from source into ONE
+# program tree. This is the compiler Wine, DXVK and vkd3d(-proton) need to
+# build their Windows PE DLLs. Native GCC on the chroot is 64-bit-only host
+# compiler; the cross target enables emitting PE binaries for Windows.
+#
+# Staged build following the official mingw-w64 how-to (sysroot layout:
+# headers+crt into $target/x86_64-w64-mingw32/{include,lib}, gcc/binutils into
+# $target, --with-sysroot=$target), so the CRT is never needed before it
+# exists and GCC always sees installed headers (no --without-headers, which
+# would make gcc's #include_next <stddef.h> fail to resolve):
+#   1. mingw-w64 headers        -> $target/x86_64-w64-mingw32/include
+#   2. binutils (target=mingw)  -> $target/bin/{x86_64-w64-mingw32-as,ld,...}
+#   3. gcc core (c,c++)         -> driver + cc1/cc1plus only (no libgcc yet)
+#   4. mingw-w64 crt            -> $target/x86_64-w64-mingw32/lib
+#   5. gcc full rebuild (headers + crt now present) -> libgcc + libstdc++ etc.
+#
+# The cross tools land in $target/bin and are symlinked into /System/Index/bin
+# by SymlinkProgram, so Wine's configure finds x86_64-w64-mingw32-gcc on PATH.
+
+compile_version=017-GIT
+urls=(
+    "https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v12.0.0.tar.bz2/download"
+    "https://ftp.gnu.org/gnu/binutils/binutils-2.43.1.tar.xz"
+    "https://ftp.gnu.org/gnu/gcc/gcc-14.2.0/gcc-14.2.0.tar.xz"
+)
+files=(
+    "mingw-w64-v12.0.0.tar.bz2"
+    "binutils-2.43.1.tar.xz"
+    "gcc-14.2.0.tar.xz"
+)
+file_sizes=( 10474283 28174300 92306460 )
+file_md5s=( cb32877a300620246926613489022fae 9202d02925c30969d1917e4bad5a2320 2268420ba02dc01821960e274711bde0 )
+dirs=(
+    "mingw-w64-v12.0.0"
+    "binutils-2.43.1"
+    "gcc-14.2.0"
+)
+recipe_type=configure
+create_dirs_first=yes
+
+do_configuration() {
+    return 0
+}
+
+do_build() {
+    local root="$(dirname "$sourcedir")"
+    local trg="$target"
+    local nj="-j$(nproc)"
+    local mingw="$root/mingw-w64-v12.0.0"
+    local binutils="$root/binutils-2.43.1"
+    local gcc="$root/gcc-14.2.0"
+    export PATH="$trg/bin:$PATH"
+
+    # 1) mingw-w64 headers -> target sysroot include dir, so GCC's own
+    #    include/stddef.h can #include_next into the installed headers.
+    #    GCC (--target=x86_64-w64-mingw32) hardcodes the mingw system header
+    #    dir as $trg/mingw/include (BUILD_SYSTEM_HEADER_DIR for fixincludes),
+    #    so mirror x86_64-w64-mingw32 as "mingw" per the official how-to.
+    mkdir -p "$builddir/headers" && cd "$builddir/headers" || return 1
+    "$mingw/mingw-w64-headers/configure" --prefix="$trg/x86_64-w64-mingw32" \
+        --host=x86_64-w64-mingw32 --disable-doc || return 1
+    make "$nj" install || return 1
+    ln -sfn x86_64-w64-mingw32 "$trg/mingw" || return 1
+
+    # 2) binutils
+    mkdir -p "$builddir/binutils" && cd "$builddir/binutils" || return 1
+    "$binutils/configure" --target=x86_64-w64-mingw32 --prefix="$trg" \
+        --with-sysroot="$trg" \
+        --disable-werror --disable-nls --disable-gdb --disable-gdbserver \
+        --disable-sim --disable-readline --disable-docs || return 1
+    make "$nj" && make install || return 1
+
+    # 3) gcc core (driver + cc1/cc1plus only). Headers are already installed,
+    #    so NO --without-headers: GCC's own include/stddef.h does
+    #    #include_next <stddef.h>, which resolves to the installed mingw-w64
+    #    header via --with-sysroot. libgcc/libstdc++ come later (stage 5).
+    mkdir -p "$builddir/gcc-bootstrap" && cd "$builddir/gcc-bootstrap" || return 1
+    "$gcc/configure" --target=x86_64-w64-mingw32 --prefix="$trg" \
+        --with-sysroot="$trg" \
+        --enable-languages=c,c++ \
+        --disable-shared --disable-nls --disable-werror --disable-multilib \
+        --disable-libatomic --disable-libgomp --disable-libitm \
+        --disable-libquadmath --disable-libsanitizer --disable-libssp \
+        --disable-libstdcxx-pch || return 1
+    make "$nj" all-gcc || return 1
+    make install-gcc || return 1
+
+    # 4) mingw-w64 crt (startfiles + runtime) -> target sysroot lib dir
+    mkdir -p "$builddir/crt" && cd "$builddir/crt" || return 1
+    "$mingw/mingw-w64-crt/configure" --prefix="$trg/x86_64-w64-mingw32" \
+        --host=x86_64-w64-mingw32 --disable-dependency-tracking || return 1
+    make "$nj" && make install || return 1
+
+    # 5) gcc full rebuild (headers + crt now present: libgcc + libstdc++ etc.)
+    mkdir -p "$builddir/gcc-final" && cd "$builddir/gcc-final" || return 1
+    "$gcc/configure" --target=x86_64-w64-mingw32 --prefix="$trg" \
+        --with-sysroot="$trg" \
+        --enable-languages=c,c++ \
+        --disable-shared --disable-nls --disable-werror --disable-multilib \
+        --disable-libgomp --disable-libitm --disable-libquadmath \
+        --disable-libsanitizer --disable-libssp --disable-libstdcxx-pch \
+        --disable-libcc1 --disable-win32-registry || return 1
+    make "$nj" && make install || return 1
+
+    return 0
+}
+
+do_install() {
+    return 0
+}

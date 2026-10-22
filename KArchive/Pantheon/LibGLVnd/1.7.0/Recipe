@@ -1,0 +1,27 @@
+# Custom recipe for libglvnd 1.7.0 (meson)
+#
+# Bump from the ISO's 1.2.0. Mesa 25.3.6 requires libglvnd >= 1.3.2 when
+# built with -Dglvnd=enabled, and the NVIDIA proprietary driver ships glvnd
+# ICDs (egl_vendor.d/10_nvidia.json), so the dispatch architecture must be
+# preserved. Build BEFORE Mesa.
+#
+# Provides libEGL/libGLX/libGLESv1_CM/libGLESv2/libOpenGL dispatch libs, the
+# GL/EGL/GLES headers and egl.pc/glesv2.pc/gl.pc that Mutter/GTK4 consume.
+#
+# Build AFTER Xorg-Lib (X11/GLX headers + glproto.pc). -Dhgl=false (Haiku).
+
+compile_version=017-GIT
+url="https://gitlab.freedesktop.org/glvnd/libglvnd/-/archive/v1.7.0/libglvnd-v1.7.0.tar.gz"
+file="libglvnd-1.7.0.tar.gz"
+file_size=839820
+file_md5=6055d0ef8676601eb78a233a9285502c
+dir='libglvnd-v1.7.0'
+recipe_type=meson
+
+meson_variables=(
+    --buildtype=release
+    -Dx11=enabled
+    -Dglx=enabled
+    -Degl=true
+    -Dhgl=false
+)

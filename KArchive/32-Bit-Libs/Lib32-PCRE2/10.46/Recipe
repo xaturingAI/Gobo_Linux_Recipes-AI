@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 32-bit PCRE2 regex library for Wine/Proton
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/p/pcre2/libpcre2-8-0_10.46-1~deb13u1_i386.deb"
+file_size=295740
+file_md5=b37cf1e54f202a525488eaefac8f941c
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libpcre2-8.so.0* "$target"/lib32/ || Die "Failed copying 32-bit libpcre2-8.so.0."
+}
+

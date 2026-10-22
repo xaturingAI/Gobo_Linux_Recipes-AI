@@ -1,0 +1,4 @@
+[Name] Lib32-vulkan-loader
+[Summary] 32-bit Vulkan loader for Wine/Proton
+[License] Apache-2.0
+[Homepage] https://github.com/KhronosGroup/vulkan-loader

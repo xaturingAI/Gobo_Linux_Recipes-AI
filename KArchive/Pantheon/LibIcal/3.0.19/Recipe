@@ -1,0 +1,32 @@
+# Custom recipe for LibIcal 3.0.19 (cmake)
+#
+# Part of the Pantheon stack port. iCalendar library. The ISO ships only
+# libical-glib-2.0.pc (libical 2.x); EvolutionDataServer 3.54.3 hard-requires
+# libical-glib >= 3.0.7 (CMakeLists.txt: CALENDAR pkg_check REQUIRED), so the
+# 3.0 line must be built. Installs libical-glib-3.0.pc (plus the C library,
+# libical-glib-2.0.pc is NOT installed by 3.0.x; only the 3.0 pc name).
+#
+# Builds with glib/gio from the ISO index. GLib bindings (ical-glib) ON because
+# EDS links the GObject API. GObject introspection + vapi OFF (not needed by
+# EDS, avoids girepository pc friction); C++ bindings/docs/tests/examples OFF.
+#
+# file_md5 + file_size verified against the github v3.0.19 release tarball.
+
+compile_version=017-GIT
+url="https://github.com/libical/libical/releases/download/v3.0.19/libical-3.0.19.tar.gz"
+file_size=973744
+file_md5=f671e38e804bf467347807d8c8d057f7
+dir='libical-3.0.19'
+recipe_type=cmake
+
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DICAL_GLIB=ON
+    -DGOBJECT_INTROSPECTION=ON
+    -DICAL_GLIB_VAPI=ON
+    -DWITH_CXX_BINDINGS=OFF
+    -DENABLE_GTK_DOC=OFF
+    -DICAL_BUILD_DOCS=OFF
+    -DICAL_BUILD_TESTING=OFF
+    -DICAL_BUILD_EXAMPLES=OFF
+)

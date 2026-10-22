@@ -1,0 +1,5 @@
+[Name] KPTY
+[Summary] KDE Frameworks 6 PTY allocation
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kpty
+[Description] KDE Frameworks 6: pseudo-terminal allocation library. Used by Konsole for terminal I/O.

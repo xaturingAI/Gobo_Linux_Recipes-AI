@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# VLC 3.0.21 (media player).
+#
+# Built from source with an explicit --enable/--disable matrix tuned to what
+# the ISO actually has, so configure neither errors out on a missing optional
+# dep nor silently drops a codec we want. Enabled: Qt 5.14.1 interface (user
+# requirement), FFmpeg 4.2.2 (avcodec/avformat/avutil/swscale/postproc), x264,
+# ALSA/PulseAudio output, FLAC, ogg, freetype (fonts/text), gcrypt/gnutls
+# (crypto/https), dbus, xcb/xvideo (X11 video output under XWayland).
+#
+# Disabled (dep present in ISO but unhelpful or missing): live555, dvdnav,
+# dvdread, bluray, matroska, upnp, smb2, sftp, vnc, vdpau, libva, gles2,
+# jack, wayland vout, microdns, sdl-image, ncurses, libplacebo, screenshots
+# (chromecast/d3d11va are Windows-only but kept off anyway), nls translation
+# build (saves a full po/ pass), gst-decode, opencv, update-check. a52 is both
+# missing (liba52) and unwanted.
+#
+# --enable-run-as-root: live ISO boots to a root-capable session; without it
+# vlc refuses to start as uid 0.
+
+compile_version=017-GIT
+url="https://download.videolan.org/pub/videolan/vlc/3.0.21/vlc-3.0.21.tar.xz"
+file_size=25649288
+file_md5=cde72f38943c685a1a39acc82da2339f
+recipe_type=configure
+
+# `make install` relinks every plugin module with an abbreviated libtool flag
+# set that lacks the -L paths used during the build. Those relinks resolve the
+# shared-object start/end files crti.o/crtn.o through GCC's prefix-relative
+# fallback .../lib/gcc/<host>/<ver>/../../../../lib/, which computes to
+# /Programs/GCC/<ver>/lib/ where the objects do not exist (they live in Glibc's
+# tree and are only referenced from /System/Index/lib). Without them the relink
+# aborts:
+#   /System/Index/bin/ld: error: cannot open .../lib/crti.o: No such file
+# Create symlinks at that path so the fallback resolves.
+pre_install() {
+   mkdir -p /Programs/GCC/Current/lib
+   for c in crti.o crtn.o; do
+      [ -e "/Programs/GCC/Current/lib/$c" ] || \
+         ln -s "/Programs/Glibc/Current/lib/$c" "/Programs/GCC/Current/lib/$c"
+   done
+}
+
+configure_options=(
+   # VLC's configure requires BUILDCC (its build-host C compiler) and only probes
+   # for programs literally named c11-gcc/c11/c99-gcc/c99, none of which exist on
+   # GoboLinux — so it aborts here. Point it at the native gcc up front.
+   "BUILDCC=gcc"
+   "--enable-qt"
+   "--enable-avcodec"
+   "--enable-avformat"
+   "--enable-avutil"
+   "--enable-swscale"
+   "--enable-postproc"
+   "--enable-x264"
+   "--enable-alsa"
+   "--enable-pulse"
+   "--enable-flac"
+   "--enable-ogg"
+   "--enable-freetype"
+   "--enable-gcrypt"
+   "--enable-gnutls"
+   "--enable-dbus"
+   "--enable-xcb"
+   "--enable-xvideo"
+   "--enable-run-as-root"
+   "--disable-nls"
+   "--disable-live555"
+   "--disable-dvdnav"
+   "--disable-dvdread"
+   "--disable-bluray"
+   "--disable-matroska"
+   "--disable-upnp"
+   "--disable-smb2"
+   "--disable-smbclient"
+   "--disable-sftp"
+   "--disable-vnc"
+   "--disable-vdpau"
+   "--disable-libva"
+   "--disable-gles2"
+   "--disable-jack"
+   "--disable-wayland"
+   "--disable-microdns"
+   "--disable-sdl-image"
+   "--disable-ncurses"
+   "--disable-libplacebo"
+   "--disable-chromecast"
+   "--disable-d3d11va"
+   "--disable-a52"
+   "--disable-gst-decode"
+   "--disable-opencv"
+   "--disable-update-check"
+)

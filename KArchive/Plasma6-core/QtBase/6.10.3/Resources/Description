@@ -1,0 +1,5 @@
+[Name] qtbase
+[Summary] Qt 6 base modules (Core, Gui, Widgets, Network, DBus, OpenGL)
+[License] LGPL-3.0-only OR GPL-3.0-only OR Qt-Commercial
+[Homepage] https://www.qt.io
+[Description] Qt 6 base libraries providing core, GUI, widgets, networking, DBus, SQL, OpenGL support. Builds with XCB + Wayland QPA plugins.

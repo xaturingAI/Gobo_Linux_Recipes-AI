@@ -1,0 +1,50 @@
+# Custom recipe for LibCLc (cmake) -- part of the Mesa 25.3.6 CLC toolchain
+# for the Pantheon desktop stack.
+#
+# WHY THIS EXISTS: Mesa 25.3.6 turns on with_clc because the iris (Intel)
+# gallium driver is listed in with_driver_using_cl. Its meson.build does
+# `_libclc = dependency('libclc', required: ...)` and then reads the pkg-config
+# variable `libexecdir`, expecting the SPIR-V builtins
+# `spirv-mesa3d-.spv` (32-bit) and `spirv64-mesa3d-.spv` (64-bit) to live
+# there. libclc is part of the LLVM monorepo, so this recipe reuses the SAME
+# llvm-19.1.7.tar.gz as the Pantheon/LLVM/19.1.7 recipe (Gobo caches the
+# archive, so nothing is downloaded twice) and points `dir` at the libclc
+# subdirectory of the unpacked tree.
+#
+# TARGETS: the default build target is "all"; LIBCLC_TARGETS_TO_BUILD is set to
+# `spirv-mesa3d-;spirv64-mesa3d-`, which is exactly the form Mesa wants. With
+# DEVICE=none for the spirv/spirv64 arches, get_libclc_device_info() sets
+# arch_suffix = ARG_TRIPLE, producing the literal file names
+# spirv-mesa3d-.spv and spirv64-mesa3d-.spv. The clang triple it derives
+# (spir-- / spir64--) is intentional for the mesa3d- archs.
+#
+# INSTALL LAYOUT / pkg-config: libclc.pc is generated from libclc.pc.in with
+# includedir=${prefix}/<includedir> and libexecdir=${prefix}/<datadir>/clc, and
+# the .spv files go to <datadir>/clc. Gobo's PKG_CONFIG_PATH only searches
+# /System/Index/lib/pkgconfig, so CMAKE_INSTALL_DATADIR=lib is used to move the
+# .pc to lib/pkgconfig and the builtins to lib/clc; libexecdir then resolves to
+# /System/Index/lib/clc, which is where Mesa will look for the .spv files.
+#
+# TOOL DISCOVERY: libclc find_package(LLVM) via LLVM_DIR and requires
+# llvm-as/llvm-link/opt/clang from LLVM, plus Python3 (generate_convert.py) and
+# llvm-spirv. llvm-spirv is looked up with
+# `find_program(LLVM_SPIRV llvm-spirv PATHS ${LLVM_TOOLS_BINARY_DIR}
+# NO_DEFAULT_PATH)`, i.e. inside /System/Index/bin -- which is exactly where the
+# SPIRV-LLVM-Translator recipe installs it. (LIBCLC_CUSTOM_LLVM_TOOLS_BINARY_DIR
+# does not affect the llvm-spirv lookup.) LLVM_DIR=/System/Index/lib/cmake/llvm
+# is preferred over /Programs/... so that LLVM_TOOLS_BINARY_DIR resolves to
+# /System/Index/bin.
+compile_version=017-GIT
+url="https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-19.1.7.tar.gz"
+file="llvm-19.1.7.tar.gz"
+file_size=217422846
+file_md5=48b47ec165a22bd11e400259f96706a6
+dir='llvm-project-llvmorg-19.1.7/libclc'
+recipe_type=cmake
+cmake_options=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DCMAKE_INSTALL_DATADIR=lib
+    -DLLVM_DIR=/System/Index/lib/cmake/llvm
+    "-DLIBCLC_TARGETS_TO_BUILD=spirv-mesa3d-;spirv64-mesa3d-"
+)

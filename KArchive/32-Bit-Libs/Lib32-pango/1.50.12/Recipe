@@ -1,0 +1,36 @@
+#!/bin/bash
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/p/pango1.0/libpango-1.0-0_1.50.12+ds-1_i386.deb"
+file_size=219520
+file_md5=a141bd9b2d2a30a33c9d0e32376c4f2f
+recipe_type=manifest
+uncompress=no
+
+pangocairo_url="https://deb.debian.org/debian/pool/main/p/pango1.0/libpangocairo-1.0-0_1.50.12+ds-1_i386.deb"
+pangocairo_md5=539190fa6be159eedb415eef0214d506
+pangoft2_url="https://deb.debian.org/debian/pool/main/p/pango1.0/libpangoft2-1.0-0_1.50.12+ds-1_i386.deb"
+pangoft2_md5=10a1f603a422095210d27264e5be18f3
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+
+    Log_Normal "Fetching pangocairo/pangoft2 32-bit packages"
+    curl -sL -o pangocairo.deb "$pangocairo_url" || Die "Failed downloading libpangocairo-1.0-0 i386."
+    echo "$pangocairo_md5  pangocairo.deb" | md5sum -c - || Die "libpangocairo-1.0-0 i386 checksum mismatch."
+    curl -sL -o pangoft2.deb "$pangoft2_url" || Die "Failed downloading libpangoft2-1.0-0 i386."
+    echo "$pangoft2_md5  pangoft2.deb" | md5sum -c - || Die "libpangoft2-1.0-0 i386 checksum mismatch."
+    mkdir -p pangocairo pangoft2
+    ar p pangocairo.deb data.tar.xz | tar xJf - -C pangocairo
+    ar p pangoft2.deb data.tar.xz | tar xJf - -C pangoft2
+    rm -f pangocairo.deb pangoft2.deb
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libpango-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit pango."
+    cp -a pangocairo/usr/lib/i386-linux-gnu/libpangocairo-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit pangocairo."
+    cp -a pangoft2/usr/lib/i386-linux-gnu/libpangoft2-1.0.so.0* "$target"/lib32/ || Die "Failed copying 32-bit pangoft2."
+}

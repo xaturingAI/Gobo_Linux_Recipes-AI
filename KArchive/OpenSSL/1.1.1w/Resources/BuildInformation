@@ -1,0 +1,7 @@
+Non-autoconf Configure (Perl) recipe. override_default_options=yes keeps
+PrepareProgram from injecting --sysconfdir/--libexecdir/--mandir (Configure
+rejects unknown options); --prefix=$target is rewritten to /System/Index by
+PrepareProgram, --openssldir=$goboSettings/ssl follows the ISO's
+Programs/OpenSSL/Settings/ssl layout. install_target=install_sw skips man
+pages. Build BEFORE Python: Python 3.11.12's configure needs openssl headers
+and pkg-config openssl. sha256 cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8.

@@ -1,0 +1,5 @@
+[Name] Gcr3
+[Summary] GCR crypto library (gck-1 / gcr-base-3)
+[License] LGPL-2.1-or-later
+[Homepage] https://gitlab.gnome.org/GNOME/gcr
+[Description] GTK3-era gcr: gck-1.pc and gcr-base-3.pc for gnome-keyring 48.0. Built with -Dgtk=false (no GTK3 UI library).

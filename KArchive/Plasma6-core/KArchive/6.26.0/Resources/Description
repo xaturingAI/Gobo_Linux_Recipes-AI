@@ -1,0 +1,5 @@
+[Name] KArchive
+[Summary] KDE Frameworks 6 archive/compression I/O
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/karchive
+[Description] KDE Frameworks 6 Tier 1: archive reading/writing (tar, zip, gzip, bzip2, xz).

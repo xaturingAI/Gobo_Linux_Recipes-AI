@@ -1,0 +1,31 @@
+# Custom recipe for libei 1.3.901 (GNOME 48 era; meson)
+#
+# Part of the Pantheon stack port. Implements the TETHER input-emulation
+# protocol for Wayland compositors (clients send keystrokes/mouse moves
+# over DBus). Mutter 48+ requires libei >= 1.3.901. Build AFTER GLib 2.84
+# and BEFORE Mutter.
+#
+# Era: GNOME 48 (Mar 2025). file_md5 placeholder -- verify after download.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libe/libei/libei_1.3.901.orig.tar.bz2"
+file_size=182495
+file_md5=ffb3870e08c96ed1dd05e8e1f3394298
+dir='libei-1.3.901'
+recipe_type=meson
+
+# - liboeffis: legacy oeffis compatibility layer; requires an sd-bus provider.
+#   Not needed by anything on the ISO (elogind is the sd-bus provider but
+#   oeffis itself is unused), so disable.
+# - libeis: the EIS server-side library. MUST be built: Mutter 48+ does
+#   `dependency('libeis-1.0')` unconditionally (its input stack talks EIS to
+#   libei). Only needs libutil, no extra deps.
+# - udev: required for hotplug detection; the ISO ships libudev (eudev).
+# - tests/examples: not shipped on the ISO.
+meson_variables=(
+    --buildtype=release
+    "-Ddocumentation=[]"
+    "-Dtests=disabled"
+    "-Dliboeffis=disabled"
+    "-Dlibeis=enabled"
+)

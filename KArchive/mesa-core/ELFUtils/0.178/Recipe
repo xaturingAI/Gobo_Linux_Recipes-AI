@@ -1,0 +1,50 @@
+# ELFUtils 0.178 (autotools) -- libelf/libdw, the source of libelf.pc.
+#
+# Ported from the canonical GoboLinux recipe (ELFUtils/0.178) because Mesa
+# 25.3.6 hard-requires it: radeonsi does
+#   dependency('libelf')  /  error('Gallium driver radeonsi requires libelf')
+# (meson.build ~1917) and there is no recipe for it in this repo, so on a host
+# without the preinstalled Program the Mesa build stops at configure time.
+# Mesa only ever links libelf; libdw/libasm and the eu-* tools come along for
+# free and are what /Programs/ELFUtils/0.178 already contains.
+#
+# Version 0.178 is deliberately the ISO's own version: this recipe exists to
+# complete the dependency graph, NOT to upgrade the base (see Resources/
+# BuildInformation).
+#
+# file_md5 / file_size verified against the tarball and match the upstream
+# GoboLinux recipe: 5480d0b7174446aba13a6adde107287f.
+compile_version=017-GIT
+url="https://sourceware.org/elfutils/ftp/0.178/elfutils-0.178.tar.bz2"
+file_size=9007557
+file_md5=5480d0b7174446aba13a6adde107287f
+recipe_type=configure
+
+configure_options=(
+    --enable-deterministic-archives
+    --disable-debuginfod
+)
+
+# elfutils turns every compiler warning into an error, unconditionally, from
+# config/eu.am's AM_CFLAGS:
+#   AM_CFLAGS = -std=gnu99 -Wall ... $(if $($(*F)_no_Werror),,-Werror) ...
+# (there is no --disable-werror).  This 2019 code predates several warnings a
+# modern GCC reports -- e.g. in libebl/ebl_syscall_abi.c
+#   error: argument 5 of type 'int *' declared as a pointer [-Werror=array-parameter=]
+# -- so the build stops.  Strip -Werror.
+#
+# NOTE: it must be stripped from Makefile.in, not Makefile.  Compile runs the
+# pre_build hook BEFORE do_configuration, so at this point ./configure has not
+# yet generated any Makefile (a fresh unpack only has Makefile.in), which is why
+# changing `find . -name Makefile` alone did nothing.  Makefile.in is what
+# config.status copies, and the -Werror text is plain make syntax with no
+# @substitutions@, so it reaches the generated Makefile unchanged.  Touching
+# Makefile.in also keeps it newer than Makefile.am, so automake is not re-run
+# (which would restore -Werror).  The existing Makefile is patched too, for the
+# pkgforced --keep case where the tree is already configured.
+pre_build() {
+    find . \( -name 'Makefile.in' -o -name Makefile \) -print | while read -r i
+    do
+        sed 's/-Werror//g' "$i" > "$i.tmp" && mv "$i.tmp" "$i"
+    done
+}

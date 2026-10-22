@@ -1,0 +1,5 @@
+[Name] KGlobalAccel
+[Summary] KDE Frameworks 6 global keyboard shortcuts
+[License] LGPL-2.1-or-later
+[Homepage] https://invent.kde.org/frameworks/kglobalaccel
+[Description] KDE Frameworks 6 Tier 3: global keyboard shortcut management (system-wide hotkeys).

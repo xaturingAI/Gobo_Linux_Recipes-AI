@@ -1,0 +1,4 @@
+[Name] Lib32-libselinux
+[Summary] 32-bit SELinux policy library for libmount
+[License] Public-Domain
+[Homepage] https://github.com/SELinuxProject/selinux

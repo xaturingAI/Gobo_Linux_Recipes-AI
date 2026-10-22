@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 32-bit libdrm extracted from Debian i386 packages for Steam GPU access.
+
+compile_version=017-GIT
+url="https://deb.debian.org/debian/pool/main/libd/libdrm/libdrm2_2.4.114-1+b1_i386.deb"
+file_size=40832
+file_md5=a5ef47b5e9d5f575ec424384ed8f104c
+recipe_type=manifest
+uncompress=no
+
+pre_install() {
+    local deb="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${deb}"
+    ar p "$deb" data.tar.xz | tar xJf -
+}
+
+do_install() {
+    mkdir -p "$target"/lib32
+    cp -a usr/lib/i386-linux-gnu/libdrm.so.2* "$target"/lib32/ || Die "Failed copying libdrm."
+}

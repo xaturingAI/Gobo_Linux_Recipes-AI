@@ -1,0 +1,5 @@
+[Name] Extra-CMake-Modules
+[Summary] Extra cmake modules for KDE/plasma development
+[License] BSD-2-Clause
+[Description] Collection of additional CMake modules used by KDE projects. Needed to build SDDM (find_package(ECM)).
+[Homepage] https://invent.kde.org/frameworks/extra-cmake-modules

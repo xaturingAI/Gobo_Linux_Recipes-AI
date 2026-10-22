@@ -1,0 +1,73 @@
+# Custom recipe for rEFInd 0.14.2 (prebuilt EFI binaries)
+# Part of the custom GoboLinux 017 stack (UEFI boot).
+# rEFInd is an EFI boot manager (Roderick W. Smith). Prebuilt binary package
+# from SourceForge (refind-bin-<ver>.zip).
+#
+# Layout under /Programs/Refind/0.14.2:
+#   bin/refind-install      official installer script (also mkrlconf, mountesp,
+#                           mvrefind, refind-mkdefault, refind-sb-healthcheck)
+#   share/refind/           refind_x64.efi / refind_ia32.efi / refind_aa64.efi,
+#                           drivers_{x64,ia32,aa64}/ EFI filesystem drivers,
+#                           icons/ banners/ fonts/ keys/, refind.conf-sample
+#
+# Consumption: the installer (gobo livefix 47) copies share/refind onto the
+# ESP, writes a Gobo-specific refind.conf and registers a UEFI boot entry with
+# efibootmgr. Ships ONLY the EFI binaries + assets (no Linux ELF binaries).
+# Requires: the Gobo Linux EFI-stub kernel + dracut initramfs it must load via
+# FAT is copied to the ESP by the installer at install time.
+
+compile_version=017-GIT
+url="https://downloads.sourceforge.net/project/refind/0.14.2/refind-bin-0.14.2.zip"
+file_size=4510998
+file_md5=cbebbc12b0bb2d668362ae7daf7fb0f1
+recipe_type=manifest
+uncompress=no
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+manifest=(
+    "refind-bin-0.14.2/refind-install:bin/refind-install"
+    "refind-bin-0.14.2/refind-mkdefault:bin/refind-mkdefault"
+    "refind-bin-0.14.2/refind-sb-healthcheck:bin/refind-sb-healthcheck"
+    "refind-bin-0.14.2/mkrlconf:bin/mkrlconf"
+    "refind-bin-0.14.2/mountesp:bin/mountesp"
+    "refind-bin-0.14.2/mvrefind:bin/mvrefind"
+    "refind-bin-0.14.2/refind:share/refind"
+    "refind-bin-0.14.2/docs:share/refind/docs"
+    "refind-bin-0.14.2/banners:share/refind/banners"
+    "refind-bin-0.14.2/fonts:share/refind/fonts"
+    "refind-bin-0.14.2/keys:share/refind/keys"
+    "refind-bin-0.14.2/README.txt:share/refind/README.txt"
+    "refind-bin-0.14.2/NEWS.txt:share/refind/NEWS.txt"
+    "refind-bin-0.14.2/LICENSE.txt:share/refind/LICENSE.txt"
+    "refind-bin-0.14.2/COPYING.txt:share/refind/COPYING.txt"
+    "refind-bin-0.14.2/CREDITS.txt:share/refind/CREDITS.txt"
+)
+
+pre_install() {
+    local tarball="$compileArchivesDir/$(basename $url)"
+    Log_Normal "Unpacking ${tarball}"
+    # unzip is not guaranteed on the chroot; use python3 zipfile (always present).
+    python3 - "$tarball" <<'PYEOF'
+import sys, zipfile
+z = zipfile.ZipFile(sys.argv[1])
+z.extractall()
+z.close()
+PYEOF
+}
+
+post_install_message="
+rEFInd 0.14.2 installed (EFI boot manager binaries + drivers under
+/Programs/Refind/0.14.2/share/refind, installer scripts in bin/).
+
+On an installed GoboLinux system the custom Installer (gobo livefix 47)
+deploys rEFInd to the ESP (EFI/refind) and makes it the default UEFI boot
+entry. The official refind-install script is included for manual use on
+systems booted from another tree, e.g.:
+
+   refind-install --root /Mount/Target --usedefault /dev/sda1 --alldrivers
+
+Note: rEFInd is UEFI-only. BIOS/MBR boots keep using GRUB.
+"

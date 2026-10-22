@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Mesa-Utils 9.0.0 -- the GL/EGL diagnostic CLI tools (glxinfo, eglinfo, ...).
+#
+# Runtime dependency of Lutris: it runs `glxinfo` in its system-check wizard to
+# print the OpenGL renderer/version for the GPU detection panel.
+#
+# NOTE: upstream "mesa-utils" was merged back into the mesa/demos project, so
+# the canonical source is the mesa-demos-9.0.0 release (what Arch/Debian call
+# the mesa-utils base). This recipe installs the whole 9.0.0 release (glxinfo,
+# glxgears, eglinfo, etc.) linked against the ISO's Mesa/GLVND.
+#
+# Only glxinfo really matters to Lutris; everything extra is disabled via
+# meson features so we get exactly the X11 GL tools and no demo-suite bloat.
+# glut is the gate for the demos/tests block, so it must stay disabled even
+# though freeglut is present on the ISO.
+
+compile_version=017-GIT
+url="https://archive.mesa3d.org/demos/mesa-demos-9.0.0.tar.xz"
+file_size=14839368
+file_md5=bd63d3d5b898851f09d87d6537843320
+dir='mesa-demos-9.0.0'
+recipe_type=meson
+
+meson_variables=(
+    -Dglut=disabled
+    -Degl=disabled
+    -Dgles1=disabled
+    -Dgles2=disabled
+    -Dosmesa=disabled
+    -Dvulkan=disabled
+    -Dwayland=disabled
+    -Dlibdrm=disabled
+)

@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Python 3.11.12 for GoboLinux -- becomes the main interpreter on the CD
+# (replaces 3.8.1 as /System/Index/bin/python3). Required by Lutris 0.5.22,
+# which hard-requires Python >= 3.10 (setup.py sys.exit) and by the rebuilt
+# Protontricks. 3.8.1 remains installed and importable via python3.8.
+#
+# Build order: OpenSSL 1.1.1w first (the ISO shipped 1.1.1d libs but no
+# include/openssl, so Python's configure would find no openssl and silently
+# skip _ssl). The ISO already provides system expat/sqlite3/zlib/bz2/lzma/
+# libffi (ffi.h) dev headers; 3.11's _ctypes requires a system libffi.
+# readline.h and uuid.h are absent on the CD: python builds without the
+# readline module (fine, headless) and without _uuid (stdlib falls back to
+# os.urandom-based UUIDs).
+#
+# --enable-shared: PyGObject/PyCairo (and any C extension) link against
+# libpython3.11.so. --with-ensurepip=install: pip/pip3.11 work on the CD.
+compile_version=017-GIT
+url="https://www.python.org/ftp/python/3.11.12/Python-3.11.12.tgz"
+file_size=26575607
+file_md5=b8bb496014f05f5be180fab74810f40b
+dir='Python-3.11.12'
+recipe_type=configure
+
+configure_options=(
+    "--enable-shared"
+    "--with-system-expat"
+    "--with-ensurepip=install"
+    "--with-openssl=$goboIndex"
+    "--enable-loadable-sqlite-extensions"
+)
+
+symlink_options=(
+    "--conflict=overwrite"
+)
+
+post_install() {
+    # python3 flips to this 3.11 interpreter, but Gobo's Scripts python modules
+    # (PythonUtils, GuessProgramCase, UseFlags, Alien, ...) stay in the 3.8
+    # site-packages, so UseFlags/CheckDependencies (and thus Compile) crash with
+    # ModuleNotFoundError. A .pth in our own site-packages makes python3.11
+    # resolve them too -- both in the build chroot and on the booted ISO. If this
+    # tree was built before this hook existed, build.sh's step_pycompat injects
+    # the same file and repackages the tarball.
+    mkdir -p "$target/lib/python3.11/site-packages"
+    printf '/System/Index/lib/python3.8/site-packages\n' \
+        > "$target/lib/python3.11/site-packages/gobo-3.8-site.pth"
+}
