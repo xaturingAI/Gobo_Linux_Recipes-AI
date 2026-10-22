@@ -18,3 +18,26 @@ cmake_options=(
     -DBUILD_MAN_DOCS=OFF
     -DBUILD_QCH=OFF
 )
+
+# pre_link: the volume applet is a plugin-less QML module, so
+# ecm_finalize_qml_module bails and 'make install' skips the QML module AND its
+# plasmoid data package (same quirk as plasma-workspace's applets). cmake still
+# copies the module to $builddir; copy it into $target and fabricate the
+# plasma/plasmoids/org.kde.plasma.volume package so the shell sees the volume
+# (sound) applet. This is a duplicate of the on-disc live-apply in
+# apply-live-fixes.sh §54/§56, kept so a plasma-pa rebuild is self-contained.
+pre_link() {
+    [ -d "$builddir" ] || return 0
+    moddir=$(find "$builddir" -type d -path "*plasma/applet/org/kde/plasma/volume" 2>/dev/null)
+    [ -n "$moddir" ] || return 0
+    local suffix="org/kde/plasma/volume" id="org.kde.plasma.volume"
+    if [ ! -e "$target/lib/qml/plasma/applet/org/kde/plasma/volume" ]; then
+        mkdir -p "$target/lib/qml/plasma/applet/org/kde/plasma"
+        cp -a "$moddir" "$target/lib/qml/plasma/applet/org/kde/plasma/volume"
+    fi
+    local pkg="$target/share/plasma/plasmoids/$id"
+    [ -e "$pkg/metadata.json" ] && return
+    mkdir -p "$pkg"
+    printf '{\n    "KPackageStructure": "Plasma/Applet",\n    "KPlugin": {\n        "Id": "%s",\n        "Name": "Sound",\n        "Description": "Plasma widget",\n        "Icon": "audio-volume-high"\n    },\n    "X-Plasma-API-Minimum-Version": "6.0"\n}\n' "$id" > "$pkg/metadata.json"
+    ln -s "../../../../lib/qml/plasma/applet/$suffix" "$pkg/contents"
+}

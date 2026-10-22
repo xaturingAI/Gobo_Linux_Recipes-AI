@@ -42,5 +42,72 @@ pre_link() {
         fi
         mkdir -p "$target/lib/qml/plasma/applet/$(dirname "$suffix")"
         cp -a "$moddir" "$target/lib/qml/plasma/applet/$suffix"
+        make_applet_package "$suffix"
     done < <(find "$builddir" -type d -path "*plasma/applet/org/kde/plasma/*" 2>/dev/null)
+
+    # aurorae.knsrc ships in NO package on this ISO (upstream: the aurorae
+    # package; KWin only carries window-decorations.knsrc), but global-theme
+    # LAF metadata depends on kns://aurorae.knsrc/... KNewStuff reads knsrcfiles
+    # via /System/Index, which refresh-merge rebuilds from PACKAGE tarballs only
+    # -- so the file must live IN a package. Provide it here so the rebuilt
+    # workspace tarball is indexed and the dep resolves. Adoption command is
+    # KWin's kwin-applywindowdecoration (upstream plasma-apply-aurorae is absent).
+    if [ -d "$target/share/knsrcfiles" ] && [ ! -e "$target/share/knsrcfiles/aurorae.knsrc" ]; then
+        cat > "$target/share/knsrcfiles/aurorae.knsrc" <<'EOF'
+[KNewStuff3]
+Name=Aurorae Window Decorations
+AliasFor=window-decorations
+ProvidersUrl=https://autoconfig.kde.org/ocs/providers.xml
+ContentWarning=Executables
+Categories=Window Decoration Aurorae
+Uncompress=archive
+TargetDir=aurorae/themes
+EOF
+        echo "AdoptionCommand=/Programs/KWin/6.7.4/libexec/kwin-applywindowdecoration %f" >> "$target/share/knsrcfiles/aurorae.knsrc"
+    fi
+}
+
+# KPackage (plasma_applet.so, defaultPackageRoot = data/plasma/plasmoids) can
+# only LIST/LOAD an applet that has a <data>/plasma/plasmoids/<id>/ package.
+# make install skipped those together with the QML modules above
+# (plasma_install_applet -> ecm_finalize_qml_module bails, plugin-less applet),
+# so fabricate the package here: metadata.json (KPackageStructure + KPlugin;
+# the same shape KDE's plasma_install_package macro writes) and a contents
+# symlink onto the module tree we just installed under $target/lib/qml.
+make_applet_package() { # <plasma-applet-relative suffix, e.g. org/kde/plasma/digitalclock>
+    local suffix="$1"
+    [ -z "$suffix" ] && return
+    local base="${suffix##*/}" id="org.kde.plasma.$base" pname icon
+    case "$base" in
+        digitalclock)    pname="Digital Clock";            icon="clock" ;;
+        notifications)   pname="Notifications";            icon="preferences-desktop-notification" ;;
+        systemtray)      pname="System Tray";              icon="system-run" ;;
+        clipboard)       pname="Clipboard";                icon="edit-paste" ;;
+        appmenu)         pname="Application Menu";         icon="application-menu" ;;
+        devicenotifier)  pname="Device Notifier";          icon="drive-removable-media" ;;
+        calendar)        pname="Calendar";                 icon="calendar" ;;
+        analogclock)     pname="Analog Clock";             icon="clock" ;;
+        icon)            pname="Icon";                     icon="icon" ;;
+        activitybar)     pname="Activity Bar";             icon="activities" ;;
+        manage-inputmethod) pname="Input Method Panel";    icon="config-language" ;;
+        lock_logout)     pname="Lock/Logout";              icon="system-lock-screen" ;;
+        mediacontroller) pname="Media Controller";         icon="multimedia-player" ;;
+        panelspacer)     pname="Panel Spacer";             icon="resize-horizontal" ;;
+        marginsseparator) pname="Margins Separator";       icon="format-horizontal-align-left" ;;
+        cameraindicator) pname="Camera Indicator";         icon="camera-web" ;;
+        *)               pname="$base";                    icon="preferences-system" ;;
+    esac
+    local pkg="$target/share/plasma/plasmoids/$id"
+    [ -e "$pkg/metadata.json" ] && return          # real package already installed
+    mkdir -p "$pkg"
+    # systemtray is a CustomEmbedded CONTAINMENT (SystemTray : Plasma::Containment),
+    # not a plain applet. Without X-Plasma-ContainmentType the shell logs
+    # "Loaded as an applet, this shouldn't have happened" and the tray (plus its
+    # sound/network items) never renders.
+    local ctype=""
+    [ "$id" = "org.kde.plasma.systemtray" ] && ctype='    "X-Plasma-ContainmentType": "CustomEmbedded",
+'
+    printf '{\n    "KPackageStructure": "Plasma/Applet",\n    "KPlugin": {\n        "Id": "%s",\n        "Name": "%s",\n        "Description": "Plasma widget",\n        "Icon": "%s"\n    },\n%s    "X-Plasma-API-Minimum-Version": "6.0"\n}\n' \
+        "$id" "$pname" "$icon" "$ctype" > "$pkg/metadata.json"
+    ln -s "../../../../lib/qml/plasma/applet/$suffix" "$pkg/contents"
 }
